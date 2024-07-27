@@ -1,0 +1,138 @@
+Folder application
+c:\Users\gonza\Portfolio\Interzone-Project\InterZone
+Start CLI application
+>  npx expo start
+
+what if the app is not loading on my device?
+> npx expo start --tunnel
+
+Choice the following:
+- Press ? | show all commands
+- Select emulator
+- Pick Pixel_6_API_33
+
+Notes:
+Stop Metro Bundler
+Ctlr + c
+Start Metro Bundler with Clear Cache
+npx expo start -c
+
+Things completed:
+(1/6/24)
+- Login screen
+- Firebase authentication linked
+(3/26/24)
+- HomeScreen (Current)
+- ProfileScreen (Current)
+
+
+Things that needs to be implemented:
+Home Screen:
+- User Profile and Notifications (Current as of 3/26/24)
+- Community Feed
+- Quick Action Buttons
+- Navigation bar
+- Local Services and Recommendations
+- Events and Groups
+- Search and Filters
+- Visual and Interaction Design
+
+Development Tips:
+- Expo & React Native: Utilize Expo's vast library of components and APIs to speed up development. Components like `ScrollView`, `FlatList`, or `sectionList` are useful for creating a feed. User `react-navitagion` for handling navigation.
+- State Management: Consider using Context API or Redux for managing the state across the app, especially useful for handling user data, notifications, and the community feed.
+
+*Remember, building an app similar to Nextdoor involves focusing on community engagement and ease of use, so keep the user experience at the forefront of your design decisions to create an inviting and functional home screen.
+
+Starting implementation for User Profile and Notifications
+Step 1: Setup Navigation
+- Install `react-navigation`:
+npm install @react-navigation/native
+npm install react-native-screens react-native-safe-area-context
+
+-Install Navigation
+npm install @react-navigation/native-stack
+
+Implementing User Profile
+- ProfileScreen.js
+    - use `useState` to manage local profile state and `useEffect` to load the profile data, possibly from an API.
+    - Utilize `Image` and `Text` components to display the user's profile picture and details.
+    - For profile editing, you can use `TextInput` for editable fields and a button to submit changes.
+    - Fetch user names through Firebase
+
+- HomeScreen.js
+    - Add top Bar Icons
+        On your `HomeScreen`, add icons for notifications and messages. You can use vector icons from `react-native-vector-icons` library.
+        > npm install react-native-vector-icons 
+    - Notification System
+        For a simple notification system, you can create a NotificationsScreen that lists the notifications. Use FlatList to render a list of notifications.
+        
+        To handle real-time notifications, consider integrating Firebase Cloud Messaging (FCM) for push notifications.
+
+- Linking Profile and Notifications to Navigation
+    Ensure that tapping on the profile and notifications icons navigates to the respective screens. Use `navigation.navigate('Profile')` or `navigation.navigate('Notifications')` within the onPress event of the icons.
+
+Additional Tips:
+Use Context API or Redux for global state management, especially useful for user authentication status, profile information, and notifications.
+
+Expo Notifications: If you're using Expo, explore using Expo Notifications for handling push notifications, which simplifies the setup process.
+
+
+Dependencies Installed:
+npm install @react-navigation/native @react-navigation/drawer
+npm install react-native-screens react-native-safe-area-context
+
+
+
+Issues that emerged and where fixed:
+Issue of the profile Icon appearing faded on the Home screen after making a post.
+Solution
+use the useFocusEffect from React Navigation to reset the opacity every time the screen comes into focus. This ensures that the opacity is reset not just after posting but also whenever you navigate back to the Home screen from any navigation path.
+Double-check how the opacity is applied to the image within the TouchableOpacity.
+
+
+Features working on 7/26/2024
+- Collect user information at First Login
+- Update user information in the profile screen
+
+
+dependencies installed:
+Install expo-image-picker
+If you haven't already installed the expo-image-picker module, you need to install it
+npm install expo-image-picker
+
+- prompt users for their name when they log in for the first time and then display it in the Profile screen
+-ensure that the ProfileScreen consistently reflects the most current user information, especially when navigating back to it from other screens
+-ensure that the TextInput for editing the name is hidden after successfully updating the profile and only the updated name along with the pencil icon is shown
+
+To upload pictures in the profile screen need dependecy:
+npm i expo-image-picker
+
+Features working on 7/27/24
+1. User Authentication and Profile Management
+Ensure that users can sign up, log in, and have profiles where their location (city or neighborhood) is stored. You might already be using Firebase Authentication for this.
+
+2. Location-Based Filtering
+Store the user’s location in their profile and use this information to filter which posts they see. This ensures that users only see posts from their own city or neighborhood.
+
+3. Backend Database Structure
+Utilize a database like Firebase Firestore to store posts. Structure it such that each post has attributes like:
+
+User ID (link to the user’s profile)
+Content of the post
+Timestamp
+Location (city or neighborhood)
+Reactions (likes, comments, etc.)
+4. Frontend Display
+On the Home Screen, fetch posts from the database that match the user’s location. Display these posts along with the user’s name, profile picture, and the post’s timestamp.
+
+5. Posting Interface
+Allow users to create new posts through a form. This form should automatically tag the post with the user’s ID, current timestamp, and location.
+
+6. Interaction Features
+Implement features to like or comment on posts. Each post in the database should have fields for storing reactions, which are updated when users interact with a post.
+
+7. Real-Time Updates
+Consider using Firebase’s real-time capabilities to update the Home Screen as new posts are made or as existing posts are interacted with.
+
+8. Privacy and Security
+Ensure that users’ location data and personal information are securely stored and that posts are only visible to the appropriate audience.
