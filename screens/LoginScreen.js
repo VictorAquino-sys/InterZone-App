@@ -84,7 +84,7 @@ const LoginScreen = () => {
         // Navigate to NameInputScreen if no name is found
         navigation.navigate('NameInputScreen', { userId: user.uid });
       } else {
-        navigation.navigate('HomeStack');
+        navigation.navigate('HomeScreen');
       }
 
       //Store user data in AsyncStorage

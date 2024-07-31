@@ -114,6 +114,10 @@ Ensure that users can sign up, log in, and have profiles where their location (c
 2. Location-Based Filtering
 Store the user’s location in their profile and use this information to filter which posts they see. This ensures that users only see posts from their own city or neighborhood.
 
+Install dependencies:
+npx expo install expo-location
+
+
 3. Backend Database Structure
 Utilize a database like Firebase Firestore to store posts. Structure it such that each post has attributes like:
 

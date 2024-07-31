@@ -13,6 +13,7 @@ import PostScreen from './screens/PostScreen';
 import NameInputScreen from './screens/NameInputScreen';
 import { auth } from './screens/firebase';
 import { PostsProvider } from './screens/PostsContext';
+import { UserProvider } from './screens/UserContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -37,7 +38,7 @@ function HomeStack(){
   )
 }
 
-function BottonTabs() {
+function BottomTabs() {
   return (
     <Tab.Navigator>
       <Tab.Screen 
@@ -84,20 +85,22 @@ export default function App() {
   }
 
   return (
-    <PostsProvider value={{ posts, setPosts }}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          {!user ? (
-            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          ) : (
-            <>
-              <Stack.Screen name="BottonTabs" component={BottonTabs} options={{ headerShown: false }} />
-              <Stack.Screen name="NameInputScreen" component={NameInputScreen} options={{ headerShown: false }} />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </PostsProvider>
+    <UserProvider> 
+      <PostsProvider>
+        <NavigationContainer>
+          <Stack.Navigator>
+            {!user ? (
+              <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            ) : (
+              <>
+                <Stack.Screen name="BottomTabs" component={BottomTabs} options={{ headerShown: false }} />
+                <Stack.Screen name="NameInputScreen" component={NameInputScreen} options={{ headerShown: false }} />
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PostsProvider>
+    </UserProvider>
   );
 }
 

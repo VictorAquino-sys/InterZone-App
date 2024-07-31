@@ -1,20 +1,22 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { View, Text, StyleSheet, Button, Image, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
+import { UserContext } from './UserContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicons is installed
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
     const auth = getAuth();
-    const user = auth.currentUser;
+    const authUser = auth.currentUser;
     const defaultImage = 'https://via.placeholder.com/150';
     // States for user details
-    const [name, setName] = useState('');
+    const [newName, setName] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [profilePic, setProfilePic] = useState(defaultImage);
+    const { user, setUser } = useContext(UserContext);
 
     useEffect(() => {
         navigation.setOptions({
@@ -27,19 +29,25 @@ const ProfileScreen = () => {
     useFocusEffect(
         useCallback(() => {
             const fetchProfile = async () => {
-                try {
-                    const userId = user ? user.uid : 'default';
-                    const storedName = await AsyncStorage.getItem('userName' + userId);
-                    const storedPic = await AsyncStorage.getItem('profilePic' + userId);
-                    console.log("Fetched name and pic:", storedName, storedPic);
-                    setName(storedName || 'Default Name');
-                    setProfilePic(storedPic || defaultImage);
+                try {// Ensure you have a valid user before proceeding
+                    if (authUser) {
+                        const userId = authUser.uid;
+                        const storedName = await AsyncStorage.getItem('userName' + userId);
+                        const storedPic = await AsyncStorage.getItem('profilePic' + userId);
+                        console.log("Fetched name and pic for user ID:", userId, storedName, storedPic);
+                        setName(storedName || 'Default Name');
+                        setProfilePic(storedPic || defaultImage);
+                    } else {
+                        console.log("No user logged in, using default profile settings.");
+                        setName('Default Name');
+                        setProfilePic(defaultImage);
+                    }
                 } catch (error) {
                     console.error("Failed to fetch profile data:", error);
                 }
             };
             fetchProfile();
-        }, [user])
+        }, [authUser])
     );
 
     const requestMediaLibraryPermissions = async () => {
@@ -65,12 +73,19 @@ const ProfileScreen = () => {
 
     const handleUpdateProfile = async () => {
         try {
-            await updateProfile(auth.currentUser, { displayName: name, photoURL: profilePic });
+            await updateProfile(auth.currentUser, { displayName: newName, photoURL: profilePic });
             alert('Profile Updated Successfully');
+
+            // Update user context
+            setUser({ ...user, name: newName, avatar: profilePic });
+            
+            // Update AsyncStorage
+            AsyncStorage.setItem('userName' + authUser.uid, newName);
+            AsyncStorage.setItem('profilePic' + authUser.uid, profilePic);
+
             // Set editing to false here to switch back to non-edit mode
             setIsEditing(false);
-            AsyncStorage.setItem('userName' + user.uid, name);
-            AsyncStorage.setItem('profilePic' + user.uid, profilePic);
+
         } catch (error) {
             alert('Error updating profile: ' + error.message);
         }
@@ -98,7 +113,8 @@ const ProfileScreen = () => {
              // Access the first item in the assets array
             const uri = result.assets[0].uri;
             setProfilePic(uri);
-            AsyncStorage.setItem('profilePic' + user.uid, uri); // Save the new profile picture
+            setUser({ ...user, avatar: uri });
+            AsyncStorage.setItem('profilePic' + authUser.uid, uri); // Save the new profile picture
         } else {
             console.log('Image picker was canceled or no image was selected');
         }
@@ -113,7 +129,7 @@ const ProfileScreen = () => {
             <View style={styles.nameContainer}>
                 {isEditing ? (
                     <TextInput
-                        value={name}
+                        value={newName}
                         onChangeText={setName}
                         style={styles.input}
                         autoFocus={true}
@@ -121,7 +137,7 @@ const ProfileScreen = () => {
                     />
                 ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={styles.name}>{name}</Text>
+                        <Text style={styles.newName}>{newName}</Text>
                         <TouchableOpacity onPress={toggleEdit}>
                             <Ionicons name="pencil" size={24} color="gray" />
                         </TouchableOpacity>
@@ -161,7 +177,7 @@ const styles = StyleSheet.create({
     nameContainer: {
         marginBottom: 20,
     },
-    name: {
+    newName: {
         fontSize: 24,
         fontWeight: 'bold',
         marginRight: 10,
