@@ -108,17 +108,17 @@ To upload pictures in the profile screen need dependecy:
 npm i expo-image-picker
 
 Features working on 7/27/24
-1. User Authentication and Profile Management
+1. User Authentication and Profile Management (Done)
 Ensure that users can sign up, log in, and have profiles where their location (city or neighborhood) is stored. You might already be using Firebase Authentication for this.
 
-2. Location-Based Filtering
+2. Location-Based Filtering (Done)
 Store the user’s location in their profile and use this information to filter which posts they see. This ensures that users only see posts from their own city or neighborhood.
 
 Install dependencies:
 npx expo install expo-location
 
 
-3. Backend Database Structure
+3. Backend Database Structure (Done)
 Utilize a database like Firebase Firestore to store posts. Structure it such that each post has attributes like:
 
 User ID (link to the user’s profile)
@@ -126,17 +126,26 @@ Content of the post
 Timestamp
 Location (city or neighborhood)
 Reactions (likes, comments, etc.)
-4. Frontend Display
+4. Frontend Display (Done)
 On the Home Screen, fetch posts from the database that match the user’s location. Display these posts along with the user’s name, profile picture, and the post’s timestamp.
 
-5. Posting Interface
+5. Posting Interface (Done)
 Allow users to create new posts through a form. This form should automatically tag the post with the user’s ID, current timestamp, and location.
 
-6. Interaction Features
+6. Interaction Features (Pending)
 Implement features to like or comment on posts. Each post in the database should have fields for storing reactions, which are updated when users interact with a post.
 
-7. Real-Time Updates
+7. Real-Time Updates (Done)
 Consider using Firebase’s real-time capabilities to update the Home Screen as new posts are made or as existing posts are interacted with.
 
 8. Privacy and Security
 Ensure that users’ location data and personal information are securely stored and that posts are only visible to the appropriate audience.
+
+
+7/31/24
+REAL-TIME UPDATES IN THE APP SO USER CAN SEE POSTS FROM OTHERS IN THE SAME CITY ON THE HOME SCREEN.
+
+Dependencies:
+Step 1: Install the Firebase JS SDK
+npx expo install firebase
+npm install firebase@10.12.5 --save

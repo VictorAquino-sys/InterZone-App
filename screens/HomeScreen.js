@@ -6,7 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from './PostsContext';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID library to generate unique keys
 import * as Location from 'expo-location';
+import { db } from './firebase';
 import { useUser } from './UserContext';
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -45,27 +47,35 @@ const HomeScreen = () => {
       setCity(reverseGeocode[0].city || "Unknown"); // Set the city from reverse geocode
     } else {
       setCity('Location not found');
+      console.log("City set to:", foundCity);
     }
   };
   
-  useEffect(() => {
-    if (route.params?.post && city !== 'Fetching location...' && city !== 'Unknown') {
-      const newPost = { 
-        ...route.params.post, 
-        id: uuidv4(), // Generate unique id for new post
-        city: city // Include city in the new post
-      }; 
-      setPosts((prevPosts) => [newPost, ...prevPosts]);
-    }
-  }, [route.params?.post, city]);
+  const fetchPostsByCity = async (cityName) => {
+    const postsRef = collection(db, "posts");
+    const q = query(postsRef, where("location", "==", cityName));
+    const querySnapshot = await getDocs(q);
+    const posts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), timestamp: doc.data().timestamp }));
+    console.log("Fetched posts:", posts);
+    setPosts(posts);
+  };
 
   useFocusEffect(
     React.useCallback(() => {
       // Reset image opacity when the screen is focused
       setImageOpacity(1);
       fetchLocation(); // Refetch location when the screen is focused
-    }, [])
+      if (city) {
+        fetchPostsByCity(city);
+      }
+    }, [city])
   );
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'Unknown date';  // Handle undefined or null timestamps
+    const date = new Date(timestamp.seconds * 1000);
+    return date.toLocaleString();  // Format date as a string
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.postItem}>
@@ -74,9 +84,7 @@ const HomeScreen = () => {
         <Text style={styles.userName}>{item.user?.name || 'Anonymous'}</Text>
         <Text style={styles.postText}>{item.text}</Text>
         <Text style={styles.postCity}>Posted from: {item.location || 'Unknown'}</Text>
-        <Text style={styles.postTimestamp}>
-          Posted on: {item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Unknown time'}
-        </Text>
+        <Text style={styles.postTimestamp}>Posted on: {formatDate(item.timestamp)}</Text>
       </View>
     </View>
   );

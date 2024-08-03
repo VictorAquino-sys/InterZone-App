@@ -5,7 +5,7 @@ export const UserContext = createContext({
     name: 'Default User',
     avatar: 'https://via.placeholder.com/150'
   },
-  setUser: () => {}
+  setUser: () => {}  // noop function for default setUser
 });
 
 export const UserProvider = ({ children }) => {

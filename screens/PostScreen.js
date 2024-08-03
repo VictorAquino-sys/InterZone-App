@@ -1,16 +1,32 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from './PostsContext';
 import { useUser } from './UserContext'; // Import useUser hook
 import { v4 as uuidv4 } from 'uuid';
+import { db } from './firebase';
+import { Timestamp } from "firebase/firestore";
+import { collection, addDoc } from "firebase/firestore";
 
 const PostScreen = ({ navigation }) => {
   const [postText, setPostText] = useState('');
   const [location, setLocation] = useState(null);
   const { setPosts } = useContext(PostsContext);
-  const { user } = useUser(); // Use the useUser hook
+  const { user, setUser } = useUser(); // Use the useUser hook
+
+  // Optionally refresh user data when screen is focused
+  // useEffect(() => {
+  //   const refreshUserData = async () => {
+  //       const storedName = await AsyncStorage.getItem('userName');
+  //       if (storedName && storedName !== user.name) {
+  //           setUser(prev => ({ ...prev, name: storedName }));
+  //       }
+  //   };
+
+  //   refreshUserData();
+  // }, [setUser]);
 
   const handleAddLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -48,24 +64,36 @@ const PostScreen = ({ navigation }) => {
       Alert.alert("Location Required", "Please click in the location icon to include your current city.");
       return;
     }
-    
-    // Prepare location text
-    let postLocation = location ? location : 'Unknown Location';  
-    const newPost = { 
-      id: uuidv4(), 
-      text: postText,
-      location: postLocation,
-      timestamp: new Date().toISOString(),
-      user: {
-        name: user.name,
-        avatar: user.avatar
-      }
-    };
 
-    setPosts((prevPosts) => [newPost, ...prevPosts]);
-    navigation.navigate('BottomTabs', { screen: 'Home'});
-    setPostText(''); // Clear the input field
-    setLocation(null);
+    try {
+      const docRef = await addDoc(collection(db, "posts"), {
+        text: postText,
+        location: location,
+        user: {
+          name: user.name,
+          avatar: user.avatar
+        },
+        timestamp: Timestamp.fromDate(new Date())
+      });
+
+      const newPost = {
+        id: docRef.id,
+        text: postText,
+        location: location,
+        timestamp: new Date().toISOString(),
+        user: {
+          name: user.name,
+          avatar: user.avatar
+        }
+      };
+      setPosts(prevPosts => [newPost, ...prevPosts]);
+      Alert.alert("Success", `Post created with ID: ${docRef.id}`);
+      navigation.navigate('Home');
+      setPostText(''); // Clear the input field
+      setLocation(null);
+    } catch (e) {
+      console.error("Error adding post: ", e);
+    }
   };
 
   return (
