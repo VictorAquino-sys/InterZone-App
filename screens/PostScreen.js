@@ -7,26 +7,30 @@ import { PostsContext } from './PostsContext';
 import { useUser } from './UserContext'; // Import useUser hook
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase';
+import { getAuth, signOut, updateProfile } from "firebase/auth";
 import { Timestamp } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
 
 const PostScreen = ({ navigation }) => {
+  const auth = getAuth();
+  const authUser = auth.currentUser;
+
   const [postText, setPostText] = useState('');
   const [location, setLocation] = useState(null);
   const { setPosts } = useContext(PostsContext);
   const { user, setUser } = useUser(); // Use the useUser hook
+  console.log("PostScreen");
 
-  // Optionally refresh user data when screen is focused
-  // useEffect(() => {
-  //   const refreshUserData = async () => {
-  //       const storedName = await AsyncStorage.getItem('userName');
-  //       if (storedName && storedName !== user.name) {
-  //           setUser(prev => ({ ...prev, name: storedName }));
-  //       }
-  //   };
-
-  //   refreshUserData();
-  // }, [setUser]);
+  useEffect(() => {
+    const authUser = auth.currentUser;
+    if (authUser) {
+      setUser({
+        uid: authUser.uid,
+        name: authUser.displayName || "Default Name",
+        avatar: authUser.photoURL || "https://via.placeholder.com/150"
+      });
+    }
+  }, [auth.currentUser]);
 
   const handleAddLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -54,7 +58,15 @@ const PostScreen = ({ navigation }) => {
   };
 
   const handleDone = async () => {
-    console.log("Current user in post:", user);
+    if (!authUser || !authUser.uid) {
+      Alert.alert("Authentication Error", "You must be logged in to post.");
+      return;
+    }
+
+    const userId = authUser.uid;
+    console.log("User ID:", userId);  // Debug log for User ID
+    const storedName = await AsyncStorage.getItem('userName' + userId);  // Fetch the latest user name
+    console.log("Saved name:", storedName);  // Debug log for saved name
     if (!postText.trim()) {
       Alert.alert("Empty Post", "Please enter some text before posting.");
       return;
@@ -66,33 +78,43 @@ const PostScreen = ({ navigation }) => {
     }
 
     try {
-      const docRef = await addDoc(collection(db, "posts"), {
-        text: postText,
-        location: location,
+      const postData = {
+        city: location,
+        content: postText,
+        timestamp: Timestamp.fromDate(new Date()),
         user: {
-          name: user.name,
-          avatar: user.avatar
-        },
-        timestamp: Timestamp.fromDate(new Date())
-      });
-
-      const newPost = {
-        id: docRef.id,
-        text: postText,
-        location: location,
-        timestamp: new Date().toISOString(),
-        user: {
-          name: user.name,
-          avatar: user.avatar
+          avatar: user.avatar,
+          name: storedName,
+          uid: userId,
         }
       };
-      setPosts(prevPosts => [newPost, ...prevPosts]);
-      Alert.alert("Success", `Post created with ID: ${docRef.id}`);
-      navigation.navigate('Home');
+
+      console.log("Attempting to add post with data:", postData);
+      const docRef = await addDoc(collection(db, "posts"), postData);
+      console.log("Post created with ID:", docRef.id);
+
+      // Add new post to local state
+      // const newPost = {
+      //   id: docRef.id,
+      //   city: location,
+      //   content: postText,
+      //   timestamp: new Date().toISOString(),
+      //   user: {
+      //     avatar: user.avatar,
+      //     name: storedName,
+      //     uid: userId,
+      //   }
+      // };
+
+      setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
+      // setPosts(prevPosts => [newPost, ...prevPosts]);
+      // navigation.navigate('Home');
+      navigation.goBack();
       setPostText(''); // Clear the input field
       setLocation(null);
     } catch (e) {
       console.error("Error adding post: ", e);
+      Alert.alert("Error adding post:", e.message || "Unknown error");
     }
   };
 

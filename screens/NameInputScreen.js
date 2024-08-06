@@ -1,19 +1,31 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserContext } from './UserContext'; // Ensure you import useUser correctly
 
 const NameInputScreen = ({ route, navigation }) => {
     const [name, setName] = useState('');
-    const { userId } = route.params;
-    // const { setUser } = useContext(UserContext); // Use the context
+    const { userId } = route.params || {}; // Safely destructure with default empty object
+    console.log("Verify userId: ", userId);
+
+    // Check if the name is already set
+    useEffect(() => {
+        const checkName = async () => {
+            const storedName = await AsyncStorage.getItem('userName' + userId);
+            if (storedName) {
+                console.log("Name already set, redirecting...");
+                navigation.navigate('BottomTabs'); // Adjust this as necessary
+            }
+        };
+
+        checkName();
+    }, [userId, navigation]);
 
     const saveName = async () => {
         try {
-            await AsyncStorage.setItem('userName' + userId, name); // Simplify this for demo purposes
+            await AsyncStorage.setItem('userName' +  userId, name); // Simplify this for demo purposes
             // setUser({ name: name }); // Assuming setUser is set up to handle this correctly
             console.log("Saved name:", name); // Debug: Check if the name is logged correctly
-            navigation.navigate('Home');  // Navigate to Home after saving
+            navigation.navigate('BottomTabs');  // Navigate to Home after saving
         } catch (error) {
             console.error('Failed to save name', error);
         }

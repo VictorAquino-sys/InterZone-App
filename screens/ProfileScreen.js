@@ -17,6 +17,7 @@ const ProfileScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [profilePic, setProfilePic] = useState(defaultImage);
     const { user, setUser } = useContext(UserContext);
+    console.log("Profile Screen");
 
     useEffect(() => {
         navigation.setOptions({

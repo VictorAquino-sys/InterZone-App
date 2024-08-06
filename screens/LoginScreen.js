@@ -11,6 +11,7 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('') 
   const [show, setShow] = useState(true)
   const navigation = useNavigation()
+  // const auth = getAuth();
 
   useEffect(() => {
     let alreadyNavigated = false;
@@ -28,63 +29,55 @@ const LoginScreen = () => {
       }
     );
 
-    const checkExistingUser = async() => {
-      try {
-        const userString = await AsyncStorage.getItem('user');
-        if (userString && !alreadyNavigated) {
-          alreadyNavigated = true;
-          // If user data exists, navigate to HomeScreen
-          navigation.navigate('HomeScreen');
-        }
-      } catch (error) {
-        console.log("Error checking existing user:", error);
-      }
-    };
-    
-    const unsubscribeAuthStateChange = auth.onAuthStateChanged(user => {
-      if (user && !alreadyNavigated) {
-        alreadyNavigated = true;
-      // Store user data in AsyncStorage
-        AsyncStorage.setItem('user', JSON.stringify(user));
-      //navigation.navigate('Root', { screen: 'HomeScreen' });
-      }
-    });
+    // const unsubscribeAuthStateChange = auth.onAuthStateChanged(user => {
+    //   if (user && !alreadyNavigated) {
+    //     alreadyNavigated = true;
+    //   // Store user data in AsyncStorage
+    //     AsyncStorage.setItem('user', JSON.stringify(user));
+    //   //navigation.navigate('HomeScreen' });
+    //   }
+    // });
 
-    checkExistingUser();
+    // checkExistingUser();
 
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
-      unsubscribeAuthStateChange();
+      // unsubscribeAuthStateChange();
     };
   }, []);
 
   const handleSignUp = async () => {
-    const auth = getAuth();
+    // const auth = getAuth();
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
       //Store user data in AsyncStorage
       await AsyncStorage.setItem('user', JSON.stringify(user));
-      navigation.navigate('HomeScreen');
+      console.log("handleSignUp");
+      navigation.navigate('NameInputScreen');
     } catch (error) {
       alert(error.message);
       }
   };
 
   const handleLogin = async () => {
-    const auth = getAuth();
+    // const auth = getAuth();
     try {
       await signInWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
 
       //Check if the user's name is stored
       const userName = await AsyncStorage.getItem('userName' + user.uid);
-      if (!userName) {
-        // Navigate to NameInputScreen if no name is found
-        navigation.navigate('NameInputScreen', { userId: user.uid });
-      } else {
+      console.log("Checking userName before:", userName);
+      if (userName) {
+        console.log("Checking userName:", userName);
         navigation.navigate('HomeScreen');
+      } else {
+        // Navigate to NameInputScreen if no name is found
+        console.log("No username found. Asking user to enter a name.");
+        console.log("Verifying user.id:", user.uid);
+        navigation.navigate('NameInputScreen', { userId: user.uid });
       }
 
       //Store user data in AsyncStorage

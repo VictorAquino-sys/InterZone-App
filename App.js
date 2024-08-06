@@ -68,10 +68,15 @@ function BottomTabs() {
 export default function App() {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState(null);
-  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
+      console.log("Auth state changed, user:", authUser);
+      if (authUser) {
+        console.log("Logged in user UID:", authUser.uid); // This should log the UID to confirm it's being received
+      } else {
+        console.log("No user is logged in.");
+      }
       setUser(authUser);
       if (initializing) {
         setInitializing(false);
@@ -85,19 +90,24 @@ export default function App() {
     return <ActivityIndicator size="large" color="#0000ff" />; // Ensure you import ActivityIndicator from 'react-native'
   }
 
+  const renderScreens = () => {
+    if (!user) {
+      return <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />;
+    }
+    return (
+      <>
+        <Stack.Screen name="NameInputScreen" component={NameInputScreen} options={{ headerShown: false }} />  
+        <Stack.Screen name="BottomTabs" component={BottomTabs} options={{ headerShown: false }} />
+      </>
+    );
+  };
+  
   return (
     <UserProvider> 
       <PostsProvider>
         <NavigationContainer>
           <Stack.Navigator>
-            {!user ? (
-              <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            ) : (
-              <>
-                <Stack.Screen name="BottomTabs" component={BottomTabs} options={{ headerShown: false }} />
-                <Stack.Screen name="NameInputScreen" component={NameInputScreen} options={{ headerShown: false }} />
-              </>
-            )}
+            {renderScreens()}
           </Stack.Navigator>
         </NavigationContainer>
       </PostsProvider>

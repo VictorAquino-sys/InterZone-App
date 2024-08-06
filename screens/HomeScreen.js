@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Button, FlatList } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Button, Alert, FlatList } from 'react-native';
 // import { auth } from '../screens/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from './PostsContext';
@@ -8,11 +8,11 @@ import { v4 as uuidv4 } from 'uuid'; // Import UUID library to generate unique k
 import * as Location from 'expo-location';
 import { db } from './firebase';
 import { useUser } from './UserContext';
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { addDoc, deleteDoc, collection, doc, getDocs, query, where } from "firebase/firestore";
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const route = useRoute();
+  // const route = useRoute();
   const { posts, setPosts } = useContext(PostsContext);
   const { user } = useUser();
 
@@ -23,9 +23,10 @@ const HomeScreen = () => {
   const [city, setCity] = useState(null); // To store the city name
   const [errorMsg, setErrorMsg] = useState(null);
 
-  useEffect(() => {
-    fetchLocation();
-  }, []);
+  console.log("HomeScreen");
+  // useEffect(() => {
+  //   fetchLocation();
+  // }, []);
 
   const fetchLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -45,15 +46,16 @@ const HomeScreen = () => {
     if (reverseGeocode && reverseGeocode.length > 0 && reverseGeocode[0].city) {
       // Assuming the first result is the most relevant
       setCity(reverseGeocode[0].city || "Unknown"); // Set the city from reverse geocode
+      console.log("Found city:", city); // Log to check what city was found
     } else {
       setCity('Location not found');
-      console.log("City set to:", foundCity);
     }
   };
   
   const fetchPostsByCity = async (cityName) => {
     const postsRef = collection(db, "posts");
-    const q = query(postsRef, where("location", "==", cityName));
+    console.log("Querying posts in city:", cityName);
+    const q = query(postsRef, where("city", "==", cityName));
     const querySnapshot = await getDocs(q);
     const posts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), timestamp: doc.data().timestamp }));
     console.log("Fetched posts:", posts);
@@ -64,9 +66,17 @@ const HomeScreen = () => {
     React.useCallback(() => {
       // Reset image opacity when the screen is focused
       setImageOpacity(1);
-      fetchLocation(); // Refetch location when the screen is focused
+      if (!user.city) {
+        fetchLocation(); // Refetch location when the screen is focused
+      } else {
+        console.log("User's name not set, awaiting completion of user setup.");
+      }
+
       if (city) {
+        console.log("Refetching posts since city is set:", city);
         fetchPostsByCity(city);
+      } else {
+        console.log("City is not yet set.");
       }
     }, [city])
   );
@@ -77,17 +87,65 @@ const HomeScreen = () => {
     return date.toLocaleString();  // Format date as a string
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.postItem}>
-      <Image source={{ uri: item.user?.avatar || 'default_avatar.png' }} style={styles.avatar} />
-      <View style={styles.postDetails}>
-        <Text style={styles.userName}>{item.user?.name || 'Anonymous'}</Text>
-        <Text style={styles.postText}>{item.text}</Text>
-        <Text style={styles.postCity}>Posted from: {item.location || 'Unknown'}</Text>
-        <Text style={styles.postTimestamp}>Posted on: {formatDate(item.timestamp)}</Text>
+  const handleDeletePost = (postId) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this post?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        {
+          text: "Ok",
+          onPress: () => deletePost(postId)
+        }
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const deletePost = async (postId) => {
+    console.log("Attempting to delete post:", postId);
+    await deleteDoc(doc(db, "posts", postId));
+    try {
+      console.log("User ID:", user.uid);
+
+      alert('Post deleted successfully.');
+      // Optionally remove the post from the local state to update UI instantly
+      setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+    } catch (error) {
+      alert('Error deleting post: ', error.message);
+      Alert.alert("Error", "Could not delete post");
+    }
+  };
+
+  const renderItem = ({ item }) =>  {
+    // Debugging user IDs
+    console.log("Current user UID:", user.uid);
+    console.log("Post creator UID:", item.user?.uid);
+
+    return (
+      <View style={styles.postItem}>
+        <Image source={{ uri: item.user?.avatar || 'default_avatar.png' }} style={styles.avatar} />
+        <View style={styles.postDetails}>
+          <Text style={styles.userName}>{item.user?.name || 'Anonymous'}</Text>
+          <Text style={styles.postText}>{item.content}</Text>
+          <Text style={styles.postCity}>Posted from: {item.city || 'Unknown'}</Text>
+          <Text style={styles.postTimestamp}>Posted on: {formatDate(item.timestamp)}</Text>
+          {user.uid == item.user?.uid && (
+            <TouchableOpacity 
+                onPress={() => handleDeletePost(item.id)}
+                style={styles.deleteButton}
+            >
+                <Text style={styles.deleteText}>Delete</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -175,5 +233,14 @@ const styles = StyleSheet.create({
   listContent: {
     // alignItems: 'center', 
     width: '100%'
+  },
+  deleteButton: {
+    paddingVertical: 5,  // Small vertical padding for easier tapping
+    paddingHorizontal: 10, // Horizontal padding to ensure the touch area is just enough
+    alignSelf: 'flex-start' // Align to the start of the flex container
+},
+  deleteText: {
+    color: 'red',
+    fontSize: 16, // Ensure the font size is appropriate
   },
 });
