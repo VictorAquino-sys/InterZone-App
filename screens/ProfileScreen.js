@@ -4,7 +4,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
-import { UserContext } from './UserContext';
+import { UserContext } from '../src/contexts/UserContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicons is installed
 
 const ProfileScreen = () => {

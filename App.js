@@ -7,14 +7,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import firestore from '@react-native-firebase/firestore';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-import LoginScreen from './screens/LoginScreen';
+import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
-import PostScreen from './screens/PostScreen';
+import PostScreen from './screens/posts/PostScreen';
 import NameInputScreen from './screens/NameInputScreen';
-import { auth } from './screens/firebase';
-import { PostsProvider } from './screens/PostsContext';
-import { UserProvider } from './screens/UserContext';
+import { auth } from './src/config/firebase';
+import { PostsProvider } from './src/contexts/PostsContext';
+import { UserProvider } from './src/contexts/UserContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

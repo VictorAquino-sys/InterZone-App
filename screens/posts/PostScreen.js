@@ -3,10 +3,10 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert } fr
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PostsContext } from './PostsContext';
-import { useUser } from './UserContext'; // Import useUser hook
+import { PostsContext } from '../../src/contexts/PostsContext';
+import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
 import { v4 as uuidv4 } from 'uuid';
-import { db } from './firebase';
+import { db } from '../../src/config/firebase';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import { Timestamp } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";

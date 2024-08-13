@@ -4,7 +4,7 @@ import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, TextInpu
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../assets/localbrands_1.png';
 import { useNavigation } from '@react-navigation/native';
-import { auth } from '../screens/firebase';
+import { auth } from '../../src/config/firebase';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('') 

@@ -3,11 +3,11 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { StyleSheet, View, Text, Image, TouchableOpacity, Button, Alert, FlatList } from 'react-native';
 // import { auth } from '../screens/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PostsContext } from './PostsContext';
+import { PostsContext } from '../src/contexts/PostsContext';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID library to generate unique keys
 import * as Location from 'expo-location';
-import { db } from './firebase';
-import { useUser } from './UserContext';
+import { db } from '../src/config/firebase';
+import { useUser } from '../src/contexts/UserContext';
 import { addDoc, deleteDoc, collection, doc, getDocs, query, where } from "firebase/firestore";
 
 const HomeScreen = () => {

@@ -153,3 +153,15 @@ npm install firebase@10.12.5 --save
 
 8/62024
 Implement language selection for English and Spanish
+
+Steps
+1. Dependencies:
+npm install react-intl react-native-localize
+
+2. Configure react-native-localize:
+// index.js
+import { setI18nConfig } from './src/i18n'; // Create this file
+// Set the initial locale
+setI18nConfig();
+
+3. 
