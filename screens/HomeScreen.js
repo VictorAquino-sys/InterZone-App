@@ -125,6 +125,10 @@ const HomeScreen = () => {
     // Debugging user IDs
     console.log("Current user UID:", user.uid);
     console.log("Post creator UID:", item.user?.uid);
+    if (!user) {
+      // Optionally, return a placeholder or nothing if the user is null
+      return null;
+    }
 
     return (
       <View style={styles.postItem}>
@@ -163,13 +167,17 @@ const HomeScreen = () => {
           />
         </TouchableOpacity>
       </View>
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
-      />
+        {user ? (
+          <FlatList
+            data={posts}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
+          />
+        ) : (
+          <Text>Please log in to view posts</Text>
+        )}
     </View>
   );
 };

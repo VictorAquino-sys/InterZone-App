@@ -97,7 +97,7 @@ const LoginScreen = () => {
         </View>
         <View style={styles.phraseContainer}>
           {show && (<Text style={{fontSize: 25, color: 'white', fontWeight: 'bold',
-textAlign: 'center'}}>Estas en todas!</Text>)}
+textAlign: 'center'}}>Asegurate!</Text>)}
         </View>
       <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
       >

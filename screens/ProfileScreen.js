@@ -12,12 +12,14 @@ const ProfileScreen = () => {
     const auth = getAuth();
     const authUser = auth.currentUser;
     const defaultImage = 'https://via.placeholder.com/150';
+
     // States for user details
     const [newName, setName] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [profilePic, setProfilePic] = useState(defaultImage);
     const { user, setUser } = useContext(UserContext);
-    console.log("Profile Screen");
+    
+    // console.log("Profile Screen");
 
     useEffect(() => {
         navigation.setOptions({
@@ -58,18 +60,22 @@ const ProfileScreen = () => {
         }
     };
 
-    const handleLogout = () => {
-        signOut(auth).then(() => {
-            // After signing out, clear any stored user data from AsyncStorage
-            AsyncStorage.removeItem('user').then(() => {
-            // sign-out successful. No need to navigate here. The App.js logic
-            // will automatically switch to the login screen.
-                navigation.navigate('Login');
-            }).catch((error) => {
+    const handleLogout = async () => {
+        try {
+            await signOut(auth); // Sign out the user
+            setUser(null); // Clear user state in context
+            await AsyncStorage.clear(); // Clear all AsyncStorage items
+            // Navigate to Login screen before signing out
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }], // Ensure this matches the name in your navigator
+            });
+            console.log('User has logged out.');
+        } catch (error) {
         // An error happened.
             console.error("Logout Error:", error);
-            });
-        });
+            Alert.alert("Error", "There was an error logging out. Please try again.");
+        }
     };
 
     const handleUpdateProfile = async () => {
