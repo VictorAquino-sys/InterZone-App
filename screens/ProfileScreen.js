@@ -6,6 +6,7 @@ import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../src/contexts/UserContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicons is installed
+import i18n from './../src/i18n'; 
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
@@ -129,7 +130,7 @@ const ProfileScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Profile</Text>
+            <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
             <TouchableOpacity onPress={pickImage}>
                 <Image source={{ uri: profilePic }} style={styles.profilePic} />
             </TouchableOpacity>
@@ -152,9 +153,9 @@ const ProfileScreen = () => {
                 )}
             </View>
             {isEditing && (
-                <Button title="Update Profile" onPress={handleUpdateProfile} />
+                <Button title={i18n.t('updateProfileButton')} onPress={handleUpdateProfile} />
             )}
-            <Button title="Logout" onPress={handleLogout} />
+            <Button title={i18n.t('logoutButton')} onPress={handleLogout} />
         </View>
     );
 };

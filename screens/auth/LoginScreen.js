@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { getAuth, createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
 import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import image from '../assets/localbrands_1.png';
+import image from '../../assets/localbrands_1.png';
 import { useNavigation } from '@react-navigation/native';
 import { auth } from '../../src/config/firebase';
+import i18n from '../../src/i18n'; 
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('') 
@@ -28,17 +29,6 @@ const LoginScreen = () => {
         setShow(true);
       }
     );
-
-    // const unsubscribeAuthStateChange = auth.onAuthStateChanged(user => {
-    //   if (user && !alreadyNavigated) {
-    //     alreadyNavigated = true;
-    //   // Store user data in AsyncStorage
-    //     AsyncStorage.setItem('user', JSON.stringify(user));
-    //   //navigation.navigate('HomeScreen' });
-    //   }
-    // });
-
-    // checkExistingUser();
 
     return () => {
       keyboardDidShowListener.remove();
@@ -93,11 +83,11 @@ const LoginScreen = () => {
     <ImageBackground source={image} resizeMode="cover" style={styles.rootContainer}
     >
         <View style={styles.titleContainer}>
-          {show && (<Text style={{fontSize: 60, color: 'yellow', borderColor: 'red',  textAlign: 'center', fontWeight: 'bold'}}>Interzone</Text>)}
+          {show && (<Text style={{fontSize: 60, color: 'yellow', borderColor: 'red',  textAlign: 'center', fontWeight: 'bold'}}>{i18n.t('appTitle')}</Text>)}
         </View>
         <View style={styles.phraseContainer}>
           {show && (<Text style={{fontSize: 25, color: 'white', fontWeight: 'bold',
-textAlign: 'center'}}>Asegurate!</Text>)}
+textAlign: 'center'}}>{i18n.t('tagline')}</Text>)}
         </View>
       <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
       >
@@ -123,13 +113,13 @@ textAlign: 'center'}}>Asegurate!</Text>)}
             onPress={handleLogin}
             style={styles.button} 
           >
-            <Text style={styles.buttonText}>Login</Text>
+            <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSignUp}
             style={[styles.button, styles.buttonOutline]} 
           >
-            <Text style={styles.buttonOutlineText}>Register</Text>
+            <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

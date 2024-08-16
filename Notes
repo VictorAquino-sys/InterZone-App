@@ -17,6 +17,38 @@ Ctlr + c
 Start Metro Bundler with Clear Cache
 npx expo start -c
 
+Verify android emulator is working correctly from Visual Studio Code
+Locate Your Android SDK
+ Appearance & Behavior > System Settings > Android SDK. Common paths might be:
+C:\Users\[Your-Username]\AppData\Local\Android\Sdk
+Update Environment Variables
+C:\Users\[Your-Username]\AppData\Local\Android\Sdk\platform-tools
+C:\Users\[Your-Username]\AppData\Local\Android\Sdk\tools
+C:\Users\[Your-Username]\AppData\Local\Android\Sdk\tools\bin
+Verify Configuration
+adb version
+This command should return the version of the Android Debug Bridge (ADB) if your path is set correctly.
+Also check if the emulator can be accessed:
+emulator -list-avds
+emulator -avd Pixel_XL_API_33
+
+Check the Expo SDK version compatibility: Your project uses Expo SDK 49, as indicated by "expo": "^49.0.0". You need to make sure all other Expo and React Native packages align with this SDK version.
+
+npx expo install --check
+
+Upgrade the Expo SDK
+# Install latest
+npm install expo@latest
+
+# Install a specific SDK version (for example, SDK 51)
+npm install expo@51
+
+upgrade dependencies
+npx expo install --fix
+
+Clearing Cache
+npm cache clean --force
+
 Things completed:
 (1/6/24)
 - Login screen
@@ -156,12 +188,11 @@ Implement language selection for English and Spanish
 
 Steps
 1. Dependencies:
-npm install react-intl react-native-localize
+npx expo install expo-localization
+npm expo install i18n-js
 
 2. Configure react-native-localize:
 // index.js
 import { setI18nConfig } from './src/i18n'; // Create this file
 // Set the initial locale
 setI18nConfig();
-
-3. 

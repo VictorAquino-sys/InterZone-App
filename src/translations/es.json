@@ -1,0 +1,41 @@
+{
+    "loginButton": "Iniciar sesión",
+    "welcomeMessage": "¡Bienvenido a la aplicación!",
+    "appTitle": "InterZone",
+    "tagline": "Asegurate",
+    "saveButton": "Guardar",
+    "registerButton": "Registrate",
+    
+    "nameInputPrompt": "Introduce tu nombre",
+    "saveName": "Guardar",
+
+    "profileTitle": "Perfil",
+    "updateProfileButton": "Actualizar Perfil",
+    "logoutButton": "Cerrar sesión",
+    
+    "postPlaceholder": "Habla Barrio! Que tienes en mente?",
+    "doneButton": "Enviar",
+    "emptyPostTitle": "Publicación vacía",
+    "emptyPostMessage": "Por favor, introduce algún texto antes de publicar.",
+    "locationRequiredTitle": "Ubicación necesaria",
+    "locationRequiredMessage": "Haz clic en el icono de ubicación para incluir tu ciudad actual.",
+    "locationAddedTitle": "Ubicación Añadida",
+    "locationAddedMessage": "Tu ubicación ha sido adjuntada a tu mensaje actual.",
+
+    "home": "Inicio",
+    "post": "Publicar",
+    "anonymous": "Anónimo",
+    "postedFrom": "Publicado desde",
+    "unknown": "Desconocido",
+    "postedOn": "Publicado el",
+    "confirmDeleteTitle": "Confirmar eliminación",
+    "confirmDeleteMessage": "¿Estás seguro de que quieres eliminar esta publicación?",
+    "cancel": "Cancelar",
+    "deletePost": "Eliminar",
+    "ok": "Aceptar",
+    "pleaseLogin": "Por favor, inicia sesión para ver las publicaciones",
+    "deleteSuccessTitle": "Publicación Eliminada",
+    "deleteSuccessMessage": "La publicación fue eliminada correctamente.",
+    "deleteErrorTitle": "Error al Eliminar",
+    "deleteErrorMessage": "Se produjo un error al eliminar la publicación: {error}"
+} 

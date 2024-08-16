@@ -10,6 +10,7 @@ import { db } from '../../src/config/firebase';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import { Timestamp } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
+import i18n from '../../src/i18n'; 
 
 const PostScreen = ({ navigation }) => {
   const auth = getAuth();
@@ -54,7 +55,7 @@ const PostScreen = ({ navigation }) => {
       setLocation(`${currentLocation.coords.latitude}, ${currentLocation.coords.longitude}`);
     }
 
-    Alert.alert('Location Added', `Your location has been attached to your current message.`);
+    Alert.alert(i18n.t('locationAddedTitle'), i18n.t('locationAddedMessage'));
   };
 
   const handleDone = async () => {
@@ -68,12 +69,12 @@ const PostScreen = ({ navigation }) => {
     const storedName = await AsyncStorage.getItem('userName' + userId);  // Fetch the latest user name
     console.log("Saved name:", storedName);  // Debug log for saved name
     if (!postText.trim()) {
-      Alert.alert("Empty Post", "Please enter some text before posting.");
+      Alert.alert(i18n.t('emptyPostTitle'), i18n.t('emptyPostMessage'));
       return;
     }
 
     if (!location) {
-      Alert.alert("Location Required", "Please click in the location icon to include your current city.");
+      Alert.alert(i18n.t('locationRequiredTitle'), i18n.t('locationRequiredMessage'));
       return;
     }
 
@@ -93,19 +94,6 @@ const PostScreen = ({ navigation }) => {
       const docRef = await addDoc(collection(db, "posts"), postData);
       console.log("Post created with ID:", docRef.id);
 
-      // Add new post to local state
-      // const newPost = {
-      //   id: docRef.id,
-      //   city: location,
-      //   content: postText,
-      //   timestamp: new Date().toISOString(),
-      //   user: {
-      //     avatar: user.avatar,
-      //     name: storedName,
-      //     uid: userId,
-      //   }
-      // };
-
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
       // setPosts(prevPosts => [newPost, ...prevPosts]);
       // navigation.navigate('Home');
@@ -122,7 +110,7 @@ const PostScreen = ({ navigation }) => {
     <View style={styles.container}>
       <TextInput
         multiline
-        placeholder="What's on your mind, neighbor?"
+        placeholder={i18n.t('postPlaceholder')}
         style={{ height: 200, padding: 10, backgroundColor: 'white' }}
         value={postText}
         onChangeText={setPostText}
@@ -136,7 +124,7 @@ const PostScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       <Button
-        title="Done"
+        title={i18n.t('doneButton')}
         onPress={handleDone}
       />
     </View>

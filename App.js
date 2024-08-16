@@ -1,8 +1,9 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, Button, Text, View } from 'react-native';
-import { NavigationContainer, useNavigation} from '@react-navigation/native';
+import { StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { getLocales } from 'expo-localization';
+import i18n from './src/i18n';
+import { NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // import firestore from '@react-native-firebase/firestore';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -46,6 +47,7 @@ function BottomTabs() {
         name="Home" 
         component={HomeStack} 
         options={{ 
+          title: i18n.t('home'), // Localized title for the tab
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" color={color} size={size} />
@@ -55,6 +57,7 @@ function BottomTabs() {
         name="Post" 
         component={PostScreen} 
         options={{ 
+          title: i18n.t('post'), // Localized title for the tab
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle-outline" color={color} size={size} />
@@ -70,6 +73,7 @@ export default function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    i18n.locale = getLocales()[0].languageCode; // Setup the locale at app start
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       console.log("Auth state changed, user:", authUser);
       if (authUser) {

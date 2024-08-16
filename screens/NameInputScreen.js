@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from './../src/i18n'; 
 
 const NameInputScreen = ({ route, navigation }) => {
     const [name, setName] = useState('');
@@ -34,12 +35,12 @@ const NameInputScreen = ({ route, navigation }) => {
     return (
         <View style={styles.container}>
             <TextInput
-                placeholder="Enter your name"
+                placeholder={i18n.t('nameInputPrompt')}
                 value={name}
                 onChangeText={setName}
                 style={styles.input}
             />
-            <Button title="Save Name" onPress={saveName} />
+            <Button title={i18n.t('saveName')} onPress={saveName} />
         </View>
     );
 };

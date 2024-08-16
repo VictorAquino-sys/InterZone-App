@@ -9,6 +9,7 @@ import * as Location from 'expo-location';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import { addDoc, deleteDoc, collection, doc, getDocs, query, where } from "firebase/firestore";
+import i18n from '../src/i18n'; 
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -89,16 +90,16 @@ const HomeScreen = () => {
 
   const handleDeletePost = (postId) => {
     Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this post?",
+      i18n.t('confirmDeleteTitle'), // "Confirm Delete"
+      i18n.t('confirmDeleteMessage'), // "Are you sure you want to delete this post?"
       [
         {
-          text: "Cancel",
+          text: i18n.t('cancel'),
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
         {
-          text: "Ok",
+          text: i18n.t('ok'),
           onPress: () => deletePost(postId)
         }
       ],
@@ -112,12 +113,13 @@ const HomeScreen = () => {
     try {
       console.log("User ID:", user.uid);
 
-      alert('Post deleted successfully.');
+        // Success message
+      Alert.alert(i18n.t('deleteSuccessTitle'), i18n.t('deleteSuccessMessage'));
       // Optionally remove the post from the local state to update UI instantly
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
     } catch (error) {
       alert('Error deleting post: ', error.message);
-      Alert.alert("Error", "Could not delete post");
+      Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage', { error: error.message }));
     }
   };
 
@@ -134,16 +136,16 @@ const HomeScreen = () => {
       <View style={styles.postItem}>
         <Image source={{ uri: item.user?.avatar || 'default_avatar.png' }} style={styles.avatar} />
         <View style={styles.postDetails}>
-          <Text style={styles.userName}>{item.user?.name || 'Anonymous'}</Text>
+          <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
           <Text style={styles.postText}>{item.content}</Text>
-          <Text style={styles.postCity}>Posted from: {item.city || 'Unknown'}</Text>
-          <Text style={styles.postTimestamp}>Posted on: {formatDate(item.timestamp)}</Text>
+          <Text style={styles.postCity}>{i18n.t('postedFrom')}: {item.city || i18n.t('unknown')}</Text>
+          <Text style={styles.postTimestamp}>{i18n.t('postedOn')}: {formatDate(item.timestamp)}</Text>
           {user.uid == item.user?.uid && (
             <TouchableOpacity 
                 onPress={() => handleDeletePost(item.id)}
                 style={styles.deleteButton}
             >
-                <Text style={styles.deleteText}>Delete</Text>
+                <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -176,8 +178,8 @@ const HomeScreen = () => {
             style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
           />
         ) : (
-          <Text>Please log in to view posts</Text>
-        )}
+          <Text>{i18n.t('pleaseLogin')}</Text>
+          )}
     </View>
   );
 };

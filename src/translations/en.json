@@ -1,0 +1,41 @@
+{
+    "loginButton": "Login",
+    "welcomeMessage": "Welcome to the app!",
+    "appTitle": "InterZone",
+    "tagline": "Chat with Your Hommies!",
+    "saveButton": "Save",
+    "registerButton": "Register",
+
+    "nameInputPrompt": "Enter your name",
+    "saveName": "Save Name",
+
+    "profileTitle": "Profile",
+    "updateProfileButton": "Update Profile",
+    "logoutButton": "Logout",
+
+    "postPlaceHolder": "What's on your mind, neighbor?",
+    "doneButton": "Done",
+    "emptyPostTitle": "Empty Post",
+    "emptyPostMessage": "Please enter some text before posting.",
+    "locationRequiredTitle": "Location Required",
+    "locationRequiredMessage": "Please click in the location icon to include your current city.",
+    "locationAddedTitle": "Location Added",
+    "locationAddedMessage": "You location has been attached to your current message.",
+
+    "home": "Home",
+    "post": "Post",
+    "anonymous": "Anonymous",
+    "postedFrom": "Posted from",
+    "unknown": "Unknown",
+    "postedOn": "Posted on",
+    "confirmDeleteTitle": "Confirm Delete",
+    "confirmDeleteMessage": "Are you sure you want to delete this post?",
+    "cancel": "Cancel",
+    "deletePost": "Delete",
+    "ok": "OK",
+    "pleaseLogin": "Please log in to view posts",
+    "deleteSuccessTitle": "Post Deleted",
+    "deleteSuccessMessage": "The post was successfully deleted.",
+    "deleteErrorTitle": "Error Deleting Post",
+    "deleteErrorMessage": "There was an error deleting the post: {error}"
+}  
