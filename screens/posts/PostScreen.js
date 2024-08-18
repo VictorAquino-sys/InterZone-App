@@ -30,8 +30,13 @@ const PostScreen = ({ navigation }) => {
         name: authUser.displayName || "Default Name",
         avatar: authUser.photoURL || "https://via.placeholder.com/150"
       });
+      console.log("Authenticated User:", authUser.uid);  // Log user ID upon authentication
     }
   }, [auth.currentUser]);
+
+  const handleaAddimage = async () => {
+    Alert.alert(i18n.t('imageAddedMessage'));
+  };
 
   const handleAddLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -41,6 +46,7 @@ const PostScreen = ({ navigation }) => {
     }
 
     let currentLocation = await Location.getCurrentPositionAsync({});
+    console.log("Location fetched:", currentLocation);  // Log fetched location
     const coords = currentLocation.coords; // Properly define coords
     setLocation(coords); // Save coordinates directly
 
@@ -66,6 +72,7 @@ const PostScreen = ({ navigation }) => {
 
     const userId = authUser.uid;
     console.log("User ID:", userId);  // Debug log for User ID
+    console.log("Attempting to add post for user:", user.uid);
     const storedName = await AsyncStorage.getItem('userName' + userId);  // Fetch the latest user name
     console.log("Saved name:", storedName);  // Debug log for saved name
     if (!postText.trim()) {
@@ -83,6 +90,7 @@ const PostScreen = ({ navigation }) => {
         city: location,
         content: postText,
         timestamp: Timestamp.fromDate(new Date()),
+        userId: userId, // Ensure the userId is set here
         user: {
           avatar: user.avatar,
           name: storedName,
@@ -116,7 +124,7 @@ const PostScreen = ({ navigation }) => {
         onChangeText={setPostText}
       />
       <View style={styles.iconsContainer}>
-        <TouchableOpacity onPress={() => {}}>
+        <TouchableOpacity onPress={handleaAddimage}>
             <Ionicons name="image-outline" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleAddLocation}>

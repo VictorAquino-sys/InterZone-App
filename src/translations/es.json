@@ -12,7 +12,7 @@
     "profileTitle": "Perfil",
     "updateProfileButton": "Actualizar Perfil",
     "logoutButton": "Cerrar sesión",
-    
+
     "postPlaceholder": "Habla Barrio! Que tienes en mente?",
     "doneButton": "Enviar",
     "emptyPostTitle": "Publicación vacía",
@@ -21,6 +21,7 @@
     "locationRequiredMessage": "Haz clic en el icono de ubicación para incluir tu ciudad actual.",
     "locationAddedTitle": "Ubicación Añadida",
     "locationAddedMessage": "Tu ubicación ha sido adjuntada a tu mensaje actual.",
+    "imageAddedMessage": "Cargar images estara disponible pronto. Y_(^.^)_/",
 
     "home": "Inicio",
     "post": "Publicar",

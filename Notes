@@ -190,9 +190,3 @@ Steps
 1. Dependencies:
 npx expo install expo-localization
 npm expo install i18n-js
-
-2. Configure react-native-localize:
-// index.js
-import { setI18nConfig } from './src/i18n'; // Create this file
-// Set the initial locale
-setI18nConfig();

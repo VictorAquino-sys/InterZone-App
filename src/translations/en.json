@@ -13,7 +13,7 @@
     "updateProfileButton": "Update Profile",
     "logoutButton": "Logout",
 
-    "postPlaceHolder": "What's on your mind, neighbor?",
+    "postPlaceholder": "What's on your mind, neighbor?",
     "doneButton": "Done",
     "emptyPostTitle": "Empty Post",
     "emptyPostMessage": "Please enter some text before posting.",
@@ -21,6 +21,7 @@
     "locationRequiredMessage": "Please click in the location icon to include your current city.",
     "locationAddedTitle": "Location Added",
     "locationAddedMessage": "You location has been attached to your current message.",
+    "imageAddedMessage": "Image Uploads will be available soon! Y_(^.^)_/",
 
     "home": "Home",
     "post": "Post",
