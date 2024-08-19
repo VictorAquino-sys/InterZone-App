@@ -17,6 +17,7 @@ const PostScreen = ({ navigation }) => {
   const authUser = auth.currentUser;
 
   const [postText, setPostText] = useState('');
+  const [charCount, setCharCount] = useState(0); 
   const [location, setLocation] = useState(null);
   const { setPosts } = useContext(PostsContext);
   const { user, setUser } = useUser(); // Use the useUser hook
@@ -28,7 +29,7 @@ const PostScreen = ({ navigation }) => {
       setUser({
         uid: authUser.uid,
         name: authUser.displayName || "Default Name",
-        avatar: authUser.photoURL || "https://via.placeholder.com/150"
+        avatar: authUser.photoURL || ""
       });
       console.log("Authenticated User:", authUser.uid);  // Log user ID upon authentication
     }
@@ -103,8 +104,7 @@ const PostScreen = ({ navigation }) => {
       console.log("Post created with ID:", docRef.id);
 
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
-      // setPosts(prevPosts => [newPost, ...prevPosts]);
-      // navigation.navigate('Home');
+
       navigation.goBack();
       setPostText(''); // Clear the input field
       setLocation(null);
@@ -119,10 +119,17 @@ const PostScreen = ({ navigation }) => {
       <TextInput
         multiline
         placeholder={i18n.t('postPlaceholder')}
+        maxLength={200}
         style={{ height: 200, padding: 10, backgroundColor: 'white' }}
         value={postText}
-        onChangeText={setPostText}
+        onChangeText={(text) => {
+          setPostText(text);
+          setCharCount(text.length); // Update character count as user types
+        }}
       />
+      <Text style={styles.charCount}>
+        {charCount} / 200
+      </Text>
       <View style={styles.iconsContainer}>
         <TouchableOpacity onPress={handleaAddimage}>
             <Ionicons name="image-outline" size={24} color="black" />
@@ -151,6 +158,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  charCount: {
+    textAlign: 'right',
+    marginRight: 10, // Adjust as needed
+    color: '#666'
   },
   postButton: {
     backgroundColor: '#b2ff59',

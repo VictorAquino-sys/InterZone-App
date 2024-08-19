@@ -2,7 +2,7 @@
     "loginButton": "Iniciar sesión",
     "welcomeMessage": "¡Bienvenido a la aplicación!",
     "appTitle": "InterZone",
-    "tagline": "Asegurate",
+    "tagline": "Asegurate!",
     "saveButton": "Guardar",
     "registerButton": "Registrate",
     
@@ -26,9 +26,7 @@
     "home": "Inicio",
     "post": "Publicar",
     "anonymous": "Anónimo",
-    "postedFrom": "Publicado desde",
     "unknown": "Desconocido",
-    "postedOn": "Publicado el",
     "confirmDeleteTitle": "Confirmar eliminación",
     "confirmDeleteMessage": "¿Estás seguro de que quieres eliminar esta publicación?",
     "cancel": "Cancelar",

@@ -183,10 +183,16 @@ Step 1: Install the Firebase JS SDK
 npx expo install firebase
 npm install firebase@10.12.5 --save
 
-8/62024
+8/6/2024
 Implement language selection for English and Spanish
 
 Steps
 1. Dependencies:
 npx expo install expo-localization
 npm expo install i18n-js
+
+8.18.24
+- Adjusting the Firestore Query to fetch posts in descending order based on 'timestamp', 'desc'.
+
+8.19.24
+- Ensure that updates to a user's profile picture are reflected across all their posts in real-time.

@@ -8,12 +8,12 @@ import { v4 as uuidv4 } from 'uuid'; // Import UUID library to generate unique k
 import * as Location from 'expo-location';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
-import { addDoc, deleteDoc, collection, doc, getDocs, query, where } from "firebase/firestore";
+import Avatar from '../src/components/Avatar';
+import { addDoc, deleteDoc, collection, doc, getDocs, query, where, orderBy } from "firebase/firestore";
 import i18n from '../src/i18n'; 
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  // const route = useRoute();
   const { posts, setPosts } = useContext(PostsContext);
   const { user } = useUser();
 
@@ -25,9 +25,6 @@ const HomeScreen = () => {
   const [errorMsg, setErrorMsg] = useState(null);
 
   console.log("HomeScreen");
-  // useEffect(() => {
-  //   fetchLocation();
-  // }, []);
 
   const fetchLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -56,9 +53,15 @@ const HomeScreen = () => {
   const fetchPostsByCity = async (cityName) => {
     const postsRef = collection(db, "posts");
     console.log("Querying posts in city:", cityName);
-    const q = query(postsRef, where("city", "==", cityName));
+    const q = query(postsRef, where("city", "==", cityName), orderBy("timestamp", "desc"));
     const querySnapshot = await getDocs(q);
-    const posts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), timestamp: doc.data().timestamp }));
+    const posts = querySnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data(), 
+      timestamp: doc.data().timestamp 
+    }));
+    // Sort posts by timestamp in decending order
+    // posts.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
     console.log("Fetched posts:", posts);
     setPosts(posts);
   };
@@ -134,21 +137,20 @@ const HomeScreen = () => {
 
     return (
       <View style={styles.postItem}>
-        <Image source={{ uri: item.user?.avatar || 'default_avatar.png' }} style={styles.avatar} />
-        <View style={styles.postDetails}>
-          <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
-          <Text style={styles.postText}>{item.content}</Text>
-          <Text style={styles.postCity}>{i18n.t('postedFrom')}: {item.city || i18n.t('unknown')}</Text>
-          <Text style={styles.postTimestamp}>{i18n.t('postedOn')}: {formatDate(item.timestamp)}</Text>
+        <View style={styles.userContainer}>
+          <Avatar key={user.avatar} name={item.user?.name} imageUri={item.user?.avatar}/>
+          <View style={styles.postDetails}>
+            <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+            <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
+            <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+          </View>
+        </View>
+            <Text style={styles.postText}>{item.content}</Text>
           {user.uid == item.user?.uid && (
-            <TouchableOpacity 
-                onPress={() => handleDeletePost(item.id)}
-                style={styles.deleteButton}
-            >
-                <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
+            <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
+              <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
             </TouchableOpacity>
           )}
-        </View>
       </View>
     );
   };
@@ -193,12 +195,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start', // Align children to the start vertically
     width: '100%', // Ensure container takes full width
   },
+  userContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   header: {
     flexDirection: 'row', // Ensure the header is a row for alignment
     alignItems: 'center',
     width: '100%', // Full width
-    paddingHorizontal: 14, // Padding on the sides
-    paddingTop: 28, // Padding on top
+    paddingHorizontal: 2, // Padding on the sides
+    paddingBottom: 8,
+    paddingTop: 24, // Padding on top
   },
   profilePicContainer: {
     height: 60,
@@ -211,46 +219,46 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   postItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    padding: 8,
+    borderTopWidth: 0.6,
+    borderTopColor: 'pearl river',
+    // borderBottomWidth: 0.6,
+    // borderBottomColor: 'pearl river',
     width: '100%', // Ensure post items take full width
   },
-  postDetails: {
-    flex: 1,
-    marginLeft: 10,
-  },
   postText: {
-    fontSize: 16,
+    fontSize: 14,
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
   },
+  postDetails: {
+    marginLeft: 10,
+    flexDirection: 'column',
+  },
   userName: {
     fontWeight: 'bold',
   },
   postCity: {
-    fontSize: 14,
-    color: 'gray'
-  },
-  postTimestamp: {
     fontSize: 12,
     color: 'gray',
-    marginTop: 4
+  },
+  postTimestamp: {
+    fontSize: 11,
+    color: 'gray',
   },
   listContent: {
-    // alignItems: 'center', 
     width: '100%'
   },
   deleteButton: {
     paddingVertical: 5,  // Small vertical padding for easier tapping
-    paddingHorizontal: 10, // Horizontal padding to ensure the touch area is just enough
-    alignSelf: 'flex-start' // Align to the start of the flex container
+    paddingHorizontal: 30, // Horizontal padding to ensure the touch area is just enough
+    alignItems: 'flex-end' // Align to the start of the flex container
 },
   deleteText: {
     color: 'red',
-    fontSize: 16, // Ensure the font size is appropriate
+    fontSize: 12, // Ensure the font size is appropriate
   },
 });

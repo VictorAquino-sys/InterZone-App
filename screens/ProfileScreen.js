@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../src/contexts/UserContext';
+import Avatar from '../src/components/Avatar';
 import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicons is installed
 import i18n from './../src/i18n'; 
 
@@ -12,12 +13,13 @@ const ProfileScreen = () => {
     const navigation = useNavigation();
     const auth = getAuth();
     const authUser = auth.currentUser;
-    const defaultImage = 'https://via.placeholder.com/150';
+    // const defaultImage = 'https://via.placeholder.com/150';
 
     // States for user details
     const [newName, setName] = useState('');
     const [isEditing, setIsEditing] = useState(false);
-    const [profilePic, setProfilePic] = useState(defaultImage);
+    // const [profilePic, setProfilePic] = useState(defaultImage);
+    const [profilePic, setProfilePic] = useState(null);
     const { user, setUser } = useContext(UserContext);
     
     // console.log("Profile Screen");
@@ -40,11 +42,11 @@ const ProfileScreen = () => {
                         const storedPic = await AsyncStorage.getItem('profilePic' + userId);
                         console.log("Fetched name and pic for user ID:", userId, storedName, storedPic);
                         setName(storedName || 'Default Name');
-                        setProfilePic(storedPic || defaultImage);
+                        setProfilePic(storedPic);
                     } else {
                         console.log("No user logged in, using default profile settings.");
                         setName('Default Name');
-                        setProfilePic(defaultImage);
+                        // setProfilePic(defaultImage);
                     }
                 } catch (error) {
                     console.error("Failed to fetch profile data:", error);
@@ -119,10 +121,12 @@ const ProfileScreen = () => {
 
         if (!result.canceled) {
              // Access the first item in the assets array
+            console.log("New image URI:", uri);  // Check what URI is being set
             const uri = result.assets[0].uri;
             setProfilePic(uri);
             setUser({ ...user, avatar: uri });
             AsyncStorage.setItem('profilePic' + authUser.uid, uri); // Save the new profile picture
+            console.log("Saving new profile picture.");
         } else {
             console.log('Image picker was canceled or no image was selected');
         }
@@ -132,7 +136,7 @@ const ProfileScreen = () => {
         <View style={styles.container}>
             <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
             <TouchableOpacity onPress={pickImage}>
-                <Image source={{ uri: profilePic }} style={styles.profilePic} />
+            <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150}/>
             </TouchableOpacity>
             <View style={styles.nameContainer}>
                 {isEditing ? (

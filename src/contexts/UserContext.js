@@ -10,11 +10,12 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(firebaseUser => {
       if (firebaseUser) {
-        setUser({
+        const updatedUser = {
           uid: firebaseUser.uid,
           name: firebaseUser.displayName || "Default Name",
-          avatar: firebaseUser.photoURL || "https://via.placeholder.com/150"
-        });
+          avatar: firebaseUser.photoURL || ""
+        };
+        setUser(updatedUser);
       } else {
         setUser(null);
       }
@@ -23,8 +24,12 @@ export const UserProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  const updateUserProfile = (updates) => {
+    setUser(prev => ({ ...prev, ...updates }));
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, updateUserProfile }}>
       {children}
     </UserContext.Provider>
   );
