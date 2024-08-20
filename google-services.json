@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "239395273948",
+    "project_id": "interzone-production",
+    "storage_bucket": "interzone-production.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239395273948:android:e04428cc451991c48c8819",
+        "android_client_info": {
+          "package_name": "com.zhd.interzone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFdq9GKQxBo-Qqxq2P-n99ZmR1G8x8JdI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

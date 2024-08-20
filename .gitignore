@@ -33,3 +33,15 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# environmet variables
+.env.development
+.env.production
+
+# Notes
+Notes.txt
+RequestedFeatures.txt
+ScreenSpecificLogic.txt
+
+# .aab files
+android/

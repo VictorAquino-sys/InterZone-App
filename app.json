@@ -2,12 +2,12 @@
   "expo": {
     "name": "InterZone",
     "slug": "InterZone",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/interzone-splash.PNG",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,14 +16,19 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.zhd.interzone",
       "jsEngine": "hermes"
     },
     "android": {
+      "package": "com.zhd.interzone",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "jsEngine": "hermes"
+      "jsEngine": "hermes",
+      "permissions": [],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
