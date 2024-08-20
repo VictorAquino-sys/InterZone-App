@@ -45,3 +45,6 @@ ScreenSpecificLogic.txt
 
 # .aab files
 android/
+
+# google api
+google-services.json
