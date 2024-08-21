@@ -28,7 +28,7 @@
       },
       "jsEngine": "hermes",
       "permissions": [],
-      "googleServicesFile": "${GOOGLE_SERVICES_JSON"}
+      "googleServicesFile": "${GOOGLE_SERVICES_JSON}"
     },
     "web": {
       "favicon": "./assets/favicon.png"
