@@ -1,3 +1,5 @@
+// ProfileScreen.js updates Firebase Auth (using updateProfile(auth.currentUser, { ...}))
+
 import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { View, Text, StyleSheet, Button, Image, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from "@react-navigation/native";

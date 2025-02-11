@@ -1,8 +1,14 @@
-const { getDefaultConfig } = require('expo/metro-config');
+const { getDefaultConfig } = require("expo/metro-config");
 
-const defaultConfig = getDefaultConfig(__dirname);
-defaultConfig.resolver.sourceExts.push('cjs');
-// defaultConfig.resolver.sourceExts.push('cjs', 'mjs');
+module.exports = (async () => { 
+    const defaultConfig = await getDefaultConfig(__dirname);
 
-module.exports = defaultConfig;
+    // Ensure Metro recognizes PNG files
+    defaultConfig.resolver.assetExts.push("png", "PNG");
 
+    // Ensure Metro recognizes CommonJS modules (cjs)
+    defaultConfig.resolver.sourceExts.push('cjs');
+
+    return defaultConfig;
+
+})();

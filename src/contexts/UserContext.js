@@ -1,3 +1,5 @@
+// USer context.js listens for Firebase Auth canges but does not save user details to firestore.
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuth } from "firebase/auth";
 
