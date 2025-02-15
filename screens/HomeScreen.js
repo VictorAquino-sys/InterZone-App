@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Button, Alert, FlatList } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Button, FlatList } from 'react-native';
 // import { auth } from '../screens/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from '../src/contexts/PostsContext';
@@ -9,80 +9,158 @@ import * as Location from 'expo-location';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
-import { addDoc, deleteDoc, collection, doc, getDocs, query, where, orderBy } from "firebase/firestore";
+import { Alert } from 'react-native';
+import { addDoc, deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
 import i18n from '../src/i18n'; 
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { posts, setPosts } = useContext(PostsContext);
-  const { user } = useUser();
+  const { user, setUser } = useUser();
 
   const [imageOpacity, setImageOpacity] = useState(1); // State to force refresh
   
   // variables for user's location
-  const [location, setLocation] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
   const [city, setCity] = useState(null); // To store the city name
+  const [loading, setLoading] = useState(true); // Loading state for better UX
   const [errorMsg, setErrorMsg] = useState(null);
+  const prevCityRef = useRef(null);
 
   console.log("HomeScreen");
 
+  useEffect(() => {
+    const checkUserName = async () => {
+      if (!user?.uid) return;
+
+        try {
+            console.log("Checking if user has a name...");
+
+            // First, check Firestore for the user name
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists() && userSnap.data().name) {
+                console.log("User has a name:", userSnap.data().name);
+                return; // Stop execution, no need to navigate
+            }
+
+            // Second, check AsyncStorage
+            const storedName = await AsyncStorage.getItem('userName' + user.uid);
+            if (storedName) {
+                console.log("Name found in AsyncStorage:", storedName);
+                return; // Stop execution, no need to navigate
+            }
+
+            // If no name is found, navigate to NameInputScreen
+            console.log("No name found, redirecting to NameInputScreen...");
+            navigation.replace('NameInputScreen', { userId: user.uid });
+
+        } catch (error) {
+            console.error("Error checking user name:", error);
+        }
+    };
+
+    checkUserName();
+  }, [user?.uid]); // Only runs when `user` changes
+
   const fetchLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      setErrorMsg('permission to access location was denied');
-      return;
-    }
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('permission to access location was denied');
+        return;
+      }
 
-    let location = await Location.getCurrentPositionAsync({});
-    setLocation(location);
+      let location = await Location.getCurrentPositionAsync({});
 
-    const reverseGeocode = await Location.reverseGeocodeAsync({
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude
-    });
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      });
 
-    if (reverseGeocode && reverseGeocode.length > 0 && reverseGeocode[0].city) {
-      // Assuming the first result is the most relevant
-      setCity(reverseGeocode[0].city || "Unknown"); // Set the city from reverse geocode
-      console.log("Found city:", city); // Log to check what city was found
-    } else {
-      setCity('Location not found');
+      if (reverseGeocode && reverseGeocode.length > 0 && reverseGeocode[0].city) {
+        const cityName = reverseGeocode[0].city;
+        console.log("Found city:", cityName); // Log to check what city was found
+        setCity(cityName); // Set the city from reverse geocode
+        // fetchPostsByCity(cityName);
+      } else {
+        console.log("City not found.")
+        setCity("Unknown");
+      }
+    } catch (error) {
+      console.error("Error fetching location:", error);
     }
   };
   
   const fetchPostsByCity = async (cityName) => {
-    const postsRef = collection(db, "posts");
-    console.log("Querying posts in city:", cityName);
-    const q = query(postsRef, where("city", "==", cityName), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
-    const posts = querySnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data(), 
-      timestamp: doc.data().timestamp 
-    }));
+    if (!cityName) return; //Prevent running if city isn't set
+
+    try {
+      console.log("Fetching posts for city:", cityName);
+      const postsRef = collection(db, "posts");
+      const q = query(postsRef, where("city", "==", cityName), orderBy("timestamp", "desc"));
+      const querySnapshot = await getDocs(q);
+
+      const postsData = querySnapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data(), 
+        timestamp: doc.data().timestamp 
+      }));
+      setPosts(postsData);
+      console.log("Fetched posts:", postsData);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false); // Stop loading once data is fetched
+    }
     // Sort posts by timestamp in decending order
     // posts.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
-    console.log("Fetched posts:", posts);
-    setPosts(posts);
   };
 
   useFocusEffect(
     React.useCallback(() => {
       // Reset image opacity when the screen is focused
       setImageOpacity(1);
-      if (!user.city) {
-        fetchLocation(); // Refetch location when the screen is focused
-      } else {
-        console.log("User's name not set, awaiting completion of user setup.");
+
+      // Fetch latest user data
+      const fetchUserData = async () => {
+        try {
+            if (user?.uid) {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    console.log("Fetched updated user:", userData);
+                    setUser((prevUser) => ({
+                        ...prevUser,
+                        name: userData.name,
+                        avatar: userData.avatar
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching updated user data:", error);
+        }
+      };
+
+      fetchUserData(); // Fetch latest user name
+
+          // Fetch location only if not already fetching
+      if (!isFetching) {
+        console.log("Fetching user location...");
+        fetchLocation();
       }
 
-      if (city) {
-        console.log("Refetching posts since city is set:", city);
-        fetchPostsByCity(city);
-      } else {
-        console.log("City is not yet set.");
+      // Fetch posts when city is available & changed
+      if (city && city !== prevCityRef.current) {
+        console.log("Fetching posts for city:", city);
+        setIsFetching(true);
+        fetchPostsByCity(city).finally(() => setIsFetching(false));
+        prevCityRef.current = city;
       }
-    }, [city])
+
+    }, [city, user?.uid])
   );
 
   const formatDate = (timestamp) => {
@@ -121,7 +199,6 @@ const HomeScreen = () => {
       // Optionally remove the post from the local state to update UI instantly
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
     } catch (error) {
-      alert('Error deleting post: ', error.message);
       Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage', { error: error.message }));
     }
   };
@@ -138,7 +215,7 @@ const HomeScreen = () => {
     return (
       <View style={styles.postItem}>
         <View style={styles.userContainer}>
-          <Avatar key={user.avatar} name={item.user?.name} imageUri={item.user?.avatar}/>
+          <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
           <View style={styles.postDetails}>
             <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
             <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
@@ -146,7 +223,7 @@ const HomeScreen = () => {
           </View>
         </View>
             <Text style={styles.postText}>{item.content}</Text>
-          {user.uid == item.user?.uid && (
+          {user?.uid == item.user?.uid && (
             <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
               <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
             </TouchableOpacity>
@@ -171,24 +248,66 @@ const HomeScreen = () => {
           />
         </TouchableOpacity>
       </View>
-        {user ? (
-          <FlatList
-            data={posts}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
-          />
-        ) : (
-          <Text>{i18n.t('pleaseLogin')}</Text>
-          )}
-    </View>
+      {loading ? (
+        <Text style={styles.loadingText}>Loading posts...</Text>
+      ) : user ? (
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.postItem}>
+              <View style={styles.userContainer}>
+                <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar} />
+                <View style={styles.postDetails}>
+                  <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+                  <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
+                  <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+                </View>
+              </View>
+              <Text style={styles.postText}>{item.content}</Text>
+
+              {/* ✅ Allow users to delete their own posts */}
+              {user?.uid === item.user?.uid && (
+                <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
+                  <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+        )}
+        contentContainerStyle={styles.listContent}
+        style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
+      />
+    ) : (
+      <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
+    )}
+  </View>
   );
 };
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+  loadingText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 20,
+    color: "gray",
+  },
+  noUserText: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "gray",
+    marginTop: 30,
+  },
+  deleteButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    alignItems: 'flex-end'
+  },
+  deleteText: {
+    color: 'red',
+    fontSize: 12,
+  },  
   container: {
     flex: 1,
     alignItems: 'stretch', // Align children to the start horizontally

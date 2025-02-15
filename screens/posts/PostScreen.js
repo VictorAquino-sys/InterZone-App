@@ -5,11 +5,12 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from '../../src/contexts/PostsContext';
 import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../src/config/firebase';
-import { getAuth, signOut, updateProfile } from "firebase/auth";
-import { Timestamp } from "firebase/firestore";
-import { collection, addDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
 import i18n from '../../src/i18n'; 
 
 const PostScreen = ({ navigation }) => {
@@ -21,21 +22,73 @@ const PostScreen = ({ navigation }) => {
   const [location, setLocation] = useState(null);
   const { setPosts } = useContext(PostsContext);
   const { user, setUser } = useUser(); // Use the useUser hook
+  const storage = getStorage();
+
   console.log("PostScreen");
 
-  useEffect(() => {
-    const authUser = auth.currentUser;
-    if (authUser) {
-      setUser({
-        uid: authUser.uid,
-        name: authUser.displayName || "Default Name",
-        avatar: authUser.photoURL || ""
-      });
-      console.log("Authenticated User:", authUser.uid);  // Log user ID upon authentication
+  const uploadImageToStorage = async (uri, userId) => {
+    try {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const imageRef = ref(storage, `profileImages/${userId}-${Date.now()}.jpg`);
+        await uploadBytes(imageRef, blob);
+        return await getDownloadURL(imageRef);
+    } catch (error) {
+        console.error("Error uploading image:", error);
+        return null;
     }
-  }, [auth.currentUser]);
+  };
 
-  const handleaAddimage = async () => {
+  // Pick Image Function
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+        return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+    });
+
+    if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        const uploadedImageUrl = await uploadImageToStorage(uri, auth.currentUser.uid);
+        if (uploadedImageUrl) {
+            setProfilePic(uploadedImageUrl);
+            setUser({ ...user, avatar: uploadedImageUrl });
+        }
+    } else {
+        console.log('Image picker was canceled or no image was selected');
+    }
+  };
+
+  // Fetch user data from Firestore
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (authUser) {
+        const userRef = doc(db, "users", authUser.uid); // Fetch from "users"
+        const docSnap = await getDoc(userRef);
+
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setUser({
+            uid: authUser.uid,
+            name: userData.displayName || "Default Name",
+            avatar: userData.photoURL || "",
+          });
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [authUser]);
+
+  const handleAddImage = async () => {
+    await pickImage(); // allow the user to pick an image
     Alert.alert(i18n.t('imageAddedMessage'));
   };
 
@@ -65,17 +118,18 @@ const PostScreen = ({ navigation }) => {
     Alert.alert(i18n.t('locationAddedTitle'), i18n.t('locationAddedMessage'));
   };
 
+  // Handle Creating a Post
   const handleDone = async () => {
     if (!authUser || !authUser.uid) {
       Alert.alert("Authentication Error", "You must be logged in to post.");
       return;
     }
 
-    const userId = authUser.uid;
-    console.log("User ID:", userId);  // Debug log for User ID
-    console.log("Attempting to add post for user:", user.uid);
-    const storedName = await AsyncStorage.getItem('userName' + userId);  // Fetch the latest user name
-    console.log("Saved name:", storedName);  // Debug log for saved name
+    // if (!user || !user.uid) {
+    //   Alert.alert("User Error", "User data is missing. Please log in again.");
+    //   return;
+    // }
+
     if (!postText.trim()) {
       Alert.alert(i18n.t('emptyPostTitle'), i18n.t('emptyPostMessage'));
       return;
@@ -87,21 +141,30 @@ const PostScreen = ({ navigation }) => {
     }
 
     try {
+      // Fetch the latest user data from Firestore
+      const userRef = doc(db, "users", authUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      let latestUserData = { name: user?.name, avatar: user?.avatar };
+      if (userSnap.exists()) {
+          latestUserData = userSnap.data();
+      }
+
+      // Create post with latest user data
       const postData = {
         city: location,
         content: postText,
         timestamp: Timestamp.fromDate(new Date()),
-        userId: userId, // Ensure the userId is set here
+        imageUrl: latestUserData.avatar, // Use updated avatar
         user: {
-          avatar: user.avatar,
-          name: storedName,
-          uid: userId,
+          uid: authUser.uid,
+          name: latestUserData.name, // Use updated name
+          avatar: latestUserData.avatar, 
         }
       };
 
-      console.log("Attempting to add post with data:", postData);
       const docRef = await addDoc(collection(db, "posts"), postData);
-      console.log("Post created with ID:", docRef.id);
+      // console.log("Post created with ID:", docRef.id);
 
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
 
@@ -131,7 +194,7 @@ const PostScreen = ({ navigation }) => {
         {charCount} / 200
       </Text>
       <View style={styles.iconsContainer}>
-        <TouchableOpacity onPress={handleaAddimage}>
+        <TouchableOpacity onPress={handleAddImage}>
             <Ionicons name="image-outline" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleAddLocation}>

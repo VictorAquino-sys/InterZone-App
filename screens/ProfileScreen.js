@@ -8,6 +8,9 @@ import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
+import { db } from '../src/config/firebase';
+import { Alert } from 'react-native';
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicons is installed
 import i18n from './../src/i18n'; 
 
@@ -15,10 +18,11 @@ const ProfileScreen = () => {
     const navigation = useNavigation();
     const auth = getAuth();
     const authUser = auth.currentUser;
+    // const db = getFirestore(); // Initialize Firestore
     // const defaultImage = 'https://via.placeholder.com/150';
 
     // States for user details
-    const [newName, setName] = useState('');
+    const [newName, setNewName] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     // const [profilePic, setProfilePic] = useState(defaultImage);
     const [profilePic, setProfilePic] = useState(null);
@@ -39,15 +43,23 @@ const ProfileScreen = () => {
             const fetchProfile = async () => {
                 try {// Ensure you have a valid user before proceeding
                     if (authUser) {
-                        const userId = authUser.uid;
-                        const storedName = await AsyncStorage.getItem('userName' + userId);
-                        const storedPic = await AsyncStorage.getItem('profilePic' + userId);
-                        console.log("Fetched name and pic for user ID:", userId, storedName, storedPic);
-                        setName(storedName || 'Default Name');
-                        setProfilePic(storedPic);
-                    } else {
-                        console.log("No user logged in, using default profile settings.");
-                        setName('Default Name');
+                        const userRef = doc(db, "users", authUser.uid);
+                        const docSnap = await getDoc(userRef);
+
+                        if (docSnap.exists()) {
+                            const userData = docSnap.data();
+                            setNewName(userData.name || 'Default Name');
+                            setProfilePic(userData.avatar || '');
+                        }
+                        // const userId = authUser.uid;
+                        // const storedName = await AsyncStorage.getItem('userName' + userId);
+                        // const storedPic = await AsyncStorage.getItem('profilePic' + userId);
+                        // console.log("Fetched name and pic for user ID:", userId, storedName, storedPic);
+                        // setName(storedName || 'Default Name');
+                        // setProfilePic(storedPic);
+                    // } else {
+                        // console.log("No user logged in, using default profile settings.");
+                        // setName('Default Name');
                         // setProfilePic(defaultImage);
                     }
                 } catch (error) {
@@ -85,20 +97,59 @@ const ProfileScreen = () => {
 
     const handleUpdateProfile = async () => {
         try {
+            if (!authUser) return;
+
+            // Reference to the Firestore document
+            const userRef = doc(db, "users", authUser.uid);
+            const docSnap = await getDoc(userRef);
+
+            let updatedUserData = { name: newName, avatar: profilePic };
+
+            // Check if the user document exists
+            if (!docSnap.exists()) {
+                console.log("User document does not exist. Creating a new one...");
+                await setDoc(userRef, updatedUserData, { merge: true });  // Merge to prevent data loss            } else {
+            } else {    
+                console.log("Updating existing user profile...");
+                await updateDoc(userRef, updatedUserData);
+            }
+
+            // Update Firebase Auth displayName & photoURL
             await updateProfile(auth.currentUser, { displayName: newName, photoURL: profilePic });
             alert('Profile Updated Successfully');
 
+            console.log("Updated Firebase Auth displayName:", auth.currentUser.displayName);
+
+            // Fetch the latest user data from Firestore (to ensure UI is updated)
+            const updatedSnap = await getDoc(userRef);
+            if (updatedSnap.exists()) {
+                updatedUserData = updatedSnap.data();
+            }
+
             // Update user context
-            setUser({ ...user, name: newName, avatar: profilePic });
+            setUser((prevUser) => ({
+                ...prevUser,
+                name: updatedUserData.name,
+                avatar: updatedUserData.avatar,
+            }));
             
             // Update AsyncStorage
-            AsyncStorage.setItem('userName' + authUser.uid, newName);
-            AsyncStorage.setItem('profilePic' + authUser.uid, profilePic);
+            await AsyncStorage.setItem('userName' + authUser.uid, newName);
 
+            // Only save profilePic if it's NOT null
+            if (profilePic) {
+                await AsyncStorage.setItem('profilePic' + authUser.uid, profilePic);
+            } else {
+                await AsyncStorage.removeItem('profilePic' + authUser.uid); // Remove instead
+            }
+        
+            console.log("Profile updated successfully:", updatedUserData);
+            alert('Profile Updated Successfully');
             // Set editing to false here to switch back to non-edit mode
             setIsEditing(false);
 
         } catch (error) {
+            console.error("Error updating profile:", error);
             alert('Error updating profile: ' + error.message);
         }
     };
@@ -144,7 +195,7 @@ const ProfileScreen = () => {
                 {isEditing ? (
                     <TextInput
                         value={newName}
-                        onChangeText={setName}
+                        onChangeText={setNewName}
                         style={styles.input}
                         autoFocus={true}
                         onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred

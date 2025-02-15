@@ -1,36 +1,79 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { View, TextInput, Button, StyleSheet } from 'react-native';
+import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth } from "firebase/auth";
 import i18n from './../src/i18n'; 
+import { db } from '../src/config/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const NameInputScreen = ({ route, navigation }) => {
+    const auth = getAuth();
+    const authUser = auth.currentUser;
     const [name, setName] = useState('');
-    const { userId } = route.params || {}; // Safely destructure with default empty object
+    const [checking, setChecking] = useState(true); // Prevent double redirects
+    // const { userId } = route.params || {}; // Safely destructure with default empty object
+    
+    const userId = authUser ? authUser.uid : null; // Always get the correct user ID
     console.log("Verify userId: ", userId);
 
     // Check if the name is already set
     useEffect(() => {
         const checkName = async () => {
-            const storedName = await AsyncStorage.getItem('userName' + userId);
-            if (storedName) {
-                console.log("Name already set, redirecting...");
-                navigation.navigate('BottomTabs'); // Adjust this as necessary
+            if (!userId) return; // Ensure userId is available
+
+             try {
+                // Check if name exists in Firestore
+                const userRef = doc(db, "users", userId);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists() && userSnap.data().name) {
+                    console.log("Name already set, redirecting...");
+                    navigation.replace('BottomTabs'); 
+                    return;
+                }
+
+                // Check AsyncStorage
+                const storedName = await AsyncStorage.getItem('userName' + userId);
+                if (storedName) {
+                    console.log("Name already set in AsyncStorage, redirecting...");
+                    navigation.replace('BottomTabs');
+                }
+            } catch (error) {
+                console.error("Error checking name:", error);
+            } finally {
+                setChecking(false); // Stop checking to prevent loops
             }
         };
 
         checkName();
-    }, [userId, navigation]);
+    }, [userId]); // Only run when `userId` changes
 
     const saveName = async () => {
+        if (!name.trim()) {
+            Alert.alert("Error", "Name cannot be empty.");
+            return;
+        }
         try {
+            if (!userId) {
+                console.error("Error: No user ID available");
+                return;
+            }
+
+            // Save name in FIrestore
+            const userRef = doc(db, "users", userId);
+            await setDoc(userRef, { name }, { merge: true });
+
+            // Save name in AsyncStorage
             await AsyncStorage.setItem('userName' +  userId, name); // Simplify this for demo purposes
-            // setUser({ name: name }); // Assuming setUser is set up to handle this correctly
+
             console.log("Saved name:", name); // Debug: Check if the name is logged correctly
-            navigation.navigate('BottomTabs');  // Navigate to Home after saving
+            navigation.replace('BottomTabs');  // Navigate to Home after saving / prevent going back to NameInputScreen
         } catch (error) {
             console.error('Failed to save name', error);
         }
     };
+
+    if (checking) return null; // Prevent rendering if still checking
 
     return (
         <View style={styles.container}>
