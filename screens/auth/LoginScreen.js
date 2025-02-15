@@ -77,7 +77,7 @@ const LoginScreen = () => {
       // console.log("Checking userName before:", userName);
       
       // Fetch user data from Firestore
-      const userRef = doc(firestore, "users", authUser.uid);
+      const userRef = doc(db, "users", authUser.uid);
       const userSnap = await getDoc(userRef);
       let userData = {};
 

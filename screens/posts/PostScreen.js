@@ -125,11 +125,6 @@ const PostScreen = ({ navigation }) => {
       return;
     }
 
-    // if (!user || !user.uid) {
-    //   Alert.alert("User Error", "User data is missing. Please log in again.");
-    //   return;
-    // }
-
     if (!postText.trim()) {
       Alert.alert(i18n.t('emptyPostTitle'), i18n.t('emptyPostMessage'));
       return;
@@ -155,11 +150,11 @@ const PostScreen = ({ navigation }) => {
         city: location,
         content: postText,
         timestamp: Timestamp.fromDate(new Date()),
-        imageUrl: latestUserData.avatar, // Use updated avatar
+        imageUrl: latestUserData.avatar || "", // Use updated avatar
         user: {
           uid: authUser.uid,
-          name: latestUserData.name, // Use updated name
-          avatar: latestUserData.avatar, 
+          name: latestUserData.name || "Anonymous", // Use updated name
+          avatar: latestUserData.avatar || "", 
         }
       };
 
