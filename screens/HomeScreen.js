@@ -31,9 +31,9 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const checkUserName = async () => {
-      if (!user?.uid) return;
 
         try {
+          if (!user?.uid) return;
             console.log("Checking if user has a name...");
 
             // First, check Firestore for the user name
@@ -107,6 +107,9 @@ const HomeScreen = () => {
         ...doc.data(), 
         timestamp: doc.data().timestamp 
       }));
+
+      console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
+
       setPosts(postsData);
       console.log("Fetched posts:", postsData);
     } catch (error) {
@@ -205,8 +208,10 @@ const HomeScreen = () => {
 
   const renderItem = ({ item }) =>  {
     // Debugging user IDs
+    console.log("Post Image URL:", item.imageUrl); // Debug log
     console.log("Current user UID:", user.uid);
     console.log("Post creator UID:", item.user?.uid);
+
     if (!user) {
       // Optionally, return a placeholder or nothing if the user is null
       return null;
@@ -222,12 +227,20 @@ const HomeScreen = () => {
             <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
           </View>
         </View>
-            <Text style={styles.postText}>{item.content}</Text>
-          {user?.uid == item.user?.uid && (
-            <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
-              <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
-            </TouchableOpacity>
-          )}
+
+        <Text style={styles.postText}>{item.content}</Text>
+
+        {/* Display Image if Available */}
+        {item.imageUrl && (
+            <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+        )}
+
+        {/* Allow users to delete their own posts */}
+        {user?.uid == item.user?.uid && (
+          <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
+            <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -248,39 +261,21 @@ const HomeScreen = () => {
           />
         </TouchableOpacity>
       </View>
+
       {loading ? (
         <Text style={styles.loadingText}>Loading posts...</Text>
       ) : user ? (
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.postItem}>
-              <View style={styles.userContainer}>
-                <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar} />
-                <View style={styles.postDetails}>
-                  <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
-                  <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-                  <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
-                </View>
-              </View>
-              <Text style={styles.postText}>{item.content}</Text>
-
-              {/* ✅ Allow users to delete their own posts */}
-              {user?.uid === item.user?.uid && (
-                <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
-                  <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-        )}
-        contentContainerStyle={styles.listContent}
-        style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
-      />
-    ) : (
-      <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
-    )}
-  </View>
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
+        />
+      ) : (
+        <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
+      )}
+    </View>
   );
 };
 
@@ -380,4 +375,10 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12, // Ensure the font size is appropriate
   },
+  postImage: {
+    width: '100%', 
+    height: 200, 
+    resizeMode: 'cover', 
+    marginTop: 10
+  },  
 });

@@ -10,6 +10,9 @@ import { getStorage } from "firebase/storage";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
+// Debug logs for Firebase initialization
+console.log("Initializing Firebase...");
+
 const firebaseConfig = {
   // For Development and Production
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -27,6 +30,8 @@ console.log("Resolved Firebase Project ID:", firebaseConfig.projectId);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+console.log("Firebase initialized successfully.");
+
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 

@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,76 +20,66 @@ const PostScreen = ({ navigation }) => {
   const [postText, setPostText] = useState('');
   const [charCount, setCharCount] = useState(0); 
   const [location, setLocation] = useState(null);
+  const [imageUri, setImageUri] = useState(null); // Store post image URI
+  const [uploading, setUploading] = useState(false);  // Track image upload status
   const { setPosts } = useContext(PostsContext);
   const { user, setUser } = useUser(); // Use the useUser hook
   const storage = getStorage();
 
   console.log("PostScreen");
 
-  const uploadImageToStorage = async (uri, userId) => {
+  // Upload image to Firebase Stora and return the download URL
+  const uploadImageToStorage = async (uri) => {
+    if (!uri) return null; // if no image is selected, return null
+
     try {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-        const imageRef = ref(storage, `profileImages/${userId}-${Date.now()}.jpg`);
-        await uploadBytes(imageRef, blob);
-        return await getDownloadURL(imageRef);
+      setUploading(true);
+      console.log("Uploading image to Firebase Storage...");
+
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // Generate filename inside the function (instead of using state)
+      const imageName = `postImages/${authUser.uid}/${Date.now()}.jpg`;
+      const imageRef = ref(storage, imageName);
+
+      console.log("Image Ref:", imageRef.fullPath);
+
+      await uploadBytes(imageRef, blob);
+
+      const downloadUrl = await getDownloadURL(imageRef);
+      console.log("Image uploaded successfully:", downloadUrl);
+
+      return downloadUrl;
     } catch (error) {
         console.error("Error uploading image:", error);
+        Alert.alert("Upload Error", error.message);
         return null;
+    } finally {
+      setUploading(false);
     }
   };
 
-  // Pick Image Function
+  // Pick an image for the post
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
+        Alert.alert('Sorry, we need camera roll permissions to make this work!');
         return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1],
+        aspect: [4, 3],
         quality: 1,
     });
 
     if (!result.canceled) {
-        const uri = result.assets[0].uri;
-        const uploadedImageUrl = await uploadImageToStorage(uri, auth.currentUser.uid);
-        if (uploadedImageUrl) {
-            setProfilePic(uploadedImageUrl);
-            setUser({ ...user, avatar: uploadedImageUrl });
-        }
+      setImageUri(result.assets[0].uri); // Store selected image URI
     } else {
-        console.log('Image picker was canceled or no image was selected');
+      console.log('Image picker was canceled or no image was selected');
     }
-  };
-
-  // Fetch user data from Firestore
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (authUser) {
-        const userRef = doc(db, "users", authUser.uid); // Fetch from "users"
-        const docSnap = await getDoc(userRef);
-
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          setUser({
-            uid: authUser.uid,
-            name: userData.displayName || "Default Name",
-            avatar: userData.photoURL || "",
-          });
-        }
-      }
-    };
-
-    fetchUserData();
-  }, [authUser]);
-
-  const handleAddImage = async () => {
-    await pickImage(); // allow the user to pick an image
-    Alert.alert(i18n.t('imageAddedMessage'));
   };
 
   const handleAddLocation = async () => {
@@ -102,6 +92,7 @@ const PostScreen = ({ navigation }) => {
     let currentLocation = await Location.getCurrentPositionAsync({});
     console.log("Location fetched:", currentLocation);  // Log fetched location
     const coords = currentLocation.coords; // Properly define coords
+
     setLocation(coords); // Save coordinates directly
 
     const reverseGeocode = await Location.reverseGeocodeAsync({
@@ -135,22 +126,38 @@ const PostScreen = ({ navigation }) => {
       return;
     }
 
+    setUploading(true);
+
     try {
       // Fetch the latest user data from Firestore
       const userRef = doc(db, "users", authUser.uid);
       const userSnap = await getDoc(userRef);
 
       let latestUserData = { name: user?.name, avatar: user?.avatar };
+      
       if (userSnap.exists()) {
           latestUserData = userSnap.data();
       }
+
+      // Upload image if provided
+      let imageUrl = "";
+      if (imageUri) {
+        console.log("Uploading image...");
+        imageUrl = await uploadImageToStorage(imageUri);
+        if (!imageUrl) {
+          Alert.alert("Upload Failed", "Could not upload image. Try again.");
+          return;
+        }
+      }
+
+      console.log("Image URL to be stored in Firestore:", imageUrl);
 
       // Create post with latest user data
       const postData = {
         city: location,
         content: postText,
         timestamp: Timestamp.fromDate(new Date()),
-        imageUrl: latestUserData.avatar || "", // Use updated avatar
+        imageUrl: imageUrl || "", // Attach uploaded image URL
         user: {
           uid: authUser.uid,
           name: latestUserData.name || "Anonymous", // Use updated name
@@ -158,17 +165,23 @@ const PostScreen = ({ navigation }) => {
         }
       };
 
+      // Add post to Firestore
       const docRef = await addDoc(collection(db, "posts"), postData);
-      // console.log("Post created with ID:", docRef.id);
+      console.log("Post added successfully with ID:", docRef.id);
 
+      // Update local state
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
 
+      // Reset UI state
       navigation.goBack();
       setPostText(''); // Clear the input field
       setLocation(null);
+      setImageUri(null);
     } catch (e) {
       console.error("Error adding post: ", e);
       Alert.alert("Error adding post:", e.message || "Unknown error");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -188,18 +201,21 @@ const PostScreen = ({ navigation }) => {
       <Text style={styles.charCount}>
         {charCount} / 200
       </Text>
+
+      {imageUri && (
+        <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+      )}
+
       <View style={styles.iconsContainer}>
-        <TouchableOpacity onPress={handleAddImage}>
+        <TouchableOpacity onPress={pickImage}>
             <Ionicons name="image-outline" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleAddLocation}>
             <Ionicons name="location-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      <Button
-        title={i18n.t('doneButton')}
-        onPress={handleDone}
-      />
+
+      <Button title={uploading ? "Uploading..." : i18n.t('doneButton')} onPress={handleDone} disabled={uploading} />
     </View>
   );
 };
@@ -257,4 +273,9 @@ const styles = StyleSheet.create({
   createOptionText: {
     fontSize: 16,
   },
+  imagePreview: { 
+    width: '100%', 
+    height: 200, 
+    resizeMode: 'cover', 
+    marginTop: 10 }
 });
