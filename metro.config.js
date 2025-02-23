@@ -1,16 +1,16 @@
 const { getDefaultConfig } = require('expo/metro-config');
 
-module.exports = (async () => {
-    const defaultConfig = await getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname);
 
-    // Adding additional asset and source extensions
-    defaultConfig.resolver.assetExts.push('png', 'jpg', 'jpeg', 'gif', 'svg', 'ttf', 'otf', 'woff', 'woff2');
-    defaultConfig.resolver.sourceExts.push('cjs', 'jsx', 'ts', 'tsx', 'mjs', 'md', 'mdx');
+// Adding additional asset and source extensions
+config.resolver.assetExts.push('png', 'jpg', 'jpeg'); 
 
-    // Including the transformer with assetPlugins
-    defaultConfig.transformer = {
-        assetPlugins: ['expo-asset/tools/hashAssetFiles'],
-    };
+// Make sure 'png' is included
+config.resolver.sourceExts.push('cjs', 'js', 'jsx', 'ts', 'tsx', 'mjs');
 
-    return defaultConfig;
-})();
+// Including the transformer with assetPlugins
+config.transformer = {
+    assetPlugins: ['expo-asset/tools/hashAssetFiles'],
+};
+
+module.exports = config;
