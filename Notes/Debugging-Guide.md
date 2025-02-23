@@ -5,6 +5,22 @@
 Terminal
 - export EXPO_PACKAGER_PROXY_URL=http://10.0.0.101:8081
 - npx expo start --clear
+* If updating dependecies doesn't reflect the changes use:
+ npm cache clean --force
+
+ * To check Node.js version
+ TERMINAL
+ node -v
+
+ * When dealing with deprecated nested dependencies:
+ npm ls <name>
+
+ * Sometimes, issues can stem from a corrupted 'node_modules' directory or 'package-lock.json'. It's a good idea to clean these and reinstall:
+ TERMINAL
+ rm -rf node_modules package-lock.json
+ npm install
+ npm update
+
 
 02-10 Firebase Auth/Invalid API Key Error
 **Issue:** `FirebaseError: Firebase: Error (auth/invalid-api-key)`

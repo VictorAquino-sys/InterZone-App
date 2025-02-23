@@ -1,5 +1,18 @@
 (Daily logs of what have been worked on)
 
+### 02-23
+* @expo/webpack-config@19.0.1 doesn't support expo@50.0.0
+    solution:
+    Remove @expo/webpack-config from package.json
+    Run npm update
+    Do Expo Upgrade if not done already
+    Add bundler in app.json
+    "web": {
+        "bundler": "metro",
+        }
+* Deprecated dependencies have been fixed.
+
+
 ### 02-22
 Upgrading InterZone App Expo SDK 50 from 49:
 * Update to the latest version of EAS CLI:
@@ -10,7 +23,6 @@ Upgrading InterZone App Expo SDK 50 from 49:
 `npx expo install --fix`
 * Check for potential issues:
 `npx expo-doctor@latest`
-
 
 ### 02-11
 [x] Fetch user data from Firestore correctly.
