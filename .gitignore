@@ -47,7 +47,7 @@ ios/GoogleService-Info.plist
 *.tsbuildinfo
 
 # Project Notes (Ignore this folder)
-Notes/
+#Notes/
 
 # .aab files
 android/
