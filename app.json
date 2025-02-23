@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/interzone-splash.PNG",
+      "image": "./assets/interzone-splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

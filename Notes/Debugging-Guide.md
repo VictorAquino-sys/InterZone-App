@@ -1,5 +1,11 @@
 (Fixes & Solutions for issues)
 
+02-22
+* Run app using IPv4 Address
+Terminal
+- export EXPO_PACKAGER_PROXY_URL=http://10.0.0.101:8081
+- npx expo start --clear
+
 02-10 Firebase Auth/Invalid API Key Error
 **Issue:** `FirebaseError: Firebase: Error (auth/invalid-api-key)`
 **Cause:** Expo wasn't loading: `.env` variables correctly.
