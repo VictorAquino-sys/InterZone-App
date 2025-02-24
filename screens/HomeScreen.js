@@ -66,32 +66,43 @@ const HomeScreen = () => {
 
   const fetchLocation = async () => {
     try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('permission to access location was denied');
+      const isLocationEnabled = await Location.hasServicesEnabledAsync();
+      if (!isLocationEnabled) {
+        alert('Please enable your location services.');
         return;
       }
-
-      let location = await Location.getCurrentPositionAsync({});
-
+  
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Permission to access location was denied');
+        return;
+      }
+  
+      let location = await Location.getCurrentPositionAsync({ timeout: 5000 });
+  
       const reverseGeocode = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude
       });
-
-      if (reverseGeocode && reverseGeocode.length > 0 && reverseGeocode[0].city) {
-        const cityName = reverseGeocode[0].city;
-        console.log("Found city:", cityName); // Log to check what city was found
-        setCity(cityName); // Set the city from reverse geocode
-        // fetchPostsByCity(cityName);
+  
+      if (reverseGeocode && reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+        if (address.city) {
+          console.log("Found city:", address.city); // Log to check what city was found
+          setCity(address.city); // Set the city from reverse geocode
+        } else {
+          console.log("City not found. Using region:", address.region);
+          setCity(address.region || "Unknown");
+        }
       } else {
-        console.log("City not found.")
+        console.log("No address found.");
         setCity("Unknown");
       }
     } catch (error) {
       console.error("Error fetching location:", error);
+      alert("Failed to fetch location. Please try again.");
     }
-  };
+  };  
   
   const fetchPostsByCity = async (cityName) => {
     if (!cityName) return; //Prevent running if city isn't set
