@@ -101,14 +101,6 @@ const LoginScreen = () => {
     } catch (error) {
       Alert.alert("Login Error", error.message);
     }
-
-      //Store user data in AsyncStorage
-      // await AsyncStorage.setItem('user', JSON.stringify(user));
-      // console.log(user.email);
-      // } catch(error) {
-      //   console.log('errorCode: ', error.code);
-      //   console.log('errorMessage:', error.message);
-      // }
   };
 
   return (

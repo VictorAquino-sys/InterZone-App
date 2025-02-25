@@ -128,8 +128,6 @@ const HomeScreen = () => {
     } finally {
       setLoading(false); // Stop loading once data is fetched
     }
-    // Sort posts by timestamp in decending order
-    // posts.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
   };
 
   useFocusEffect(

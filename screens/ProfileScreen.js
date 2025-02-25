@@ -6,27 +6,29 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
-import { UserContext } from '../src/contexts/UserContext';
+import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import { db } from '../src/config/firebase';
 import { Alert } from 'react-native';
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicons is installed
 import i18n from './../src/i18n'; 
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import mime from "mime";
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
     const auth = getAuth();
     const authUser = auth.currentUser;
-    // const db = getFirestore(); // Initialize Firestore
-    // const defaultImage = 'https://via.placeholder.com/150';
+    const storage = getStorage();
 
     // States for user details
     const [newName, setNewName] = useState('');
     const [isEditing, setIsEditing] = useState(false);
-    // const [profilePic, setProfilePic] = useState(defaultImage);
     const [profilePic, setProfilePic] = useState(null);
-    const { user, setUser } = useContext(UserContext);
+    const { user, setUser } = useUser();
+    const [loading, setLoading] = useState(false);
+
     
     // console.log("Profile Screen");
 
@@ -51,16 +53,6 @@ const ProfileScreen = () => {
                             setNewName(userData.name || 'Default Name');
                             setProfilePic(userData.avatar || '');
                         }
-                        // const userId = authUser.uid;
-                        // const storedName = await AsyncStorage.getItem('userName' + userId);
-                        // const storedPic = await AsyncStorage.getItem('profilePic' + userId);
-                        // console.log("Fetched name and pic for user ID:", userId, storedName, storedPic);
-                        // setName(storedName || 'Default Name');
-                        // setProfilePic(storedPic);
-                    // } else {
-                        // console.log("No user logged in, using default profile settings.");
-                        // setName('Default Name');
-                        // setProfilePic(defaultImage);
                     }
                 } catch (error) {
                     console.error("Failed to fetch profile data:", error);
@@ -95,62 +87,35 @@ const ProfileScreen = () => {
         }
     };
 
-    const handleUpdateProfile = async () => {
+    const handleNameProfile = async () => {
         try {
             if (!authUser) return;
 
+            // Update Firebase Auth displayName
+            await updateProfile(auth.currentUser, { displayName: newName });
+            console.log("Firebase Auth displayName updated:", auth.currentUser.displayName);
+    
             // Reference to the Firestore document
             const userRef = doc(db, "users", authUser.uid);
-            const docSnap = await getDoc(userRef);
-
-            let updatedUserData = { name: newName, avatar: profilePic };
-
-            // Check if the user document exists
-            if (!docSnap.exists()) {
-                console.log("User document does not exist. Creating a new one...");
-                await setDoc(userRef, updatedUserData, { merge: true });  // Merge to prevent data loss            } else {
-            } else {    
-                console.log("Updating existing user profile...");
-                await updateDoc(userRef, updatedUserData);
-            }
-
-            // Update Firebase Auth displayName & photoURL
-            await updateProfile(auth.currentUser, { displayName: newName, photoURL: profilePic });
-            alert('Profile Updated Successfully');
-
-            console.log("Updated Firebase Auth displayName:", auth.currentUser.displayName);
-
-            // Fetch the latest user data from Firestore (to ensure UI is updated)
-            const updatedSnap = await getDoc(userRef);
-            if (updatedSnap.exists()) {
-                updatedUserData = updatedSnap.data();
-            }
-
-            // Update user context
-            setUser((prevUser) => ({
+            // Update Firestore and merge data
+            await setDoc(userRef, { name: newName }, { merge: true });
+            console.log("Firestore profile updated or created.");
+    
+            // Update user context directly
+            setUser(prevUser => ({
                 ...prevUser,
-                name: updatedUserData.name,
-                avatar: updatedUserData.avatar,
+                name: newName,
             }));
             
             // Update AsyncStorage
             await AsyncStorage.setItem('userName' + authUser.uid, newName);
-
-            // Only save profilePic if it's NOT null
-            if (profilePic) {
-                await AsyncStorage.setItem('profilePic' + authUser.uid, profilePic);
-            } else {
-                await AsyncStorage.removeItem('profilePic' + authUser.uid); // Remove instead
-            }
-        
-            console.log("Profile updated successfully:", updatedUserData);
+    
             alert('Profile Updated Successfully');
-            // Set editing to false here to switch back to non-edit mode
-            setIsEditing(false);
-
+            setIsEditing(false); // Set editing to false here to switch back to non-edit mode
+    
         } catch (error) {
-            console.error("Error updating profile:", error);
-            alert('Error updating profile: ' + error.message);
+            console.error("Error updating name:", error);
+            Alert.alert("Error", "Failed to update name: " + error.message);
         }
     };
 
@@ -158,39 +123,71 @@ const ProfileScreen = () => {
         setIsEditing(!isEditing);
     };
 
-    const pickImage = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            alert('Sorry, we need camera roll permissions to make this work!');
-            return;
+    const uploadImageAsync = async (uri) => {
+        try {
+            setLoading(true); // Start loading
+            // Correct the URI for Android file path
+            const newImageUri = uri.startsWith('file://') ? uri : `file://${uri.split("file:/").join("")}`;
+
+            const blob = await (await fetch(newImageUri)).blob();
+            const storagePath = `profilePictures/${auth.currentUser.uid}`;
+            const ref = storageRef(storage, storagePath);
+
+            console.log('Uploading to:', ref.fullPath);  // Ensure path is correct
+
+            const snapshot = await uploadBytes(ref, blob, {
+                contentType: mime.getType(newImageUri)  // Use mime to get the correct type
+            });
+
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            // Update the user's profile photoURL with the new image
+            updateProfile(auth.currentUser, { photoURL: downloadURL });
+
+            console.log('File available at', downloadURL);
+
+            return downloadURL;
+        } catch (error) {
+            console.error("Error uploading image: ", error);
+            throw new Error("Failed to upload image.");
+        } finally {
+            setLoading(false); // Stop loading
         }
+    };
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-             // Access the first item in the assets array
-            console.log("New image URI:", uri);  // Check what URI is being set
-            const uri = result.assets[0].uri;
-            setProfilePic(uri);
-            setUser({ ...user, avatar: uri });
-            AsyncStorage.setItem('profilePic' + authUser.uid, uri); // Save the new profile picture
-            console.log("Saving new profile picture.");
-        } else {
-            console.log('Image picker was canceled or no image was selected');
+    const pickImageProfile = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
+            });
+    
+            console.log("ImagePicker Result:", JSON.stringify(result));
+    
+            if (!result.canceled && result.assets && result.assets[0].uri) {
+                console.log("Image URI:", result.assets[0].uri);
+                const uploadUrl = await uploadImageAsync(result.assets[0].uri);
+                console.log("Image uploaded and URL received:", uploadUrl);
+                setProfilePic(uploadUrl); // Update the state and the user context
+                setUser((prevUser) => ({ ...prevUser, avatar: uploadUrl })); // Update the user context
+            } else {
+                console.log("Image picking was canceled or no image was selected");
+            }
+        } catch (error) {
+            console.error("Failed to pick or upload image: ", error);
+            Alert.alert("Upload Error", "Failed to upload image. Please try again.");
         }
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
-            <TouchableOpacity onPress={pickImage}>
+            <TouchableOpacity onPress={pickImageProfile}>
             <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150}/>
             </TouchableOpacity>
+            {loading && <ActivityIndicator size="large" color="#0000ff" />} 
             <View style={styles.nameContainer}>
                 {isEditing ? (
                     <TextInput
@@ -210,7 +207,7 @@ const ProfileScreen = () => {
                 )}
             </View>
             {isEditing && (
-                <Button title={i18n.t('updateProfileButton')} onPress={handleUpdateProfile} />
+                <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
             )}
             <Button title={i18n.t('logoutButton')} onPress={handleLogout} />
         </View>
