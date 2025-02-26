@@ -11,12 +11,15 @@ import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import { Alert } from 'react-native';
 import { addDoc, deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
+import {ref as storageRef, deleteObject, getStorage } from 'firebase/storage';
 import i18n from '../src/i18n'; 
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { posts, setPosts } = useContext(PostsContext);
   const { user, setUser } = useUser();
+  const storage = getStorage();
+
 
   const [imageOpacity, setImageOpacity] = useState(1); // State to force refresh
   
@@ -123,6 +126,7 @@ const HomeScreen = () => {
 
       setPosts(postsData);
       console.log("Fetched posts:", postsData);
+      console.log("Fetched posts image URLs:", postsData.map(post => post.imageUrl));  // This will log all image URLs
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
@@ -181,7 +185,7 @@ const HomeScreen = () => {
     return date.toLocaleString();  // Format date as a string
   };
 
-  const handleDeletePost = (postId) => {
+  const handleDeletePost = (postId, imageUrl) => {
     Alert.alert(
       i18n.t('confirmDeleteTitle'), // "Confirm Delete"
       i18n.t('confirmDeleteMessage'), // "Are you sure you want to delete this post?"
@@ -193,26 +197,57 @@ const HomeScreen = () => {
         },
         {
           text: i18n.t('ok'),
-          onPress: () => deletePost(postId)
+          onPress: () => deletePost(postId, imageUrl)
         }
       ],
       { cancelable: false }
     );
   };
 
-  const deletePost = async (postId) => {
-    console.log("Attempting to delete post:", postId);
-    await deleteDoc(doc(db, "posts", postId));
-    try {
-      console.log("User ID:", user.uid);
+  const deletePost = async (postId, imageUrl) => {
+    if (imageUrl) {
+      // Create a reference to the file to delete
+      const imageRef = storageRef(storage, imageUrl);
 
-        // Success message
-      Alert.alert(i18n.t('deleteSuccessTitle'), i18n.t('deleteSuccessMessage'));
-      // Optionally remove the post from the local state to update UI instantly
-      setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-    } catch (error) {
-      Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage', { error: error.message }));
+      // Delete the file
+      deleteObject(imageRef)
+          .then(() => {
+              console.log('Image successfully deleted!');
+          }).catch((error) => {
+              console.error('Error removing image: ', error);
+          });
     }
+
+    console.log("Attempting to delete post:", postId);
+      // Check if there is an image URL to delete
+      if (imageUrl) {
+        const imageRef = storageRef(storage, imageUrl);
+
+        // Delete the file
+        deleteObject(imageRef)
+            .then(() => {
+                console.log('Image successfully deleted!');
+            })
+            .catch((error) => {
+              if (error.code === 'storage/object-not-found') {
+                  console.log('No image found, nothing to delete.');
+              } else {
+                  console.error('Error removing image: ', error);
+              }
+            });
+      }
+
+      // Proceed to delete the post document from Firestore regardless of the image deletion
+      try {
+          await deleteDoc(doc(db, "posts", postId));
+          console.log('Post successfully deleted!');
+          Alert.alert(i18n.t('deleteSuccessTitle'), i18n.t('deleteSuccessMessage'));
+          // Remove the post from the local state to update UI instantly
+          setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+      } catch (error) {
+          console.error('Error deleting post: ', error);
+          Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage', { error: error.message }));
+      }
   };
 
   const renderItem = ({ item }) =>  {
@@ -246,7 +281,7 @@ const HomeScreen = () => {
 
         {/* Allow users to delete their own posts */}
         {user?.uid == item.user?.uid && (
-          <TouchableOpacity onPress={() => handleDeletePost(item.id)} style={styles.deleteButton}>
+          <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
             <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
           </TouchableOpacity>
         )}

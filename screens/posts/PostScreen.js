@@ -12,6 +12,7 @@ import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '../../src/i18n'; 
+import mime from 'mime';
 
 const PostScreen = ({ navigation }) => {
   const auth = getAuth();
@@ -30,33 +31,32 @@ const PostScreen = ({ navigation }) => {
 
   // Upload image to Firebase Stora and return the download URL
   const uploadImageToStorage = async (uri) => {
-    if (!uri) return null; // if no image is selected, return null
+    if (!uri) return null;
 
     try {
-      setUploading(true);
-      console.log("Uploading image to Firebase Storage...");
+        setUploading(true);
+        const response = await fetch(uri);
+        const blob = await response.blob();
 
-      const response = await fetch(uri);
-      const blob = await response.blob();
+        // Extract the file extension and set MIME type
+        const fileExtension = uri.split('.').pop();
+        const mimeType = mime.getType(fileExtension) || 'application/octet-stream'; // Fallback to binary if unknown
 
-      // Generate filename inside the function (instead of using state)
-      const imageName = `postImages/${authUser.uid}/${Date.now()}.jpg`;
-      const imageRef = ref(storage, imageName);
+        const imageName = `postImages/${authUser.uid}/${Date.now()}.${fileExtension}`;
+        const imageRef = ref(storage, imageName);
 
-      console.log("Image Ref:", imageRef.fullPath);
+        await uploadBytes(imageRef, blob, { contentType: mimeType });
 
-      await uploadBytes(imageRef, blob);
+        const downloadUrl = await getDownloadURL(imageRef);
+        console.log("Image uploaded successfully:", downloadUrl);
 
-      const downloadUrl = await getDownloadURL(imageRef);
-      console.log("Image uploaded successfully:", downloadUrl);
-
-      return downloadUrl;
+        return downloadUrl;
     } catch (error) {
         console.error("Error uploading image:", error);
         Alert.alert("Upload Error", error.message);
         return null;
     } finally {
-      setUploading(false);
+        setUploading(false);
     }
   };
 
