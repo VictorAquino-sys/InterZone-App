@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 10.2.4"
+    "version": ">= 10.2.4",
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -8,12 +9,18 @@
       "distribution": "internal"
     },
     "preview": {
+      "channel": "staging",
       "distribution": "internal"
     },
     "production": {
+      "environment": "production",
+      "channel": "production",
       "env": {
-        "GOOGLE_SERVICES_FILE": "@google-service-file"
+        "GOOGLE_SERVICES_FILE": "@google-service-json"
       }
+    },
+    "my-profile": {
+      "environment": "production"
     }
   },
   "submit": {

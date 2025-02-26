@@ -1,5 +1,9 @@
 (Fixes & Solutions for issues)
 
+02-23
+* For Local development modify the app.json to:
+ "googleServicesFile": "./android/app/google-services.json"
+
 02-22
 * Run app using IPv4 Address
 Terminal
