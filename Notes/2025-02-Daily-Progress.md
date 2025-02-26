@@ -1,5 +1,23 @@
 (Daily logs of what have been worked on)
 
+### 02-25
+1. Image upload and Display Enhancements:
+    - Improved the image upload functionality in both `ProfileScreen` and `PostScreen` by ensuring that images are uploaded with the correct MIME types using the mime package.
+    - Integrated images in posts displayed on the `HomeScreen`, ensuring that each post can optionally include an image that reflects alongside the text.
+2. Firebase Rules and Error Handling:
+    - Updated Firebase storage rules to secure images paths, ensuring users can only access their own images.
+    - Implemented error handling for image uploads and deletions, addressing issues like unauthorized access and non-existing objects.
+3. Post Deletion Functionality:
+    - Enhanced the post deletion process to include the removal of associated images from Firebase Storage. This prevents orphaned images from accumulating in storage when their corresponding posts are deleted.
+    - Resolved bugs related to image delition where thrown if the image file did not exist.
+4. Debugging and Logging:
+    - Fixed several bugs and enhanced error loggging for debbuging. Addrressed specific errors like 'getDownloadURL' not found and handled uncaught exceptions for better stability.
+    - Added comprehensive logs for key actions to aid in troubleshooting and ensuring that all operations perform as expected.
+5. User Interface Adjustments:
+    - Made UI improvements to ensure that images are displayed correctly within the app, maintaining aspects ratios and ensuring high usability and aesthetics.
+6. Commit and Documentation:
+    - Regular commits were made to track changes effectively. Prepared detailed notes and documentation of the day's work to ensure progress is well documented and easy to follow.
+
 ### 02-23
 * @expo/webpack-config@19.0.1 doesn't support expo@50.0.0
     solution:
