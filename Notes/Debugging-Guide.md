@@ -16,6 +16,10 @@ Terminal
  TERMINAL
  node -v
 
+ * Clear Cache and Rebuild the App:
+ npx react-native run-android
+
+
  * When dealing with deprecated nested dependencies:
  npm ls <name>
 
@@ -24,6 +28,13 @@ Terminal
  rm -rf node_modules package-lock.json
  npm install
  npm update
+
+* Identify Problematic Libraries
+Run the app on a device/emulator and execute:
+adb logcat -s AndroidRuntime
+
+* to Update dependencies run:
+npx expo install --fix
 
 
 02-10 Firebase Auth/Invalid API Key Error

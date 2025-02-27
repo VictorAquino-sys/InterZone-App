@@ -16,7 +16,7 @@
       "environment": "production",
       "channel": "production",
       "env": {
-        "GOOGLE_SERVICES_FILE": "@google-service-json"
+        "GOOGLE_SERVICES_JSON": "@google-service-json"
       }
     },
     "my-profile": {

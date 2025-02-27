@@ -31,6 +31,7 @@ yarn-error.*
 # local env files
 .env*
 .env*.local
+.env.production
 
 # typescript
 *.tsbuildinfo
@@ -46,8 +47,9 @@ ios/GoogleService-Info.plist
 # typescript
 *.tsbuildinfo
 
-# Project Notes (Ignore this folder)
+# Project Notes & googles-services(Ignore this folder)
 #Notes/
+google-services/
 
 # .aab files
 android/
