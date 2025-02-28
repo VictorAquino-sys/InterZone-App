@@ -61,7 +61,7 @@ const NameInputScreen = ({ route, navigation }) => {
 
             // Save name in FIrestore
             const userRef = doc(db, "users", userId);
-            await setDoc(userRef, { name }, { merge: true });
+            await setDoc(userRef, { name: name }, { merge: true });
 
             // Save name in AsyncStorage
             await AsyncStorage.setItem('userName' +  userId, name); // Simplify this for demo purposes

@@ -3,14 +3,14 @@ export default {
   expo: {
     name: "InterZone",
     slug: "InterZone",
-    version: "1.0.5",
+    version: "1.0.9",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
     splash: {
-      image: "./assets/interzone-splash.png",
+      image: "./assets/images/splash-icon.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff"
+      "imageWidth": 200
     },
     assetBundlePatterns: [
       "**/*"
@@ -22,11 +22,11 @@ export default {
     },
     android: {
       package: "com.zhd.interzone",
-      versionCode: 5,
-      adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#ffffff"
-      },
+      versionCode: 9,
+      // adaptiveIcon: {
+      //   foregroundImage: "./assets/images/icon.png",
+        // backgroundColor: "#ffffff"
+      // },
       jsEngine: "hermes",
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",

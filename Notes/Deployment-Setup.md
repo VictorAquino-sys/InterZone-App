@@ -51,7 +51,11 @@
         "GOOGLE_WEB_CLIENT_ID": "@GOOGLE_WEB_CLIENT_ID"
     }
 
-6.  Branch             main
+6. To build an Android App Bundle(.aab file):
+    npx eas build --platform android
+
+
+7.  Branch             main
     Runtime version    1.0.3
     Platform           android
     Update group ID    3a3f75b8-040d-48c1-a0d8-8867e748039a

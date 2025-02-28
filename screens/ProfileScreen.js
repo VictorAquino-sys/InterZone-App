@@ -50,7 +50,8 @@ const ProfileScreen = () => {
                         if (docSnap.exists()) {
                             const userData = docSnap.data();
                             setNewName(userData.name || 'Default Name');
-                            setProfilePic(userData.avatar || '');
+
+                            setProfilePic(authUser.photoURL || userData.avatar || '');
                         }
                     }
                 } catch (error) {
@@ -168,11 +169,17 @@ const ProfileScreen = () => {
             if (!result.canceled && result.assets && result.assets[0].uri) {
                 console.log("Image URI:", result.assets[0].uri);
                 const uploadUrl = await uploadImageAsync(result.assets[0].uri);
+
+                // Update both Auth and Firestore with the new profile picture
+                await updateProfile(auth.currentUser, { photoURL: uploadUrl });
+    
+                const userRef = doc(db, "users", auth.currentUser.uid);
+                await updateDoc(userRef, { avatar: uploadUrl });  // Update Firestore
+
                 console.log("Image uploaded and URL received:", uploadUrl);
+
                 setProfilePic(uploadUrl); // Update the state and the user context
                 setUser((prevUser) => ({ ...prevUser, avatar: uploadUrl })); // Update the user context
-            } else {
-                console.log("Image picking was canceled or no image was selected");
             }
         } catch (error) {
             console.error("Failed to pick or upload image: ", error);

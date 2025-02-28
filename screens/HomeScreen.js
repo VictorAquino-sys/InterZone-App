@@ -27,7 +27,6 @@ const HomeScreen = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [city, setCity] = useState(null); // To store the city name
   const [loading, setLoading] = useState(true); // Loading state for better UX
-  const [errorMsg, setErrorMsg] = useState(null);
   const prevCityRef = useRef(null);
 
   console.log("HomeScreen");
