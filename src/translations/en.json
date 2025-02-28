@@ -4,7 +4,15 @@
     "appTitle": "InterZone",
     "tagline": "Chat with Your Hommies!",
     "saveButton": "Save",
-    "registerButton": "Register",
+    "registerButton": "Sign Up",
+    "loginError": "Login Error",
+    "SignUpError": "Sign up Error",
+    "invalidEmail": "Invalid email address. Please enter a valid email.",
+    "wrongPassword": "Incorrect password. Please try again.",
+    "userNotFound": "No account found with this email.",
+    "genericError": "An error occurred. Please try again.",
+    "emailAlreadyInUse": "The email address is already in use. Please use a different email.",
+    "passwordRequirement": "Password must be at least 6 characters and no more than 20.",
 
     "nameInputPrompt": "Enter your name",
     "saveName": "Save Name",
@@ -21,7 +29,6 @@
     "locationRequiredMessage": "Please click in the location icon to include your current city.",
     "locationAddedTitle": "Location Added",
     "locationAddedMessage": "You location has been attached to your current message.",
-    "imageAddedMessage": "Image Uploads will be available soon! Y_(^.^)_/",
 
     "home": "Home",
     "post": "Post",
@@ -36,5 +43,8 @@
     "deleteSuccessTitle": "Post Deleted",
     "deleteSuccessMessage": "The post was successfully deleted.",
     "deleteErrorTitle": "Error Deleting Post",
-    "deleteErrorMessage": "There was an error deleting the post: {error}"
+    "deleteErrorMessage": "There was an error deleting the post: {error}",
+    "noPosts": "No posts yet in your city. Be the first to share something!"
+
+
 }  

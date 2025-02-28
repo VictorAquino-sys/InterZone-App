@@ -41,7 +41,12 @@ const LoginScreen = () => {
 
   // Save new user details in Firestore after signup
   const handleSignUp = async () => {
-    // const auth = getAuth();
+    // Check if the password is too short
+    if (password.length < 6) {
+      Alert.alert(i18n.t('SignUpError'), i18n.t('passwordRequirement'));
+      return;
+    }
+    
     try {
       const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
       const authUser = userCredentials.user;
@@ -61,21 +66,35 @@ const LoginScreen = () => {
 
       navigation.navigate('NameInputScreen');
     } catch (error) {
-      Alert.alert("Sign up Error", error.message);
+      console.log("Firebase Auth Error:", error.code, error.message); // Debugging line
+
+      let errorMessage = i18n.t('genericError'); // Default error message
+
+      switch (error.code) {
+        case 'auth/invalid-email':
+          errorMessage = i18n.t('invalidEmail');
+          break;
+        case 'auth/wrong-password':
+          errorMessage = i18n.t('wrongPassword');
+          break;
+        case 'auth/user-not-found':
+          errorMessage = i18n.t('userNotFound');
+          break;
+          case 'auth/email-already-in-use':  // Handle duplicate email
+          errorMessage = i18n.t('emailAlreadyInUse');
+          break;
       }
+
+      Alert.alert(i18n.t('SignUpError'), errorMessage);
+    }
   };
 
   // Handle user login and ensure Firestore data is locked
   const handleLogin = async () => {
-    // const auth = getAuth();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const authUser = userCredential.user;
-
-      //Check if the user's name is stored
-      // const userName = await AsyncStorage.getItem('userName' + user.uid);
-      // console.log("Checking userName before:", userName);
-      
+ 
       // Fetch user data from Firestore
       const userRef = doc(db, "users", authUser.uid);
       const userSnap = await getDoc(userRef);
@@ -99,7 +118,23 @@ const LoginScreen = () => {
           navigation.navigate('BottomTabs'); // Redirect to main app
       }
     } catch (error) {
-      Alert.alert("Login Error", error.message);
+      console.log("Firebase Auth Error:", error.code, error.message); // Debugging line
+
+      let errorMessage = i18n.t('genericError'); // Default error message
+
+      switch (error.code) {
+        case 'auth/invalid-email':
+          errorMessage = i18n.t('invalidEmail');
+          break;
+        case 'auth/wrong-password':
+          errorMessage = i18n.t('wrongPassword');
+          break;
+        case 'auth/user-not-found':
+          errorMessage = i18n.t('userNotFound');
+          break;
+      }
+
+      Alert.alert(i18n.t('loginError'), errorMessage);
     }
   };
 

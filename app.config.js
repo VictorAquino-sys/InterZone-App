@@ -3,7 +3,7 @@ export default {
   expo: {
     name: "InterZone",
     slug: "InterZone",
-    version: "1.0.3",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -22,7 +22,7 @@ export default {
     },
     android: {
       package: "com.zhd.interzone",
-      versionCode: 3,
+      versionCode: 5,
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff"
@@ -40,7 +40,9 @@ export default {
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.RECORD_AUDIO",
         "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION"
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE", 
+        "android.permission.WRITE_EXTERNAL_STORAGE",
       ],
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './android/app/google-services.json',
       runtimeVersion: {

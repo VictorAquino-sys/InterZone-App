@@ -15,6 +15,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicon
 import i18n from './../src/i18n'; 
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import mime from "mime";
+import { ActivityIndicator } from 'react-native';
+
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
@@ -28,9 +30,6 @@ const ProfileScreen = () => {
     const [profilePic, setProfilePic] = useState(null);
     const { user, setUser } = useUser();
     const [loading, setLoading] = useState(false);
-
-    
-    // console.log("Profile Screen");
 
     useEffect(() => {
         navigation.setOptions({
@@ -158,7 +157,7 @@ const ProfileScreen = () => {
     const pickImageProfile = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: 'Images',
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 1,

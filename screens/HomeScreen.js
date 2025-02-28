@@ -251,10 +251,6 @@ const HomeScreen = () => {
   };
 
   const renderItem = ({ item }) =>  {
-    // Debugging user IDs
-    console.log("Post Image URL:", item.imageUrl); // Debug log
-    console.log("Current user UID:", user.uid);
-    console.log("Post creator UID:", item.user?.uid);
 
     if (!user) {
       // Optionally, return a placeholder or nothing if the user is null
@@ -308,7 +304,13 @@ const HomeScreen = () => {
 
       {loading ? (
         <Text style={styles.loadingText}>Loading posts...</Text>
-      ) : user ? (
+      ) : !user ? (
+        <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
+      ) : posts.length === 0 ? (
+        <View style={styles.noPostsContainer}>
+          <Text style={styles.noPostsText}>{i18n.t('noPosts')}</Text>
+        </View>
+      ) : (
         <FlatList
           data={posts}
           keyExtractor={(item) => item.id}
@@ -316,8 +318,6 @@ const HomeScreen = () => {
           contentContainerStyle={styles.listContent}
           style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
         />
-      ) : (
-        <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
       )}
     </View>
   );
@@ -342,6 +342,17 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 15,
     alignItems: 'flex-end'
+  },
+  noPostsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  noPostsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
   deleteText: {
     color: 'red',

@@ -5,6 +5,14 @@
     "tagline": "Asegurate!",
     "saveButton": "Guardar",
     "registerButton": "Registrate",
+    "loginError": "Error de inicio de sesión",
+    "SignUpError": "Error de registro",
+    "invalidEmail": "Dirección de correo inválida. Por favor, ingrese un correo válido.",
+    "wrongPassword": "Contraseña incorrecta. Inténtalo de nuevo.",
+    "userNotFound": "No se encontró una cuenta con este correo.",
+    "genericError": "Ocurrió un error. Inténtalo de nuevo.",
+    "emailAlreadyInUse": "La dirección de correo electrónico ya está en uso. Por favor, usa otro correo electrónico.",
+    "passwordRequirement": "La contraseña debe tener al menos 6 caracteres y no mas de 20.",
     
     "nameInputPrompt": "Introduce tu nombre",
     "saveName": "Guardar",
@@ -21,7 +29,6 @@
     "locationRequiredMessage": "Haz clic en el icono de ubicación para incluir tu ciudad actual.",
     "locationAddedTitle": "Ubicación Añadida",
     "locationAddedMessage": "Tu ubicación ha sido adjuntada a tu mensaje actual.",
-    "imageAddedMessage": "Cargar images estara disponible pronto. Y_(^.^)_/",
 
     "home": "Inicio",
     "post": "Publicar",
@@ -36,5 +43,7 @@
     "deleteSuccessTitle": "Publicación Eliminada",
     "deleteSuccessMessage": "La publicación fue eliminada correctamente.",
     "deleteErrorTitle": "Error al Eliminar",
-    "deleteErrorMessage": "Se produjo un error al eliminar la publicación: {error}"
+    "deleteErrorMessage": "Se produjo un error al eliminar la publicación: {error}",
+    "noPosts": "Aún no hay publicaciones en tu ciudad. ¡Sé el primero en compartir algo!"
+
 } 
