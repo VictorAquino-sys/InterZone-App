@@ -18,7 +18,12 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.interzone.app",
-      jsEngine: "hermes"
+      jsEngine: "hermes",
+      infoPlist: {
+        NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone requires access to your location at all times to provide notifications about local events and updates relevant to your interests, even when the app is not in use.",
+        NSLocationWhenInUseUsageDescription: "InterZone needs access to your location to show you events and places near you when you are using the app.",
+        ITSAppUsesNonExemptEncryption: false
+      }
     },
     android: {
       package: "com.zhd.interzone",

@@ -4,6 +4,10 @@
     "appVersionSource": "local"
   },
   "build": {
+    "release": {
+      "distribution": "store",
+      "ios": {}
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal"

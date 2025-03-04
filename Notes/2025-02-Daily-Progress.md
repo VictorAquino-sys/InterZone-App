@@ -12,6 +12,8 @@
 
 2. Implement similar feature for viewing post images in full screen.
 
+3. Prompt users to update app to the latest version.
+
 
 ### 02-25
 1. Image upload and Display Enhancements:
