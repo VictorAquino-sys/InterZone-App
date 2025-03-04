@@ -1,10 +1,9 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Button, FlatList } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Button, FlatList, Modal } from 'react-native';
 // import { auth } from '../screens/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from '../src/contexts/PostsContext';
-import { v4 as uuidv4 } from 'uuid'; // Import UUID library to generate unique keys
 import * as Location from 'expo-location';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
@@ -20,6 +19,9 @@ const HomeScreen = () => {
   const { user, setUser } = useUser();
   const storage = getStorage();
 
+  // Modal state inside the component
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
   const [imageOpacity, setImageOpacity] = useState(1); // State to force refresh
   
@@ -249,6 +251,17 @@ const HomeScreen = () => {
       }
   };
 
+  // Function to handle opening the modal
+  const openImageModal = (imageUrl) => {
+    setSelectedImageUrl(imageUrl);
+    setModalVisible(true);
+  };
+
+  // Function to handle closing the modal
+  const closeImageModal = () => {
+    setModalVisible(false);
+  };
+
   const renderItem = ({ item }) =>  {
 
     if (!user) {
@@ -259,7 +272,10 @@ const HomeScreen = () => {
     return (
       <View style={styles.postItem}>
         <View style={styles.userContainer}>
-          <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
+          {/* Clickable Avatar */}
+          <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
+            <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
+          </TouchableOpacity>
           <View style={styles.postDetails}>
             <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
             <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
@@ -271,7 +287,9 @@ const HomeScreen = () => {
 
         {/* Display Image if Available */}
         {item.imageUrl && (
+          <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
             <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+          </TouchableOpacity>
         )}
 
         {/* Allow users to delete their own posts */}
@@ -318,6 +336,16 @@ const HomeScreen = () => {
           style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
         />
       )}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeImageModal}
+      >
+        <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
+          <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl }} />
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -390,8 +418,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderTopWidth: 0.6,
     borderTopColor: 'pearl river',
-    // borderBottomWidth: 0.6,
-    // borderBottomColor: 'pearl river',
     width: '100%', // Ensure post items take full width
   },
   postText: {
@@ -434,5 +460,16 @@ const styles = StyleSheet.create({
     height: 200, 
     resizeMode: 'cover', 
     marginTop: 10
-  },  
+  },
+  fullScreenModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+  },
+  fullScreenImage: {
+    width: '90%',
+    height: '90%',
+    resizeMode: 'contain'
+  }
 });

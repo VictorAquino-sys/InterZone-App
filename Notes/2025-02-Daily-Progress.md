@@ -1,5 +1,14 @@
 (Daily logs of what have been worked on)
 
+### 02-03
+1. Allow users to click on profile pictures from posts and view them in full screen within React Native app. We use modal to approach this matter.
+    Steps:
+    - Install necessary Packages:
+    npm install react-native-modal
+
+    -Update The HomeScreen.js
+    
+
 ### 02-25
 1. Image upload and Display Enhancements:
     - Improved the image upload functionality in both `ProfileScreen` and `PostScreen` by ensuring that images are uploaded with the correct MIME types using the mime package.

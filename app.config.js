@@ -17,7 +17,7 @@ export default {
     ],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.zhd.interzone",
+      bundleIdentifier: "com.interzone.app",
       jsEngine: "hermes"
     },
     android: {

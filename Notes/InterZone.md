@@ -1,0 +1,2 @@
+Description:
+InterZone is your gateway to explore and connect with your city's vibrant life. Discover local events, dining, music, and more. Join community-driven activities or start your own. Whether you’re a local or just visiting, InterZone makes sure you find your place in the city.

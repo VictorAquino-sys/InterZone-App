@@ -2,6 +2,9 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+3-01
+1. Transition to "com.interzona.app" (instead of "com.zhd.app") on Android to be consistent with Apple. I am creating a Bundle ID "com.interzone.app" on Apple.
+
 02-13
 1. Fix Fetching Post on First Load
 The `fetchPostByCity(city)` function only runs when `city` changes, but `city` is initially `null`, meaning no posts are fectched on the first render.
