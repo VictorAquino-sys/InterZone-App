@@ -3,7 +3,7 @@ export default {
   expo: {
     name: "InterZone",
     slug: "InterZone",
-    version: "1.0.9",
+    version: "1.0.10",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
@@ -22,11 +22,7 @@ export default {
     },
     android: {
       package: "com.zhd.interzone",
-      versionCode: 9,
-      // adaptiveIcon: {
-      //   foregroundImage: "./assets/images/icon.png",
-        // backgroundColor: "#ffffff"
-      // },
+      versionCode: 10,
       jsEngine: "hermes",
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",

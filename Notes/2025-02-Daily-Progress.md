@@ -6,8 +6,12 @@
     - Install necessary Packages:
     npm install react-native-modal
 
-    -Update The HomeScreen.js
-    
+    -Update The HomeScreen.js to use Modal
+    commited to github as:
+    "Add feature to view user profile pictures in full screen on HomeScreen"
+
+2. Implement similar feature for viewing post images in full screen.
+
 
 ### 02-25
 1. Image upload and Display Enhancements:
