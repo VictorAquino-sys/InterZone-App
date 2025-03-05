@@ -6,11 +6,16 @@
   "build": {
     "release": {
       "distribution": "store",
-      "ios": {}
+      "ios": {
+        "credentialsSource": "local"
+      }
     },
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "credentialsSource": "local"
+      }
     },
     "preview": {
       "channel": "staging",
@@ -19,6 +24,9 @@
     "production": {
       "environment": "production",
       "channel": "production",
+      "ios": {
+        "credentialsSource": "local"
+      },
       "env": {
         "GOOGLE_SERVICES_JSON": "@google-service-json"
       }

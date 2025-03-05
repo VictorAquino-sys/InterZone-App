@@ -51,8 +51,10 @@ ios/GoogleService-Info.plist
 #Notes/
 google-services/
 
-# Credential Files
-credentials/
+# ios/certs
+ios/certs/*
+
+credentials.json
 
 # .aab files
 android/
