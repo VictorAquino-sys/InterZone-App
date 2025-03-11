@@ -191,7 +191,7 @@ const PostScreen = ({ navigation }) => {
         multiline
         placeholder={i18n.t('postPlaceholder')}
         maxLength={200}
-        style={{ height: 200, padding: 10, backgroundColor: 'white' }}
+        style={{height: 300}}
         value={postText}
         onChangeText={(text) => {
           setPostText(text);
@@ -226,6 +226,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingTop: 100,
     backgroundColor: 'white',
   },
   header: {
@@ -249,11 +250,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   textInput: {
-    marginTop: 20,
+    flex: 1,
+    marginTop: 50,
+    padding: 10,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     fontSize: 18,
-    flex: 1,
     textAlignVertical: 'top',
   },
   iconsContainer: {
