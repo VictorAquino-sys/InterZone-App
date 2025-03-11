@@ -1,3 +1,4 @@
+import * as Updates from 'expo-updates';
 import React, { createContext, useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { getLocales } from 'expo-localization';
@@ -73,6 +74,18 @@ export default function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    async function onFetchUpdateAsync() {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (error) {
+        alert(`Error fetching latest Expo update: ${error}`);
+      }
+
     i18n.locale = getLocales()[0].languageCode; // Setup the locale at app start
     const unsubscribe = auth.onAuthStateChanged((authUser) => {
       console.log("Auth state changed, user:", authUser);
@@ -88,6 +101,8 @@ export default function App() {
     });
 
     return unsubscribe; // Unsubscribe from the listener when unmounting
+  }
+    onFetchUpdateAsync();
   }, [initializing]);
 
   if (initializing) { // Show nothing or loading screen while initializing
