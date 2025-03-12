@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 03-12
+    Ran in terminal
+    sudo npx expo prebuild
+
 ### 02-03
 1. Allow users to click on profile pictures from posts and view them in full screen within React Native app. We use modal to approach this matter.
     Steps:

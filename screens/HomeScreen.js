@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { StyleSheet, View, Text, Image, TouchableOpacity, Button, FlatList, Modal } from 'react-native';
-// import { auth } from '../screens/firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from '../src/contexts/PostsContext';
 import * as Location from 'expo-location';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
+import LikeButton from '../src/components/LikeButton';
 import { Alert } from 'react-native';
 import { addDoc, deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
 import {ref as storageRef, deleteObject, getStorage } from 'firebase/storage';
@@ -294,6 +294,9 @@ const HomeScreen = () => {
           </TouchableOpacity>
         )}
 
+        {/* Like Button Component */}
+        <LikeButton postId={item.id} userId={user.uid} />
+
         {/* Allow users to delete their own posts */}
         {user?.uid == item.user?.uid && (
           <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
@@ -332,7 +335,7 @@ const HomeScreen = () => {
       ) : (
         <FlatList
           data={posts}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
