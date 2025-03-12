@@ -1,9 +1,11 @@
+const isDevelopment = process.env.APP_VARIANT === 'development';
+
 // app.config.js
 export default {
   expo: {
-    name: "InterZone",
+    name: isDevelopment ? "InterZone (Dev)" : "InterZone",
     slug: "InterZone",
-    version: "1.0.10",
+    version: "1.0.11",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
@@ -12,22 +14,22 @@ export default {
       resizeMode: "contain",
       "imageWidth": 200
     },
-    assetBundlePatterns: [
-      "**/*"
-    ],
+    assetBundlePatterns: ["**/*"],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.interzone.app",
+      bundleIdentifier: isDevelopment ? "com.interzone.app.dev" : "com.interzone.app",
       jsEngine: "hermes",
       infoPlist: {
         NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone requires access to your location at all times to provide notifications about local events and updates relevant to your interests, even when the app is not in use.",
         NSLocationWhenInUseUsageDescription: "InterZone needs access to your location to show you events and places near you when you are using the app.",
-        ITSAppUsesNonExemptEncryption: false
+        ITSAppUsesNonExemptEncryption: false,
+        EXUpdatesRuntimeVersion: "1.0.0",
+        EXUpdatesURL: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6"
       }
     },
     android: {
-      package: "com.zhd.interzone",
-      versionCode: 10,
+      package: isDevelopment ? "com.zhd.interzone.dev" : "com.zhd.interzone",
+      versionCode: 11,
       jsEngine: "hermes",
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",
@@ -79,7 +81,10 @@ export default {
       }
     },
     updates: {
-      url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6"
+      url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6",
+      runtimeVersion: {
+        policy: "appVersion"
+      }
     }
   }
 };

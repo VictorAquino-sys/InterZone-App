@@ -22,6 +22,7 @@ const HomeScreen = () => {
   // Modal state inside the component
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState('../assets/unknownuser.png');
 
   const [imageOpacity, setImageOpacity] = useState(1); // State to force refresh
   
@@ -154,6 +155,7 @@ const HomeScreen = () => {
                         name: userData.name,
                         avatar: userData.avatar
                     }));
+                    setProfileImageUrl(userData.avatar || '../assets/unknownuser.png'); // Set the profile image URL from the user data
                 }
             }
         } catch (error) {
@@ -313,8 +315,8 @@ const HomeScreen = () => {
           activeOpacity={0.5} // Manage active opacity here
         >
           <Image 
-            source={require('../assets/unknownuser.png')} 
-            style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
+              source={{ uri: profileImageUrl }}
+              style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
           />
         </TouchableOpacity>
       </View>
@@ -390,6 +392,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch', // Align children to the start horizontally
     justifyContent: 'flex-start', // Align children to the start vertically
     width: '100%', // Ensure container takes full width
+    marginTop: 15,
   },
   userContainer: {
     flexDirection: 'row',
@@ -401,18 +404,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%', // Full width
     paddingHorizontal: 2, // Padding on the sides
-    paddingBottom: 8,
-    paddingTop: 24, // Padding on top
+    paddingBottom: 15,
+    paddingTop: 26, // Padding on top
   },
   profilePicContainer: {
-    height: 60,
-    width: 60,
+    height: 50,
+    width: 50,
     borderRadius: 25,
     overflow: 'hidden',
+    marginLeft: 5,
   },
   profilePic: {
     height: '100%',
     width: '100%',
+    resizeMode: 'cover', // Ensures the image covers the space without stretching
   },
   postItem: {
     padding: 8,
