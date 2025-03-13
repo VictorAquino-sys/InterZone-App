@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, Text } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { db } from '../../config/firebase';
+import { db } from '../config/firebase';
 
 const LikeButton = ({ postId, userId }) => {
     const [liked, setLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
 
     useEffect(() => {
         const fetchLikeStatus = async () => {
@@ -14,6 +15,7 @@ const LikeButton = ({ postId, userId }) => {
             if (postSnap.exists()) {
                 const likes = postSnap.data().likedBy || [];
                 setLiked(likes.includes(userId));
+                setLikeCount(likes.length);
             }
         };
 
@@ -22,21 +24,23 @@ const LikeButton = ({ postId, userId }) => {
 
     const toggleLike = async () => {
         const postRef = doc(db, "posts", postId);
-        setLiked(!liked);  // Optimistic update
-        if (liked) {
+        try {
+            const newLiked = !liked;
+            setLiked(newLiked);
             await updateDoc(postRef, {
-                likedBy: arrayRemove(userId)
-            }).catch(() => setLiked(true)); // Revert on error
-        } else {
-            await updateDoc(postRef, {
-                likedBy: arrayUnion(userId)
-            }).catch(() => setLiked(false)); // Revert on error
+                likedBy: newLiked ? arrayUnion(userId) : arrayRemove(userId)
+            });
+            setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
+        } catch (error) {
+            console.error("Error toggling like:", error);
+            setLiked(!newLiked); // Revert optimistic update on error
         }
     };
 
     return (
-        <TouchableOpacity onPress={toggleLike}>
+        <TouchableOpacity onPress={toggleLike} style={{ flexDirection: 'row', alignItems: 'center' }}>
             <FontAwesome name={liked ? 'heart' : 'heart-o'} size={24} color={liked ? 'red' : 'grey'} />
+            {likeCount > 0 && <Text>{likeCount}</Text>}
         </TouchableOpacity>
     );
 };

@@ -2,6 +2,7 @@
 
 ### 03-12
     Ran in terminal
+    for windows and then must be done in Mac as well
     sudo npx expo prebuild
 
 ### 02-03
