@@ -7,7 +7,7 @@
 02-22
 * Run app using IPv4 Address
 Terminal (for Windos use 'set')
-- export EXPO_PACKAGER_PROXY_URL=http://10.0.0.101:8081
+- set export EXPO_PACKAGER_PROXY_URL=http://10.0.0.101:8081
 - npx expo start --clear
 * If updating dependecies doesn't reflect the changes use:
  npm cache clean --force

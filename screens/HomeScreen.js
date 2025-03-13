@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Button, FlatList, Modal } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from '../src/contexts/PostsContext';
 import * as Location from 'expo-location';
@@ -25,6 +25,13 @@ const HomeScreen = () => {
   const [profileImageUrl, setProfileImageUrl] = useState('../assets/unknownuser.png');
 
   const [imageOpacity, setImageOpacity] = useState(1); // State to force refresh
+
+  // Search Bar State
+  const [searchText, setSearchText] = useState('');
+  const categories = ['Events', 'Restaurants'];
+
+  // State to show the funny message
+  const [funnyMessage, setFunnyMessage] = useState('');
   
   // variables for user's location
   const [isFetching, setIsFetching] = useState(false);
@@ -264,6 +271,26 @@ const HomeScreen = () => {
     setModalVisible(false);
   };
 
+  // Filter categories based on search input
+  const filteredCategories = categories.filter(category =>
+    category.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  // Navigate to Category Screen
+  const handleCategorySelect = (category) => {
+    navigation.navigate('CategoryScreen', { category });
+  };
+
+  // Handle category click
+  const handleCategoryClick = (category) => {
+    setFunnyMessage(`Ah ah! Still working on this awesome feature 😆🎉`);
+
+    // Remove the message after 3 seconds
+    setTimeout(() => {
+      setFunnyMessage('');
+    }, 3000);
+  };
+
   const renderItem = ({ item }) =>  {
 
     if (!user) {
@@ -309,7 +336,8 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+     {/* Top Bar with Profile Icon and Search Bar */}
+      <View style={styles.topBar}>
         <TouchableOpacity 
           style={styles.profilePicContainer} 
           onPress={() => {
@@ -322,7 +350,28 @@ const HomeScreen = () => {
               style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
           />
         </TouchableOpacity>
+        
+        {/* Search Bar */}
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search categories"
+          placeholderTextColor="#888"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+
       </View>
+
+      <View style={styles.categoriesContainer}>
+        {filteredCategories.map((item) => (
+          <TouchableOpacity key={item} style={styles.categoryItem} onPress={() => handleCategoryClick(item)}>
+            <Text style={styles.categoryText}>{item}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+       {/* Display Funny Message (if exists) */}
+       {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null}
 
       {loading ? (
         <Text style={styles.loadingText}>Loading posts...</Text>
@@ -391,31 +440,69 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },  
   container: {
+    marginTop: 20,
     flex: 1,
-    alignItems: 'stretch', // Align children to the start horizontally
-    justifyContent: 'flex-start', // Align children to the start vertically
-    width: '100%', // Ensure container takes full width
-    marginTop: 15,
+    backgroundColor: '#fff',
+    paddingTop: 16,
   },
   userContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  header: {
-    flexDirection: 'row', // Ensure the header is a row for alignment
+  topBar: {
+    paddingTop: 10, // Padding on top
+    flexDirection: 'row',
     alignItems: 'center',
-    width: '100%', // Full width
-    paddingHorizontal: 2, // Padding on the sides
-    paddingBottom: 15,
-    paddingTop: 26, // Padding on top
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    borderBottomColor: '#ddd',
   },
   profilePicContainer: {
-    height: 50,
-    width: 50,
-    borderRadius: 25,
+    height: 40,
+    width: 40,
+    borderRadius: 20,
     overflow: 'hidden',
-    marginLeft: 5,
+    marginRight: 10,
+  },
+  searchBar: {
+    flex: 1,
+    height: 40,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    fontSize: 14,
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    marginTop: 5,
+    marginLeft: 8,
+    marginBottom: 5,
+    alignItems: 'center',
+  },
+  categoryItem: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 20,
+    paddingLeft: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginRight: 12,
+    alignItems: 'center',
+  },
+  categoryText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
+  funnyMessage: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    marginTop: 10,
+    backgroundColor: '#fffae6',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ffd700',
   },
   profilePic: {
     height: '100%',
@@ -424,7 +511,8 @@ const styles = StyleSheet.create({
   },
   postItem: {
     padding: 8,
-    borderTopWidth: 0.6,
+    borderTopWidth: 0.5,
+    // borderTopWidth: 0.6,
     borderTopColor: 'pearl river',
     width: '100%', // Ensure post items take full width
   },
