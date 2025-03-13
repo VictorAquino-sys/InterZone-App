@@ -32,7 +32,13 @@
 
     "home": "Home",
     "post": "Post",
+    "funnyMessage": "Ah ah! Still working on this awesome feature 😆🎉",
     "anonymous": "Anonymous",
+    "searchPlaceholder": "Search categories",
+    "categories": {
+      "events": "Events",
+      "restaurants": "Restaurants"
+    },
     "unknown": "Unknown",
     "confirmDeleteTitle": "Confirm Delete",
     "confirmDeleteMessage": "Are you sure you want to delete this post?",

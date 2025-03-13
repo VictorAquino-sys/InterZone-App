@@ -28,8 +28,10 @@ const HomeScreen = () => {
 
   // Search Bar State
   const [searchText, setSearchText] = useState('');
-  const categories = ['Events', 'Restaurants'];
-
+  const categories = [
+    { key: 'events', label: i18n.t('categories.events') },
+    { key: 'restaurants', label: i18n.t('categories.restaurants') }
+  ];
   // State to show the funny message
   const [funnyMessage, setFunnyMessage] = useState('');
   
@@ -273,7 +275,7 @@ const HomeScreen = () => {
 
   // Filter categories based on search input
   const filteredCategories = categories.filter(category =>
-    category.toLowerCase().includes(searchText.toLowerCase())
+    category.label.toLowerCase().includes(searchText.toLowerCase())
   );
 
   // Navigate to Category Screen
@@ -283,7 +285,7 @@ const HomeScreen = () => {
 
   // Handle category click
   const handleCategoryClick = (category) => {
-    setFunnyMessage(`Ah ah! Still working on this awesome feature 😆🎉`);
+    setFunnyMessage(i18n.t('funnyMessage'));
 
     // Remove the message after 3 seconds
     setTimeout(() => {
@@ -354,7 +356,7 @@ const HomeScreen = () => {
         {/* Search Bar */}
         <TextInput
           style={styles.searchBar}
-          placeholder="Search categories"
+          placeholder={i18n.t('searchPlaceholder')}
           placeholderTextColor="#888"
           value={searchText}
           onChangeText={setSearchText}
@@ -364,8 +366,8 @@ const HomeScreen = () => {
 
       <View style={styles.categoriesContainer}>
         {filteredCategories.map((item) => (
-          <TouchableOpacity key={item} style={styles.categoryItem} onPress={() => handleCategoryClick(item)}>
-            <Text style={styles.categoryText}>{item}</Text>
+          <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
+            <Text style={styles.categoryText}>{item.label}</Text>
           </TouchableOpacity>
         ))}
       </View>

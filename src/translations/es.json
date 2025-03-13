@@ -32,6 +32,12 @@
 
     "home": "Inicio",
     "post": "Publicar",
+    "funnyMessage": "¡Ah ah! Todavía estamos trabajando en esta increíble función 😆🎉",
+    "searchPlaceholder": "Buscar categorías",
+    "categories": {
+        "events": "Eventos",
+        "restaurants": "Restaurantes"
+    },
     "anonymous": "Anónimo",
     "unknown": "Desconocido",
     "confirmDeleteTitle": "Confirmar eliminación",
