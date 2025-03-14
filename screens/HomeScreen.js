@@ -367,19 +367,6 @@ const HomeScreen = () => {
         />
       </View>
 
-      <View style={styles.categoriesContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {filteredCategories.map((item) => (
-            <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
-              <Text style={styles.categoryText}>{item.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-       {/* Display Funny Message (if exists) */}
-       {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null}
-
       {loading ? (
         <Text style={styles.loadingText}>Loading posts...</Text>
       ) : !user ? (
@@ -389,7 +376,25 @@ const HomeScreen = () => {
           <Text style={styles.noPostsText}>{i18n.t('noPosts')}</Text>
         </View>
       ) : (
+         /* Scrollable Content (Categories + Funny Message + Posts) */
         <FlatList
+          ListHeaderComponent={
+            <View>
+                {/* Categories (Now Scrollable) */}
+                <View style={styles.categoriesContainer}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {filteredCategories.map((item) => (
+                            <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
+                                <Text style={styles.categoryText}>{item.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+
+                {/* Display Funny Message (if exists) */}
+                {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null}
+            </View>
+          }
           data={posts}
           keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
           renderItem={renderItem}
@@ -458,7 +463,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   topBar: {
-    paddingTop: 40, // Padding on top
+    paddingTop: 10, // Padding on top
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,

@@ -5,7 +5,7 @@ export default {
   expo: {
     name: isDevelopment ? "InterZone (Dev)" : "InterZone",
     slug: "InterZone",
-    version: "1.0.12",
+    version: "1.0.14",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
@@ -29,7 +29,7 @@ export default {
     },
     android: {
       package: isDevelopment ? "com.zhd.interzone.dev" : "com.zhd.interzone",
-      versionCode: 12,
+      versionCode: 14,
       jsEngine: "hermes",
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",
