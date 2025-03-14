@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -186,37 +186,41 @@ const PostScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        multiline
-        placeholder={i18n.t('postPlaceholder')}
-        maxLength={200}
-        style={{height: 300}}
-        value={postText}
-        onChangeText={(text) => {
-          setPostText(text);
-          setCharCount(text.length); // Update character count as user types
-        }}
-      />
-      <Text style={styles.charCount}>
-        {charCount} / 200
-      </Text>
+    <KeyboardAvoidingView>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.container}>
+          <TextInput
+            multiline
+            placeholder={i18n.t('postPlaceholder')}
+            maxLength={200}
+            style={{height: 300}}
+            value={postText}
+            onChangeText={(text) => {
+              setPostText(text);
+              setCharCount(text.length); // Update character count as user types
+            }}
+          />
+          <Text style={styles.charCount}>
+            {charCount} / 200
+          </Text>
 
-      {imageUri && (
-        <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-      )}
+          {imageUri && (
+            <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+          )}
 
-      <View style={styles.iconsContainer}>
-        <TouchableOpacity onPress={pickImage}>
-            <Ionicons name="image-outline" size={24} color="black" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleAddLocation}>
-            <Ionicons name="location-outline" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
+          <View style={styles.iconsContainer}>
+            <TouchableOpacity onPress={pickImage}>
+                <Ionicons name="image-outline" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleAddLocation}>
+                <Ionicons name="location-outline" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
 
-      <Button title={uploading ? "Uploading..." : i18n.t('doneButton')} onPress={handleDone} disabled={uploading} />
-    </View>
+          <Button title={uploading ? "Uploading..." : i18n.t('doneButton')} onPress={handleDone} disabled={uploading} />
+        </View>
+    </ScrollView>
+  </KeyboardAvoidingView>
   );
 };
 

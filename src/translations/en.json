@@ -22,7 +22,7 @@
     "logoutButton": "Logout",
 
     "postPlaceholder": "What's on your mind, neighbor?",
-    "doneButton": "Done",
+    "doneButton": "Send",
     "emptyPostTitle": "Empty Post",
     "emptyPostMessage": "Please enter some text before posting.",
     "locationRequiredTitle": "Location Required",
@@ -37,7 +37,11 @@
     "searchPlaceholder": "Search categories",
     "categories": {
       "events": "Events",
-      "restaurants": "Restaurants"
+      "restaurants": "Restaurants",
+      "music": "Music",
+      "news": "News",
+      "studyhub": "Study Hub",
+      "petpals": "Pet Pals"
     },
     "unknown": "Unknown",
     "confirmDeleteTitle": "Confirm Delete",

@@ -30,7 +30,11 @@ const HomeScreen = () => {
   const [searchText, setSearchText] = useState('');
   const categories = [
     { key: 'events', label: i18n.t('categories.events') },
-    { key: 'restaurants', label: i18n.t('categories.restaurants') }
+    { key: 'restaurants', label: i18n.t('categories.restaurants') },
+    { key: 'music', label: i18n.t('categories.music')},
+    { key: 'news', label: i18n.t('categories.news')},
+    { key: 'study hub', label: i18n.t('categories.studyhub')},
+    { key: 'petpals', label: i18n.t('categories.petpals')}
   ];
   // State to show the funny message
   const [funnyMessage, setFunnyMessage] = useState('');
@@ -361,15 +365,16 @@ const HomeScreen = () => {
           value={searchText}
           onChangeText={setSearchText}
         />
-
       </View>
 
       <View style={styles.categoriesContainer}>
-        {filteredCategories.map((item) => (
-          <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
-            <Text style={styles.categoryText}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {filteredCategories.map((item) => (
+            <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
+              <Text style={styles.categoryText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
        {/* Display Funny Message (if exists) */}
@@ -442,10 +447,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },  
   container: {
-    marginTop: 20,
+    // marginTop: 20,
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 16,
+    // paddingTop: 16,
   },
   userContainer: {
     flexDirection: 'row',
@@ -453,7 +458,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   topBar: {
-    paddingTop: 10, // Padding on top
+    paddingTop: 40, // Padding on top
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -471,8 +476,16 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',  // Light gray border
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
     borderRadius: 20,
+    shadowRadius: 4,
     paddingHorizontal: 16,
+    elevation: 2, // Shadow effect for Android
+    marginRight: 20,  // Adjust the right spacing
+    marginLeft: 10,
     fontSize: 14,
   },
   categoriesContainer: {

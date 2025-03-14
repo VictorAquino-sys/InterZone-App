@@ -36,7 +36,11 @@
     "searchPlaceholder": "Buscar categorías",
     "categories": {
         "events": "Eventos",
-        "restaurants": "Restaurantes"
+        "restaurants": "Restaurantes",
+        "music": "Musica",
+        "news": "Noticias",
+        "studyhub": "Centro de Estudio",
+        "petpals": "Mascotas"
     },
     "anonymous": "Anónimo",
     "unknown": "Desconocido",
