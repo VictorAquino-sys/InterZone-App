@@ -54,6 +54,9 @@ google-services/
 # ios/certs
 ios/certs/*
 
+# GoogleService-info.plist
+GoogleService-info.plist
+
 credentials.json
 
 # .aab files
