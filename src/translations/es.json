@@ -22,7 +22,7 @@
     "logoutButton": "Cerrar sesión",
 
     "postPlaceholder": "Habla Barrio! Que tienes en mente?",
-    "doneButton": "Enviar",
+    "doneButton": "Publicar",
     "emptyPostTitle": "Publicación vacía",
     "emptyPostMessage": "Por favor, introduce algún texto antes de publicar.",
     "locationRequiredTitle": "Ubicación necesaria",
@@ -40,7 +40,8 @@
         "music": "Musica",
         "news": "Noticias",
         "studyhub": "Centro de Estudio",
-        "petpals": "Mascotas"
+        "petpals": "Mascotas",
+        "deals": "Promociones"
     },
     "anonymous": "Anónimo",
     "unknown": "Desconocido",

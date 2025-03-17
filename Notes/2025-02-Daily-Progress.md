@@ -1,5 +1,16 @@
 (Daily logs of what have been worked on)
 
+### 03-14
+    - Set up the TTL Policy for Time-to-Live (usually 7 days to expired).
+    - Fixed UI issues: scrollable categories, search bar border & width, profile pic alignment.
+    - Updated image picker to maintain original image size, fixed UI scrolling for categories, and improved HomeScreen layout.
+    - Allow Free Cropping.
+
+### 03-13
+    - add Like button feature in Home Screen
+    - Implemented serach bar, row of categories, improved UI click layout, and added funny message on category click
+    - added Spanish translations for search bar, categories, and fixed category filtering with translations
+    
 ### 03-12
     Ran in terminal
     for windows and then must be done in Mac as well

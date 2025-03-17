@@ -30,11 +30,12 @@ const HomeScreen = () => {
   const [searchText, setSearchText] = useState('');
   const categories = [
     { key: 'events', label: i18n.t('categories.events') },
-    { key: 'restaurants', label: i18n.t('categories.restaurants') },
+    { key: 'restaurants', label: i18n.t('categories.restaurants')},
     { key: 'music', label: i18n.t('categories.music')},
     { key: 'news', label: i18n.t('categories.news')},
     { key: 'study hub', label: i18n.t('categories.studyhub')},
-    { key: 'petpals', label: i18n.t('categories.petpals')}
+    { key: 'petpals', label: i18n.t('categories.petpals')},
+    { key: 'deals', label: i18n.t('categories.deals')}
   ];
   // State to show the funny message
   const [funnyMessage, setFunnyMessage] = useState('');
