@@ -23,6 +23,7 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState('../assets/unknownuser.png');
+  const defaultProfileImg = require('../assets/unknownuser.png');
 
   const [imageOpacity, setImageOpacity] = useState(1); // State to force refresh
 
@@ -169,7 +170,7 @@ const HomeScreen = () => {
                         name: userData.name,
                         avatar: userData.avatar
                     }));
-                    setProfileImageUrl(userData.avatar || '../assets/unknownuser.png'); // Set the profile image URL from the user data
+                    setProfileImageUrl(userData.avatar || Image.resolveAssetSource(defaultProfileImg).uri); // Set the profile image URL from the user data
                 }
             }
         } catch (error) {

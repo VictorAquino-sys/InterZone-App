@@ -5,7 +5,6 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from '../../src/contexts/PostsContext';
 import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
-// import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../src/config/firebase';
 import { getAuth } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
@@ -71,7 +70,7 @@ const PostScreen = ({ navigation }) => {
     const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        quality: 1,
+        quality: 0.5,
     });
 
     if (!result.canceled) {

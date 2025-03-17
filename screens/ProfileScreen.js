@@ -161,7 +161,7 @@ const ProfileScreen = () => {
                 mediaTypes: 'Images',
                 allowsEditing: true,
                 aspect: [4, 3],
-                quality: 1,
+                quality: 0.5,
             });
     
             console.log("ImagePicker Result:", JSON.stringify(result));
