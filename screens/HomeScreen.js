@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView } from 'react-native';
+import { Platform, SafeAreaView, StyleSheet, View, Text, Image, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PostsContext } from '../src/contexts/PostsContext';
 import * as Location from 'expo-location';
@@ -341,84 +341,91 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-     {/* Top Bar with Profile Icon and Search Bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity 
-          style={styles.profilePicContainer} 
-          onPress={() => {
-            navigation.navigate('Profile');
-          }}
-          activeOpacity={0.5} // Manage active opacity here
-        >
-          <Image 
-              source={{ uri: profileImageUrl }}
-              style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
+    <SafeAreaView style={styles.safeArea}>
+
+      <View style={styles.container}>
+      {/* Top Bar with Profile Icon and Search Bar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity 
+            style={styles.profilePicContainer} 
+            onPress={() => {
+              navigation.navigate('Profile');
+            }}
+            activeOpacity={0.5} // Manage active opacity here
+          >
+            <Image 
+                source={{ uri: profileImageUrl }}
+                style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
+            />
+          </TouchableOpacity>
+          
+          {/* Search Bar */}
+          <TextInput
+            style={styles.searchBar}
+            placeholder={i18n.t('searchPlaceholder')}
+            placeholderTextColor="#888"
+            value={searchText}
+            onChangeText={setSearchText}
           />
-        </TouchableOpacity>
-        
-        {/* Search Bar */}
-        <TextInput
-          style={styles.searchBar}
-          placeholder={i18n.t('searchPlaceholder')}
-          placeholderTextColor="#888"
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-      </View>
-
-      {loading ? (
-        <Text style={styles.loadingText}>Loading posts...</Text>
-      ) : !user ? (
-        <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
-      ) : posts.length === 0 ? (
-        <View style={styles.noPostsContainer}>
-          <Text style={styles.noPostsText}>{i18n.t('noPosts')}</Text>
         </View>
-      ) : (
-         /* Scrollable Content (Categories + Funny Message + Posts) */
-        <FlatList
-          ListHeaderComponent={
-            <View>
-                {/* Categories (Now Scrollable) */}
-                <View style={styles.categoriesContainer}>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {filteredCategories.map((item) => (
-                            <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
-                                <Text style={styles.categoryText}>{item.label}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                </View>
 
-                {/* Display Funny Message (if exists) */}
-                {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null}
-            </View>
-          }
-          data={posts}
-          keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
-        />
-      )}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeImageModal}
-      >
-        <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
-          <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl }} />
-        </TouchableOpacity>
-      </Modal>
-    </View>
+        {loading ? (
+          <Text style={styles.loadingText}>Loading posts...</Text>
+        ) : !user ? (
+          <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
+        ) : posts.length === 0 ? (
+          <View style={styles.noPostsContainer}>
+            <Text style={styles.noPostsText}>{i18n.t('noPosts')}</Text>
+          </View>
+        ) : (
+          /* Scrollable Content (Categories + Funny Message + Posts) */
+          <FlatList
+            ListHeaderComponent={
+              <View>
+                  {/* Categories (Now Scrollable) */}
+                  <View style={styles.categoriesContainer}>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                          {filteredCategories.map((item) => (
+                              <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
+                                  <Text style={styles.categoryText}>{item.label}</Text>
+                              </TouchableOpacity>
+                          ))}
+                      </ScrollView>
+                  </View>
+
+                  {/* Display Funny Message (if exists) */}
+                  {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null}
+              </View>
+            }
+            data={posts}
+            keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
+          />
+        )}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeImageModal}
+        >
+          <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
+            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl }} />
+          </TouchableOpacity>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'white' // or any other background color you want
+  },
   loadingText: {
     fontSize: 16,
     textAlign: "center",
@@ -463,7 +470,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   topBar: {
-    paddingTop: 10, // Padding on top
+    paddingTop: Platform.OS === 'ios' ? 5 : 10, // Increase padding for iOS
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,

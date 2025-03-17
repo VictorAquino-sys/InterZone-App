@@ -1,11 +1,11 @@
-const isDevelopment = process.env.APP_VARIANT === 'development';
+const IS_DEV = process.env.APP_VARIANT === 'development';
 
 // app.config.js
 export default {
   expo: {
-    name: isDevelopment ? "InterZone (Dev)" : "InterZone",
+    name: IS_DEV ? "InterZone (Dev)" : "InterZone",
     slug: "InterZone",
-    version: "1.0.14",
+    version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
@@ -16,8 +16,14 @@ export default {
     },
     assetBundlePatterns: ["**/*"],
     ios: {
-      supportsTablet: true,
-      bundleIdentifier: isDevelopment ? "com.interzone.app.dev" : "com.interzone.app",
+      supportsTablet: false,
+      sdkVersion: "18.0",
+      buildNumber: "1.0.1",
+      bundleIdentifier: IS_DEV ? "com.interzone.app.dev" : "com.interzone.app",
+      runtimeVersion: {
+        policy: "appVersion"
+      },
+      usesAppleSignIn: true,
       jsEngine: "hermes",
       infoPlist: {
         NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone requires access to your location at all times to provide notifications about local events and updates relevant to your interests, even when the app is not in use.",
@@ -25,10 +31,11 @@ export default {
         ITSAppUsesNonExemptEncryption: false,
         EXUpdatesRuntimeVersion: "1.0.0",
         EXUpdatesURL: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6"
-      }
+      },
+      googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist"
     },
     android: {
-      package: isDevelopment ? "com.zhd.interzone.dev" : "com.zhd.interzone",
+      package: IS_DEV ? "com.zhd.interzone.dev" : "com.zhd.interzone",
       versionCode: 14,
       jsEngine: "hermes",
       permissions: [
@@ -57,6 +64,16 @@ export default {
       favicon: "./assets/favicon.png"
     },
     plugins: [
+      [
+        "expo-build-properties",
+        {
+            "ios": {
+                "useFrameworks": "static"
+            }
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
       "expo-localization",
       [
         "expo-image-picker",
@@ -73,7 +90,7 @@ export default {
           isAndroidBackgroundLocationEnabled: true,
           isIosBackgroundLocationEnabled: true
         }
-      ]
+      ],
     ],
     extra: {
       eas: {

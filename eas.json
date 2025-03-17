@@ -28,17 +28,22 @@
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "preview"
+      },
+      "ios": {
+        "simulator": true
       }
     },
     "production": {
       "environment": "production",
       "channel": "production",
       "ios": {
-        "credentialsSource": "local"
+        "credentialsSource": "remote"
       },
-      "env": {
-        "GOOGLE_SERVICES_JSON": "@google-service-json",
-        "APP_VARIANT": "production"
+      "android": {
+        "credentialsSource": "remote",
+        "env": {
+          "GOOGLE_SERVICES_JSON": "@google-service-json"
+        }
       }
     },
     "my-profile": {
@@ -49,6 +54,10 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6742695484"
+      }
+    }
   }
 }
