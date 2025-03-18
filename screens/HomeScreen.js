@@ -105,12 +105,13 @@ const HomeScreen = () => {
         longitude: location.coords.longitude
       });
   
+      console.log("Reverse Geocode Result:", JSON.stringify(reverseGeocode));
       if (reverseGeocode && reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
         if (address.city) {
           console.log("Found city:", address.city); // Log to check what city was found
           setCity(address.city); // Set the city from reverse geocode
-        } else {
+        } else if (address.region) {
           console.log("City not found. Using region:", address.region);
           setCity(address.region || "Unknown");
         }
