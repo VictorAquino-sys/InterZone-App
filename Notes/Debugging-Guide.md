@@ -1,5 +1,10 @@
 (Fixes & Solutions for issues)
 
+03-22
+* Migrate to TypeScript. Run this command to check for type errors without necesssary outputting JavaScript files.
+    Terminal
+    npm run tsc
+
 02-23
 * For Local development modify the app.json to:
  "googleServicesFile": "./android/app/google-services.json"

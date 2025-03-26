@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 03-22
+    - updated firebase setup. 
+    
+
 ### 03-14
     - Set up the TTL Policy for Time-to-Live (usually 7 days to expired).
     - Fixed UI issues: scrollable categories, search bar border & width, profile pic alignment.

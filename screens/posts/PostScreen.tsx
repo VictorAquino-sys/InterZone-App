@@ -1,46 +1,52 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, FunctionComponent } from 'react';
 import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PostsContext } from '../../src/contexts/PostsContext';
+import { usePosts } from '../../src/contexts/PostsContext';
 import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
 import { db } from '../../src/config/firebase';
-import { getAuth } from "firebase/auth";
+import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '../../src/i18n'; 
 import mime from 'mime';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { TabParamList } from '@/navigationTypes';
 
-const PostScreen = ({ navigation }) => {
+type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
+
+const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const auth = getAuth();
   const authUser = auth.currentUser;
 
-  const [postText, setPostText] = useState('');
-  const [charCount, setCharCount] = useState(0); 
-  const [location, setLocation] = useState(null);
-  const [imageUri, setImageUri] = useState(null); // Store post image URI
-  const [uploading, setUploading] = useState(false);  // Track image upload status
-  const { setPosts } = useContext(PostsContext);
-  const { user, setUser } = useUser(); // Use the useUser hook
+  const [postText, setPostText] = useState<string>('');
+  const [charCount, setCharCount] = useState<number>(0); 
+  const [location, setLocation] = useState<string | null>(null);
+  const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
+  const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
+  const { user } = useUser(); // Use the useUser hook
+  const { setPosts } = usePosts();
   const storage = getStorage();
 
   console.log("PostScreen");
 
-  // Upload image to Firebase Stora and return the download URL
-  const uploadImageToStorage = async (uri) => {
+  // Asynchronous function to upload image and return the download URL
+  const uploadImageToStorage = async (uri:string): Promise<string | null> => {
     if (!uri) return null;
-
     try {
         setUploading(true);
         const response = await fetch(uri);
         const blob = await response.blob();
 
         // Extract the file extension and set MIME type
-        const fileExtension = uri.split('.').pop();
+        const fileExtension = uri.split('.').pop() ?? 'jpg';
         const mimeType = mime.getType(fileExtension) || 'application/octet-stream'; // Fallback to binary if unknown
 
+        if (!authUser) {
+          console.error("Authentication required for uploading images.");
+          return null; // or handle it by showing an error message
+        }
         const imageName = `postImages/${authUser.uid}/${Date.now()}.${fileExtension}`;
         const imageRef = ref(storage, imageName);
 
@@ -50,9 +56,9 @@ const PostScreen = ({ navigation }) => {
         console.log("Image uploaded successfully:", downloadUrl);
 
         return downloadUrl;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error uploading image:", error);
-        Alert.alert("Upload Error", error.message);
+        Alert.alert("Upload Error", (error as Error).message || "Unknow error occurred");
         return null;
     } finally {
         setUploading(false);
@@ -81,30 +87,43 @@ const PostScreen = ({ navigation }) => {
   };
 
   const handleAddLocation = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
+    const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Location Permission Denied', 'Please enable location permissions in your settings.');
       return;
     }
 
-    let currentLocation = await Location.getCurrentPositionAsync({});
-    console.log("Location fetched:", currentLocation);  // Log fetched location
-    const coords = currentLocation.coords; // Properly define coords
+    try {
+      // Fetch current location coordinates
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      console.log("Location fetched:", currentLocation);  // Log fetched location
+      const coords = currentLocation.coords; // Properly define coords
 
-    setLocation(coords); // Save coordinates directly
+      // setLocation(coords); // Save coordinates directly
 
-    const reverseGeocode = await Location.reverseGeocodeAsync({
-      latitude: coords.latitude,
-      longitude: coords.longitude
-    });
+      const reverseGeocodeResults = await Location.reverseGeocodeAsync({
+        latitude: coords.latitude,
+        longitude: coords.longitude
+      });
 
-    if (reverseGeocode.length > 0 && reverseGeocode[0].city) {
-      setLocation(reverseGeocode[0].city); // Set city name if available
-    } else {
-      setLocation(`${currentLocation.coords.latitude}, ${currentLocation.coords.longitude}`);
+      // Process reverse geocode results
+      if (reverseGeocodeResults.length > 0) {
+        const { city, region } = reverseGeocodeResults[0];
+        const readableLocation = city ? `${city}, ${region}` : `$(coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`;
+        console.log("Reverse geocoded location:", readableLocation);
+
+        // Update the state with either the city or a more generic location description
+        setLocation(readableLocation);
+        Alert.alert(i18n.t('locationAddedTitle'), `${i18n.t('locationAddedMessage')} ${readableLocation}`);
+      } else {
+          // Set location to a formatted string of latitude and longitude if no address is found
+        setLocation(`${coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`);
+        Alert.alert(i18n.t('locationAddedTitle'), i18n.t('genericLocationAddedMessage'));
+      }
+    } catch (error) {
+        console.error("Failed to fetch location or reverse geocode:", error);
+        Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
     }
-
-    Alert.alert(i18n.t('locationAddedTitle'), i18n.t('locationAddedMessage'));
   };
 
   // Handle Creating a Post
@@ -131,17 +150,17 @@ const PostScreen = ({ navigation }) => {
       const userRef = doc(db, "users", authUser.uid);
       const userSnap = await getDoc(userRef);
 
-      let latestUserData = { name: user?.name, avatar: user?.avatar };
+      const latestUserData = userSnap.exists() ? userSnap.data() : { name: 'Anonymous', avatar: '' };
       
-      if (userSnap.exists()) {
-          latestUserData = userSnap.data();
-      }
+      // if (userSnap.exists()) {
+      //     latestUserData = userSnap.data();
+      // }
 
       // Upload image if provided
       let imageUrl = "";
       if (imageUri) {
         console.log("Uploading image...");
-        imageUrl = await uploadImageToStorage(imageUri);
+        imageUrl = await uploadImageToStorage(imageUri) || '';
         if (!imageUrl) {
           Alert.alert("Upload Failed", "Could not upload image. Try again.");
           return;
@@ -175,9 +194,9 @@ const PostScreen = ({ navigation }) => {
       setPostText(''); // Clear the input field
       setLocation(null);
       setImageUri(null);
-    } catch (e) {
-      console.error("Error adding post: ", e);
-      Alert.alert("Error adding post:", e.message || "Unknown error");
+    } catch (error: any) {
+      console.error("Error adding post: ", error);
+      Alert.alert("Upload Error", (error as Error).message || "Unknow error occurred");
     } finally {
       setUploading(false);
     }

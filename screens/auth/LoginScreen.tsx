@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, FunctionComponent } from 'react'
 import { getAuth, createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
 import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
-import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
-// import { db } from '../src/config/firebase';
 import { Alert } from 'react-native';
+import { UserData } from '../../src/contexts/UserContext'; // Use useUser here
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import i18n from '../../src/i18n'; 
+import i18n from '../../src/i18n';
+import { NativeStackScreenProps } from '@react-navigation/native-stack'; 
+import { RootStackParamList } from '@/navigationTypes';
 
-const LoginScreen = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); 
-  const [show, setShow] = useState(true);
-  const navigation = useNavigation();
+type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
+
+const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>(''); 
+  const [show, setShow] = useState<boolean>(true);
 
   useEffect(() => {
     let alreadyNavigated = false;
@@ -35,7 +37,6 @@ const LoginScreen = () => {
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
-      // unsubscribeAuthStateChange();
     };
   }, []);
 
@@ -64,9 +65,9 @@ const LoginScreen = () => {
       await AsyncStorage.setItem('user', JSON.stringify(authUser));
       console.log("User signed up:", authUser.email);
 
-      navigation.navigate('NameInputScreen');
-    } catch (error) {
-      console.log("Firebase Auth Error:", error.code, error.message); // Debugging line
+      navigation.navigate('NameInputScreen', {userId: authUser.uid});
+    } catch (error :any) {
+      console.log("Firebase Auth Error:"); // Debugging line
 
       let errorMessage = i18n.t('genericError'); // Default error message
 
@@ -98,26 +99,26 @@ const LoginScreen = () => {
       // Fetch user data from Firestore
       const userRef = doc(db, "users", authUser.uid);
       const userSnap = await getDoc(userRef);
-      let userData = {};
+      let userData: UserData | undefined;
 
       if (userSnap.exists()) {
-        userData = userSnap.data();
+        userData = userSnap.data() as UserData;
       }
 
       // Store user data locally
       await AsyncStorage.setItem('user', JSON.stringify(authUser));
-      await AsyncStorage.setItem('userName' + authUser.uid, userData.name || ""); // Save name
+      await AsyncStorage.setItem('userName' + authUser.uid, userData?.name || ""); // Save name
 
       console.log("User logged in:", authUser.email);
-      console.log("Fetched name:", userData.name); 
+      console.log("Fetched name:", userData?.name); 
 
       // Only navigate to NameInputScreen if the name is missing
-      if (!userData.name) {
+      if (!userData?.name) {
         navigation.replace('NameInputScreen', { userId: authUser.uid });
       } else {
           navigation.navigate('BottomTabs'); // Redirect to main app
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Firebase Auth Error:", error.code, error.message); // Debugging line
 
       let errorMessage = i18n.t('genericError'); // Default error message
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
     marginVertical: 95,
   },
   titleContainer: {
-    paddingHorizontal: '15%',
+    // paddingHorizontal: '15%',
     paddingVertical: '20%',
     marginBottom : '-30%',
     paddingHorizontal: 15,
@@ -219,7 +220,7 @@ input: {
 },
 buttonContainer: {
   width:'60%',
-  justifycontent: 'center',
+  justifyContent: 'center',
   alignItems: 'center',
   marginTop: '5%',
   marginBottom: '-70%',
@@ -234,7 +235,7 @@ button: {
 buttonOutline: {
   backgroundColor: 'white',
   marginTop: 5,
-  bordeColor: '#0782F9',
+  borderColor: '#0782F9',
   borderWidth: 2,
 },
 buttonText:{

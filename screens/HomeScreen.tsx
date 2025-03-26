@@ -1,34 +1,39 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState, FunctionComponent } from 'react';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { Platform, SafeAreaView, StyleSheet, View, Text, Image, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView } from 'react-native';
+import { Platform, StyleSheet, View, Text, Image, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PostsContext } from '../src/contexts/PostsContext';
+import { Post, usePosts } from '../src/contexts/PostsContext';
 import * as Location from 'expo-location';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
-import { Alert } from 'react-native';
 import { addDoc, deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
 import {ref as storageRef, deleteObject, getStorage } from 'firebase/storage';
 import i18n from '../src/i18n'; 
+import { RootStackParamList } from '@/navigationTypes';
+import { Accuracy } from 'expo-location';
+import { Timestamp } from 'firebase/firestore';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-const HomeScreen = () => {
-  const navigation = useNavigation();
-  const { posts, setPosts } = useContext(PostsContext);
+type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
+
+const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
+  const { posts, setPosts } = usePosts();
   const { user, setUser } = useUser();
   const storage = getStorage();
 
   // Modal state inside the component
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedImageUrl, setSelectedImageUrl] = useState(null);
-  const [profileImageUrl, setProfileImageUrl] = useState('../assets/unknownuser.png');
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>('../assets/unknownuser.png');
   const defaultProfileImg = require('../assets/unknownuser.png');
 
-  const [imageOpacity, setImageOpacity] = useState(1); // State to force refresh
+  const [imageOpacity, setImageOpacity] = useState<number>(1); // State to force refresh
 
   // Search Bar State
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState<string>('');
   const categories = [
     { key: 'events', label: i18n.t('categories.events') },
     { key: 'restaurants', label: i18n.t('categories.restaurants')},
@@ -39,46 +44,46 @@ const HomeScreen = () => {
     { key: 'deals', label: i18n.t('categories.deals')}
   ];
   // State to show the funny message
-  const [funnyMessage, setFunnyMessage] = useState('');
+  const [funnyMessage, setFunnyMessage] = useState<string>('');
   
   // variables for user's location
-  const [isFetching, setIsFetching] = useState(false);
-  const [city, setCity] = useState(null); // To store the city name
-  const [loading, setLoading] = useState(true); // Loading state for better UX
-  const prevCityRef = useRef(null);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [city, setCity] = useState<string | null>(null); // To store the city name
+  const [loading, setLoading] = useState<boolean>(true); // Loading state for better UX
+  const prevCityRef = useRef<string | null>(null);
 
   console.log("HomeScreen");
 
   useEffect(() => {
     const checkUserName = async () => {
 
-        try {
-          if (!user?.uid) return;
-            console.log("Checking if user has a name...");
+      try {
+        if (!user?.uid) return;
+          console.log("Checking if user has a name...");
 
-            // First, check Firestore for the user name
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
+          // First, check Firestore for the user name
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
 
-            if (userSnap.exists() && userSnap.data().name) {
-                console.log("User has a name:", userSnap.data().name);
-                return; // Stop execution, no need to navigate
-            }
+          if (userSnap.exists() && userSnap.data().name) {
+              console.log("User has a name:", userSnap.data().name);
+              return; // Stop execution, no need to navigate
+          }
 
-            // Second, check AsyncStorage
-            const storedName = await AsyncStorage.getItem('userName' + user.uid);
-            if (storedName) {
-                console.log("Name found in AsyncStorage:", storedName);
-                return; // Stop execution, no need to navigate
-            }
+          // Second, check AsyncStorage
+          const storedName = await AsyncStorage.getItem('userName' + user.uid);
+          if (storedName) {
+              console.log("Name found in AsyncStorage:", storedName);
+              return; // Stop execution, no need to navigate
+          }
 
-            // If no name is found, navigate to NameInputScreen
-            console.log("No name found, redirecting to NameInputScreen...");
-            navigation.replace('NameInputScreen', { userId: user.uid });
+          // If no name is found, navigate to NameInputScreen
+          console.log("No name found, redirecting to NameInputScreen...");
+          navigation.replace('NameInputScreen', { userId: user.uid });
 
-        } catch (error) {
-            console.error("Error checking user name:", error);
-        }
+      } catch (error) {
+          console.error("Error checking user name:", error);
+      }
     };
 
     checkUserName();
@@ -98,7 +103,11 @@ const HomeScreen = () => {
         return;
       }
   
-      let location = await Location.getCurrentPositionAsync({ timeout: 5000 });
+      let location = await Location.getCurrentPositionAsync({ 
+        accuracy: Accuracy.Balanced,
+        mayShowUserSettingsDialog: true,
+        timeInterval: 5000,
+      });
   
       const reverseGeocode = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
@@ -125,7 +134,7 @@ const HomeScreen = () => {
     }
   };  
   
-  const fetchPostsByCity = async (cityName) => {
+  const fetchPostsByCity = async (cityName: string): Promise<void> => {
     if (!cityName) return; //Prevent running if city isn't set
 
     try {
@@ -134,11 +143,21 @@ const HomeScreen = () => {
       const q = query(postsRef, where("city", "==", cityName), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
 
-      const postsData = querySnapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data(), 
-        timestamp: doc.data().timestamp 
-      }));
+      const postsData: Post[] = querySnapshot.docs.map(doc => { 
+        const data = doc.data();
+        return {
+          id: doc.id,
+          city: data.city as string,
+          content: data.content as string,
+          timestamp: data.timestamp as Timestamp | null,
+          imageUrl: data.imageUrl as string,
+          user: {
+            uid: data.user.uid as string,  // Assume that user.uid exists in the data
+            name: data.user.name as string,  // Assume that user.name exists in the data
+            avatar: data.user.avatar as string  // Assume that user.avatar exists in the data
+          }
+        };
+      });
 
       console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
 
@@ -166,11 +185,15 @@ const HomeScreen = () => {
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
                     console.log("Fetched updated user:", userData);
-                    setUser((prevUser) => ({
-                        ...prevUser,
-                        name: userData.name,
-                        avatar: userData.avatar
-                    }));
+                    setUser(prevUser => {
+                      if (!prevUser) return null;  // Handle case where previous user is null
+
+                      return {
+                        uid: prevUser.uid,  // Assume uid is always present in the previous user
+                        name: userData.name || prevUser.name,
+                        avatar: userData.avatar || prevUser.avatar
+                      };
+                   });
                     setProfileImageUrl(userData.avatar || Image.resolveAssetSource(defaultProfileImg).uri); // Set the profile image URL from the user data
                 }
             }
@@ -198,13 +221,13 @@ const HomeScreen = () => {
     }, [city, user?.uid])
   );
 
-  const formatDate = (timestamp) => {
-    if (!timestamp) return 'Unknown date';  // Handle undefined or null timestamps
-    const date = new Date(timestamp.seconds * 1000);
-    return date.toLocaleString();  // Format date as a string
+  const formatDate = (timestamp: Timestamp | undefined) => {
+    if (!timestamp) return 'Unknown date'; // Handle undefined or null timestamps
+    const date = new Date(timestamp.seconds * 1000); // Convert timestamp to Date object
+    return date.toLocaleString(); // Format date as a string in the local date and time format
   };
 
-  const handleDeletePost = (postId, imageUrl) => {
+  const handleDeletePost = (postId: string, imageUrl: string | null) => {
     Alert.alert(
       i18n.t('confirmDeleteTitle'), // "Confirm Delete"
       i18n.t('confirmDeleteMessage'), // "Are you sure you want to delete this post?"
@@ -223,8 +246,9 @@ const HomeScreen = () => {
     );
   };
 
-  const deletePost = async (postId, imageUrl) => {
+  const deletePost = async (postId: string, imageUrl:string | null) => {
     if (imageUrl) {
+      const storage = getStorage(); // Make sure storage is initialized
       // Create a reference to the file to delete
       const imageRef = storageRef(storage, imageUrl);
 
@@ -265,12 +289,12 @@ const HomeScreen = () => {
           setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
       } catch (error) {
           console.error('Error deleting post: ', error);
-          Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage', { error: error.message }));
+          Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage'));
       }
   };
 
   // Function to handle opening the modal
-  const openImageModal = (imageUrl) => {
+  const openImageModal = (imageUrl: string | null) => {
     setSelectedImageUrl(imageUrl);
     setModalVisible(true);
   };
@@ -286,12 +310,12 @@ const HomeScreen = () => {
   );
 
   // Navigate to Category Screen
-  const handleCategorySelect = (category) => {
-    navigation.navigate('CategoryScreen', { category });
-  };
+  // const handleCategorySelect = (category) => {
+  //   navigation.navigate('CategoryScreen', { category });
+  // };
 
   // Handle category click
-  const handleCategoryClick = (category) => {
+  const handleCategoryClick = (category: string) => {
     setFunnyMessage(i18n.t('funnyMessage'));
 
     // Remove the message after 3 seconds
@@ -300,7 +324,7 @@ const HomeScreen = () => {
     }, 3000);
   };
 
-  const renderItem = ({ item }) =>  {
+  const renderItem = ({ item }: { item: Post }) =>  {
 
     if (!user) {
       // Optionally, return a placeholder or nothing if the user is null
@@ -317,7 +341,7 @@ const HomeScreen = () => {
           <View style={styles.postDetails}>
             <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
             <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-            <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+            <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
           </View>
         </View>
 
@@ -352,7 +376,7 @@ const HomeScreen = () => {
           <TouchableOpacity 
             style={styles.profilePicContainer} 
             onPress={() => {
-              navigation.navigate('Profile');
+              navigation.navigate('ProfileScreen');
             }}
             activeOpacity={0.5} // Manage active opacity here
           >
@@ -414,7 +438,7 @@ const HomeScreen = () => {
           onRequestClose={closeImageModal}
         >
           <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
-            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl }} />
+            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} />
           </TouchableOpacity>
         </Modal>
       </View>
@@ -441,11 +465,6 @@ const styles = StyleSheet.create({
     color: "gray",
     marginTop: 30,
   },
-  deleteButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    alignItems: 'flex-end'
-  },
   noPostsContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -457,10 +476,6 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-  deleteText: {
-    color: 'red',
-    fontSize: 12,
-  },  
   container: {
     // marginTop: 20,
     flex: 1,
@@ -473,7 +488,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   topBar: {
-    paddingTop: Platform.OS === 'ios' ? 5 : 10, // Increase padding for iOS
+    // paddingTop: Platform.OS === 'ios' ? 5 : 10, // Increase padding for iOS
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -496,7 +511,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     borderRadius: 20,
-    shadowRadius: 4,
     paddingHorizontal: 16,
     elevation: 2, // Shadow effect for Android
     marginRight: 20,  // Adjust the right spacing

@@ -1,6 +1,4 @@
-// ProfileScreen.js updates Firebase Auth (using updateProfile(auth.currentUser, { ...}))
-
-import React, { useEffect, useState, useCallback, useContext } from 'react';
+import React, { useEffect, useState, useCallback, useContext, FunctionComponent } from 'react';
 import { View, Text, StyleSheet, Button, Image, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,30 +9,32 @@ import Avatar from '../src/components/Avatar';
 import { db } from '../src/config/firebase';
 import { Alert } from 'react-native';
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import Ionicons from 'react-native-vector-icons/Ionicons';  // Make sure Ionicons is installed
-import i18n from './../src/i18n'; 
+import Ionicons from '@expo/vector-icons/Ionicons';
+import i18n from '../src/i18n'; 
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import mime from "mime";
 import { ActivityIndicator } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigationTypes';
 
+type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'ProfileScreen'>;
 
-const ProfileScreen = () => {
-    const navigation = useNavigation();
+const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) => {
     const auth = getAuth();
     const authUser = auth.currentUser;
     const storage = getStorage();
 
     // States for user details
-    const [newName, setNewName] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
-    const [profilePic, setProfilePic] = useState(null);
+    const [newName, setNewName] = useState<string>('');
+    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [profilePic, setProfilePic] = useState<string | null>(null);
     const { user, setUser } = useUser();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
         navigation.setOptions({
             headerShown: false,
-            Title: '',
+            title: '',
         });
         requestMediaLibraryPermissions();
     }, []);
@@ -77,7 +77,7 @@ const ProfileScreen = () => {
             // Navigate to Login screen before signing out
             navigation.reset({
                 index: 0,
-                routes: [{ name: 'Login' }], // Ensure this matches the name in your navigator
+                routes: [{ name: 'LoginScreen' }], // Ensure this matches the name in your navigator
             });
             console.log('User has logged out.');
         } catch (error) {
@@ -102,10 +102,7 @@ const ProfileScreen = () => {
             console.log("Firestore profile updated or created.");
     
             // Update user context directly
-            setUser(prevUser => ({
-                ...prevUser,
-                name: newName,
-            }));
+            setUser(prevUser => prevUser ? {...prevUser, name: newName} : null);
             
             // Update AsyncStorage
             await AsyncStorage.setItem('userName' + authUser.uid, newName);
@@ -115,7 +112,7 @@ const ProfileScreen = () => {
     
         } catch (error) {
             console.error("Error updating name:", error);
-            Alert.alert("Error", "Failed to update name: " + error.message);
+            Alert.alert("Error", "Failed to update name");
         }
     };
 
@@ -123,7 +120,13 @@ const ProfileScreen = () => {
         setIsEditing(!isEditing);
     };
 
-    const uploadImageAsync = async (uri) => {
+    const uploadImageAsync = async (uri: string): Promise<string | null> => {
+        if (!uri) return null;
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            console.error("No user is currently logged in.");
+            return null;
+        }
         try {
             setLoading(true); // Start loading
             // Correct the URI for Android file path
@@ -136,7 +139,7 @@ const ProfileScreen = () => {
             console.log('Uploading to:', ref.fullPath);  // Ensure path is correct
 
             const snapshot = await uploadBytes(ref, blob, {
-                contentType: mime.getType(newImageUri)  // Use mime to get the correct type
+                contentType: mime.getType(newImageUri) || 'application/octet-stream'  // Use mime to get the correct type
             });
 
             const downloadURL = await getDownloadURL(snapshot.ref);
@@ -158,7 +161,7 @@ const ProfileScreen = () => {
     const pickImageProfile = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: 'Images',
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 0.5,
@@ -168,7 +171,19 @@ const ProfileScreen = () => {
     
             if (!result.canceled && result.assets && result.assets[0].uri) {
                 console.log("Image URI:", result.assets[0].uri);
+
+                if (!auth.currentUser) {
+                    console.error("No user logged in.");
+                    Alert.alert("Login Required", "Please log in to upload images.");
+                    return;
+                }
+
                 const uploadUrl = await uploadImageAsync(result.assets[0].uri);
+
+                if (!uploadUrl) {
+                    console.error("Failed to upload image");
+                    return;
+                }
 
                 // Update both Auth and Firestore with the new profile picture
                 await updateProfile(auth.currentUser, { photoURL: uploadUrl });
@@ -179,7 +194,7 @@ const ProfileScreen = () => {
                 console.log("Image uploaded and URL received:", uploadUrl);
 
                 setProfilePic(uploadUrl); // Update the state and the user context
-                setUser((prevUser) => ({ ...prevUser, avatar: uploadUrl })); // Update the user context
+                setUser(prevUser => prevUser ? { ...prevUser, avatar: uploadUrl } : null ); // Update the user context
             }
         } catch (error) {
             console.error("Failed to pick or upload image: ", error);

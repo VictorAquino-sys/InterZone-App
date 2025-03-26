@@ -1,7 +1,21 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 
-const Avatar = ({ name, imageUri, size = 40, backgroundColor = '#ccc', color = '#fff' }) => {
+type AvatarProps = {
+  name: string;
+  imageUri?: string | null;
+  size?: number;
+  backgroundColor?: string;
+  color?: string;
+};
+
+const Avatar: React.FC<AvatarProps> = ({
+  name,
+  imageUri,
+  size = 40,
+  backgroundColor = '#ccc',
+  color = '#fff'
+}) => {
   console.log("Avatar props:", { name, imageUri });  // Add this to log props being received
   const firstLetter = name ? name[0].toUpperCase() : '?'; // Default to '?' if no name is provided
 

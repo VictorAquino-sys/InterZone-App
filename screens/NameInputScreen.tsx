@@ -1,42 +1,38 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useState, useContext, useEffect, FunctionComponent } from 'react';
+import { View, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from "firebase/auth";
-import i18n from './../src/i18n'; 
+import i18n from '../src/i18n'; 
 import { db } from '../src/config/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { RootStackParamList } from '@/navigationTypes';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-const NameInputScreen = ({ route, navigation }) => {
+type NameInputScreenProps = NativeStackScreenProps<RootStackParamList, 'NameInputScreen'>;
+
+const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }) => {
+    const [name, setName] = useState<string>('');
+    const [checking, setChecking] = useState<boolean>(true); // Prevent double redirects
     const auth = getAuth();
-    const authUser = auth.currentUser;
-    const [name, setName] = useState('');
-    const [checking, setChecking] = useState(true); // Prevent double redirects
-    // const { userId } = route.params || {}; // Safely destructure with default empty object
-    
-    const userId = authUser ? authUser.uid : null; // Always get the correct user ID
+    const userId = auth.currentUser?.uid;
+
     console.log("Verify userId: ", userId);
 
     // Check if the name is already set
     useEffect(() => {
-        const checkName = async () => {
+        const fetchData = async () => {
             if (!userId) return; // Ensure userId is available
 
-             try {
+            try {
                 // Check if name exists in Firestore
                 const userRef = doc(db, "users", userId);
                 const userSnap = await getDoc(userRef);
-
-                if (userSnap.exists() && userSnap.data().name) {
+                // Check AsyncStorage
+                const storedName = await AsyncStorage.getItem('userName' + userId);
+                if (userSnap.exists() && userSnap.data().name || storedName) {
                     console.log("Name already set, redirecting...");
                     navigation.replace('BottomTabs'); 
                     return;
-                }
-
-                // Check AsyncStorage
-                const storedName = await AsyncStorage.getItem('userName' + userId);
-                if (storedName) {
-                    console.log("Name already set in AsyncStorage, redirecting...");
-                    navigation.replace('BottomTabs');
                 }
             } catch (error) {
                 console.error("Error checking name:", error);
@@ -45,35 +41,39 @@ const NameInputScreen = ({ route, navigation }) => {
             }
         };
 
-        checkName();
-    }, [userId]); // Only run when `userId` changes
+        fetchData();
+    }, [userId, navigation]); // Only run when `userId` changes
 
-    const saveName = async () => {
+    const handleSaveName = async () => {
         if (!name.trim()) {
             Alert.alert("Error", "Name cannot be empty.");
             return;
         }
+
         try {
             if (!userId) {
                 console.error("Error: No user ID available");
                 return;
             }
 
-            // Save name in FIrestore
+            // Save name in Firestore
             const userRef = doc(db, "users", userId);
             await setDoc(userRef, { name: name }, { merge: true });
 
             // Save name in AsyncStorage
-            await AsyncStorage.setItem('userName' +  userId, name); // Simplify this for demo purposes
+            await AsyncStorage.setItem('userName' +  userId!, name); // Simplify this for demo purposes
 
             console.log("Saved name:", name); // Debug: Check if the name is logged correctly
             navigation.replace('BottomTabs');  // Navigate to Home after saving / prevent going back to NameInputScreen
         } catch (error) {
+            // Alert.alert(i18n.t('error'), i18n.t('saveError'));
             console.error('Failed to save name', error);
         }
     };
 
-    if (checking) return null; // Prevent rendering if still checking
+    if (checking) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+    }
 
     return (
         <View style={styles.container}>
@@ -82,8 +82,9 @@ const NameInputScreen = ({ route, navigation }) => {
                 value={name}
                 onChangeText={setName}
                 style={styles.input}
+                autoFocus
             />
-            <Button title={i18n.t('saveName')} onPress={saveName} />
+            <Button title={i18n.t('saveName')} onPress={handleSaveName} />
         </View>
     );
 };

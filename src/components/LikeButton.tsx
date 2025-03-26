@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, FunctionComponent } from 'react';
 import { TouchableOpacity, Text } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from '../config/firebase';
 
-const LikeButton = ({ postId, userId }) => {
-    const [liked, setLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(0);
+type LikeButtonProps = {
+    postId: string;
+    userId: string;
+    likedCount?: number;  // Suggest renaming for clarity
+}
+
+const LikeButton: FunctionComponent<LikeButtonProps> = ({ postId, userId, likedCount = 0 }) => {
+    const [liked, setLiked] = useState<boolean>(false);
+    const [likeCount, setLikeCount] = useState<number>(likedCount);
 
     useEffect(() => {
         const fetchLikeStatus = async () => {
@@ -25,7 +31,7 @@ const LikeButton = ({ postId, userId }) => {
     const toggleLike = async () => {
         const postRef = doc(db, "posts", postId);
         try {
-            const newLiked = !liked;
+            const newLiked: boolean = !liked;
             setLiked(newLiked);
             await updateDoc(postRef, {
                 likedBy: newLiked ? arrayUnion(userId) : arrayRemove(userId)
@@ -33,7 +39,7 @@ const LikeButton = ({ postId, userId }) => {
             setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
         } catch (error) {
             console.error("Error toggling like:", error);
-            setLiked(!newLiked); // Revert optimistic update on error
+            setLiked(liked => !liked); // Revert optimistic update on error
         }
     };
 
