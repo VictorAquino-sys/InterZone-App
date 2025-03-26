@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 
 type AvatarProps = {
   name: string;
@@ -22,7 +23,11 @@ const Avatar: React.FC<AvatarProps> = ({
   return (
     <View style={[styles.circle, { width: size, height: size, borderRadius: size / 2, backgroundColor }]}>
       {imageUri ? (
-        <Image source={{ uri: imageUri }} style={[styles.image, { borderRadius: size / 2 }]} />
+        <Image 
+          source={{ uri: imageUri }} 
+          style={[styles.image, { borderRadius: size / 2 }]} 
+          contentFit="cover"
+        />
       ) : (
         <Text style={[styles.text, { color, fontSize: size / 2 }]}>{firstLetter}</Text>
       )}

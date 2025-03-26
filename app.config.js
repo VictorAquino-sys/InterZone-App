@@ -91,6 +91,12 @@ export default {
           isIosBackgroundLocationEnabled: true
         }
       ],
+      [
+        "expo-asset",
+        {
+          "assets": ["./assets"]
+        }
+      ],
     ],
     extra: {
       eas: {

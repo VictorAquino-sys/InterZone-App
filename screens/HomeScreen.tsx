@@ -1,6 +1,9 @@
 import React, { useContext, useEffect, useRef, useState, FunctionComponent } from 'react';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { Platform, StyleSheet, View, Text, Image, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
+import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { StyleSheet, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
+import { Image } from 'expo-image';
+import { Asset } from 'expo-asset';
+import defaultProfileImg from '../assets/unknownuser.png';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Post, usePosts } from '../src/contexts/PostsContext';
@@ -10,7 +13,7 @@ import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
 import { addDoc, deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
-import {ref as storageRef, deleteObject, getStorage } from 'firebase/storage';
+import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import i18n from '../src/i18n'; 
 import { RootStackParamList } from '@/navigationTypes';
 import { Accuracy } from 'expo-location';
@@ -27,8 +30,8 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   // Modal state inside the component
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [profileImageUrl, setProfileImageUrl] = useState<string>('../assets/unknownuser.png');
-  const defaultProfileImg = require('../assets/unknownuser.png');
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const defaultUri = Asset.fromModule(defaultProfileImg).uri;
 
   const [imageOpacity, setImageOpacity] = useState<number>(1); // State to force refresh
 
@@ -55,39 +58,40 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   console.log("HomeScreen");
 
   useEffect(() => {
-    const checkUserName = async () => {
-
+    async function handleUserChanges() {
       try {
         if (!user?.uid) return;
-          console.log("Checking if user has a name...");
-
-          // First, check Firestore for the user name
-          const userRef = doc(db, "users", user.uid);
-          const userSnap = await getDoc(userRef);
-
-          if (userSnap.exists() && userSnap.data().name) {
-              console.log("User has a name:", userSnap.data().name);
-              return; // Stop execution, no need to navigate
-          }
-
-          // Second, check AsyncStorage
-          const storedName = await AsyncStorage.getItem('userName' + user.uid);
-          if (storedName) {
-              console.log("Name found in AsyncStorage:", storedName);
-              return; // Stop execution, no need to navigate
-          }
-
-          // If no name is found, navigate to NameInputScreen
-          console.log("No name found, redirecting to NameInputScreen...");
-          navigation.replace('NameInputScreen', { userId: user.uid });
-
+        console.log("Checking if user has a name...");
+  
+        // Fetch user name from Firestore or AsyncStorage
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists() && userSnap.data().name) {
+            console.log("User has a name:", userSnap.data().name);
+        } else {
+            const storedName = await AsyncStorage.getItem('userName' + user.uid);
+            if (storedName) {
+                console.log("Name found in AsyncStorage:", storedName);
+            } else {
+                console.log("No name found, redirecting to NameInputScreen...");
+                navigation.replace('NameInputScreen', { userId: user.uid });
+                return; // Ensure no further execution if navigating away
+            }
+        }
+  
+        // Fetch posts if the city is known
+        if (city) {
+          console.log("User is set and city is available, fetching posts:", city);
+          fetchPostsByCity(city);
+        }
       } catch (error) {
-          console.error("Error checking user name:", error);
+        console.error("Error handling user changes:", error);
       }
-    };
-
-    checkUserName();
-  }, [user?.uid]); // Only runs when `user` changes
+    }
+  
+    handleUserChanges();
+  }, [user?.uid, city]); // Dependency on both user UID and city
 
   const fetchLocation = async () => {
     try {
@@ -117,16 +121,16 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       console.log("Reverse Geocode Result:", JSON.stringify(reverseGeocode));
       if (reverseGeocode && reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
-        if (address.city) {
-          console.log("Found city:", address.city); // Log to check what city was found
-          setCity(address.city); // Set the city from reverse geocode
-        } else if (address.region) {
-          console.log("City not found. Using region:", address.region);
-          setCity(address.region || "Unknown");
+        let formattedCity = address.city || "Unknown Location";  // Use city if available
+
+        if (address.region) {
+          formattedCity += address.city ? `, ${address.region}` : `${address.region}`;  // Append region if available
         }
+  
+        setCity(formattedCity);  // Update the city state
       } else {
         console.log("No address found.");
-        setCity("Unknown");
+        setCity("Unknown Location");
       }
     } catch (error) {
       console.error("Error fetching location:", error);
@@ -143,21 +147,31 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       const q = query(postsRef, where("city", "==", cityName), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
 
-      const postsData: Post[] = querySnapshot.docs.map(doc => { 
+      const postsData: Post[] = await Promise.all(querySnapshot.docs.map(async (doc) => {
         const data = doc.data();
+        let avatarUrl = "";
+        try {
+          if (data.user.avatar) {
+            const avatarRef = storageRef(getStorage(), data.user.avatar);
+            avatarUrl = await getDownloadURL(avatarRef);
+          }
+        } catch (error) {
+          console.error("Failed to load avatar:", error);
+        }
+
         return {
           id: doc.id,
-          city: data.city as string,
-          content: data.content as string,
-          timestamp: data.timestamp as Timestamp | null,
-          imageUrl: data.imageUrl as string,
+          city: data.city,
+          content: data.content,
+          timestamp: data.timestamp,
+          imageUrl: data.imageUrl,
           user: {
-            uid: data.user.uid as string,  // Assume that user.uid exists in the data
-            name: data.user.name as string,  // Assume that user.name exists in the data
-            avatar: data.user.avatar as string  // Assume that user.avatar exists in the data
+            uid: data.user.uid,
+            name: data.user.name,
+            avatar: avatarUrl || "", // fallback to empty string
           }
         };
-      });
+      }));
 
       console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
 
@@ -182,6 +196,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             if (user?.uid) {
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
+
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
                     console.log("Fetched updated user:", userData);
@@ -194,7 +209,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                         avatar: userData.avatar || prevUser.avatar
                       };
                    });
-                    setProfileImageUrl(userData.avatar || Image.resolveAssetSource(defaultProfileImg).uri); // Set the profile image URL from the user data
+                    setProfileImageUrl(userData.avatar || defaultUri); // Set the profile image URL from the user data
                 }
             }
         } catch (error) {
@@ -224,7 +239,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   const formatDate = (timestamp: Timestamp | undefined) => {
     if (!timestamp) return 'Unknown date'; // Handle undefined or null timestamps
     const date = new Date(timestamp.seconds * 1000); // Convert timestamp to Date object
-    return date.toLocaleString(); // Format date as a string in the local date and time format
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   const handleDeletePost = (postId: string, imageUrl: string | null) => {
@@ -309,11 +324,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     category.label.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Navigate to Category Screen
-  // const handleCategorySelect = (category) => {
-  //   navigation.navigate('CategoryScreen', { category });
-  // };
-
   // Handle category click
   const handleCategoryClick = (category: string) => {
     setFunnyMessage(i18n.t('funnyMessage'));
@@ -325,6 +335,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   };
 
   const renderItem = ({ item }: { item: Post }) =>  {
+    console.log("Post user avatar:", item.user.avatar);
 
     if (!user) {
       // Optionally, return a placeholder or nothing if the user is null
@@ -381,7 +392,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             activeOpacity={0.5} // Manage active opacity here
           >
             <Image 
-                source={{ uri: profileImageUrl }}
+                source={{ uri: profileImageUrl || defaultUri }}
                 style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
             />
           </TouchableOpacity>

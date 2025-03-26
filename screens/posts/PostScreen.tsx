@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, FunctionComponent } from 'react';
-import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { usePosts } from '../../src/contexts/PostsContext';
@@ -20,6 +20,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const auth = getAuth();
   const authUser = auth.currentUser;
 
+  const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [postText, setPostText] = useState<string>('');
   const [charCount, setCharCount] = useState<number>(0); 
   const [location, setLocation] = useState<string | null>(null);
@@ -87,9 +88,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   };
 
   const handleAddLocation = async () => {
+    setLocationLoading(true); // Start loading when the location fetch begins
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Location Permission Denied', 'Please enable location permissions in your settings.');
+      setLocationLoading(false); // End loading on permission denial
       return;
     }
 
@@ -109,7 +112,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       // Process reverse geocode results
       if (reverseGeocodeResults.length > 0) {
         const { city, region } = reverseGeocodeResults[0];
-        const readableLocation = city ? `${city}, ${region}` : `$(coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`;
+        const readableLocation = city ? `${city}, ${region}` : `${coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`;
+
         console.log("Reverse geocoded location:", readableLocation);
 
         // Update the state with either the city or a more generic location description
@@ -123,6 +127,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     } catch (error) {
         console.error("Failed to fetch location or reverse geocode:", error);
         Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
+    } finally {
+      setLocationLoading(false); // End loading after fetching location
     }
   };
 
@@ -226,15 +232,19 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           )}
 
           <View style={styles.iconsContainer}>
-            <TouchableOpacity onPress={pickImage}>
-                <Ionicons name="image-outline" size={24} color="black" />
+            <TouchableOpacity onPress={pickImage} disabled={locationLoading}>
+                <Ionicons name="image-outline" size={24} color={locationLoading ? "gray" : "black"} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleAddLocation}>
-                <Ionicons name="location-outline" size={24} color="black" />
+              {locationLoading ? (
+                <ActivityIndicator  size="small" color="blue" /> // Change to a spinner or different icon color
+                ) : (
+                <Ionicons name="location-outline" size={24} color="b2ff59" />
+              )}            
             </TouchableOpacity>
           </View>
 
-          <Button title={uploading ? "Uploading..." : i18n.t('doneButton')} onPress={handleDone} disabled={uploading} />
+          <Button title={uploading || uploading ? "Uploading..." : i18n.t('doneButton')} onPress={handleDone} disabled={uploading || locationLoading} />
         </View>
     </ScrollView>
   </KeyboardAvoidingView>

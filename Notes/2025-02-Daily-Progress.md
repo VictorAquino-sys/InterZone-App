@@ -2,6 +2,8 @@
 
 ### 03-22
     - updated firebase setup. 
+    - Install expo-image
+    - Install Expo Asset
     
 
 ### 03-14
