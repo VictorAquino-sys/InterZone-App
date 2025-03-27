@@ -99,30 +99,25 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     try {
       // Fetch current location coordinates
       const currentLocation = await Location.getCurrentPositionAsync({});
-      console.log("Location fetched:", currentLocation);  // Log fetched location
       const coords = currentLocation.coords; // Properly define coords
-
-      // setLocation(coords); // Save coordinates directly
 
       const reverseGeocodeResults = await Location.reverseGeocodeAsync({
         latitude: coords.latitude,
         longitude: coords.longitude
       });
 
+      console.log("Location fetched:", reverseGeocodeResults);  // Log fetched location
       // Process reverse geocode results
       if (reverseGeocodeResults.length > 0) {
-        const { city, region } = reverseGeocodeResults[0];
-        const readableLocation = city ? `${city}, ${region}` : `${coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`;
-
-        console.log("Reverse geocoded location:", readableLocation);
-
-        // Update the state with either the city or a more generic location description
-        setLocation(readableLocation);
-        Alert.alert(i18n.t('locationAddedTitle'), `${i18n.t('locationAddedMessage')} ${readableLocation}`);
+        const formattedLocation = `${reverseGeocodeResults[0].city}, ${reverseGeocodeResults[0].region}`;
+  
+        console.log("Display Location:", formattedLocation); // For debugging
+  
+        setLocation(formattedLocation);
+        Alert.alert(i18n.t('locationAddedTitle'), `${i18n.t('locationAddedMessage')} ${formattedLocation}`);
       } else {
-          // Set location to a formatted string of latitude and longitude if no address is found
-        setLocation(`${coords.latitude.toFixed(2)}, ${coords.longitude.toFixed(2)}`);
-        Alert.alert(i18n.t('locationAddedTitle'), i18n.t('genericLocationAddedMessage'));
+        setLocation("Unknown Location");
+        Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
       }
     } catch (error) {
         console.error("Failed to fetch location or reverse geocode:", error);
@@ -157,10 +152,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       const userSnap = await getDoc(userRef);
 
       const latestUserData = userSnap.exists() ? userSnap.data() : { name: 'Anonymous', avatar: '' };
-      
-      // if (userSnap.exists()) {
-      //     latestUserData = userSnap.data();
-      // }
 
       // Upload image if provided
       let imageUrl = "";
