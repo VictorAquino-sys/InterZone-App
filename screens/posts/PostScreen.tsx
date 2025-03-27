@@ -11,6 +11,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '../../src/i18n'; 
 import mime from 'mime';
+import { checkLocation } from '@/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '@/navigationTypes';
 
@@ -108,13 +109,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
       console.log("Location fetched:", reverseGeocodeResults);  // Log fetched location
       // Process reverse geocode results
+      let locationDisplay = null;
       if (reverseGeocodeResults.length > 0) {
-        const formattedLocation = `${reverseGeocodeResults[0].city}, ${reverseGeocodeResults[0].region}`;
+        const { city, region } = reverseGeocodeResults[0];
+        locationDisplay = city ? `${city}, ${region}` : checkLocation(coords);
+        // const formattedLocation = `${reverseGeocodeResults[0].city}, ${reverseGeocodeResults[0].region}`;
   
-        console.log("Display Location:", formattedLocation); // For debugging
+        console.log("Display Location:", locationDisplay); // For debugging
   
-        setLocation(formattedLocation);
-        Alert.alert(i18n.t('locationAddedTitle'), `${i18n.t('locationAddedMessage')} ${formattedLocation}`);
+        setLocation(locationDisplay);
+        Alert.alert(i18n.t('locationAddedTitle'), `${i18n.t('locationAddedMessage')} ${locationDisplay}`);
       } else {
         setLocation("Unknown Location");
         Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));

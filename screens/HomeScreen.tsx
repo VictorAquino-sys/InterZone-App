@@ -14,6 +14,7 @@ import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
 import { addDoc, deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
+import { checkLocation } from '@/utils/locationUtils';
 import i18n from '../src/i18n'; 
 import { RootStackParamList } from '@/navigationTypes';
 import { Accuracy } from 'expo-location';
@@ -119,19 +120,15 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       });
   
       console.log("Reverse Geocode Result:", JSON.stringify(reverseGeocode));
+      let locationDisplay = null;
       if (reverseGeocode && reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
-        let formattedCity = address.city || "Unknown Location";  // Use city if available
+        const { city, region } = reverseGeocode[0];
+        locationDisplay = city ? `${city}, ${region}` : checkLocation(location.coords);
 
-        if (address.region) {
-          formattedCity += address.city ? `, ${address.region}` : `${address.region}`;  // Append region if available
-        }
-  
-        setCity(formattedCity);  // Update the city state
       } else {
-        console.log("No address found.");
-        setCity("Unknown Location");
+        locationDisplay = checkLocation(location.coords);
       }
+      setCity(locationDisplay);  // Update the city state
     } catch (error) {
       console.error("Error fetching location:", error);
       alert("Failed to fetch location. Please try again.");
