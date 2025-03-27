@@ -1,10 +1,15 @@
 (Daily logs of what have been worked on)
 
+### 03-27
+    - Integrate Google Sign-In: added plugins and rebuild the app by:
+    npx expo prebuild --clean
+    npx expo run:android && npx expo run:ios
+
 ### 03-22
     - updated firebase setup. 
     - Install expo-image
     - Install Expo Asset
-    
+    - added custom mapping
 
 ### 03-14
     - Set up the TTL Policy for Time-to-Live (usually 7 days to expired).

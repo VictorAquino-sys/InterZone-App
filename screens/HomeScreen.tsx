@@ -124,7 +124,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       if (reverseGeocode && reverseGeocode.length > 0) {
         const { city, region } = reverseGeocode[0];
         locationDisplay = city ? `${city}, ${region}` : checkLocation(location.coords);
-
       } else {
         locationDisplay = checkLocation(location.coords);
       }
