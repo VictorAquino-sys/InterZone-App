@@ -15,7 +15,7 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "fire
 import mime from "mime";
 import { ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigationTypes';
+import { RootStackParamList } from '../src/navigationTypes';
 
 type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'ProfileScreen'>;
 

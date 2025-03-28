@@ -10,7 +10,7 @@ export default {
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
     splash: {
-      image: "./assets/images/splash-icon.png",
+      image: "./assets/images/splash_icon.png",
       resizeMode: "contain",
       "imageWidth": 200
     },
@@ -35,8 +35,8 @@ export default {
       googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist"
     },
     android: {
-      package: IS_DEV ? "com.zhd.interzone.dev" : "com.zhd.interzone",
-      versionCode: 14,
+      package: IS_DEV ? "com.zhd.interzone" : "com.zhd.interzone",
+      versionCode: 16,
       jsEngine: "hermes",
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",
@@ -54,7 +54,7 @@ export default {
         "android.permission.READ_EXTERNAL_STORAGE", 
         "android.permission.WRITE_EXTERNAL_STORAGE",
       ],
-      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './android/app/google-services.json',
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       runtimeVersion: {
         policy: "appVersion"
       }

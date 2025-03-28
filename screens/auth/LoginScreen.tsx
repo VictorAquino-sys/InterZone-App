@@ -1,15 +1,16 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
-import { getAuth, createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
-import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard } from 'react-native'
+import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
+import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
 import { Alert } from 'react-native';
+import { GoogleSignin, statusCodes, isErrorWithCode, isSuccessResponse, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { UserData } from '../../src/contexts/UserContext'; // Use useUser here
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import i18n from '../../src/i18n';
 import { NativeStackScreenProps } from '@react-navigation/native-stack'; 
-import { RootStackParamList } from '@/navigationTypes';
+import { RootStackParamList } from '../../src/navigationTypes';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -139,6 +140,66 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
     }
   };
 
+  const signIn = async () => {
+    try {
+      await checkPlayServices(); // Check for Google Play Services
+      const userInfo = await handleGoogleSignIn(); // Handle the Google sign-in process
+      if (!userInfo.idToken) {
+        throw new Error('No ID token received from Google Sign-In');
+      }
+      
+      const googleCredential = GoogleAuthProvider.credential(userInfo.idToken);
+      const userCredential = await signInWithCredential(auth, googleCredential);
+      console.log('User signed in with Google:', userCredential.user.email);
+    
+      // await checkAndCreateFirestoreDocument(userCredential.user); 
+      const userRef = doc(db, "users", userCredential.user.uid);
+      const docSnap = await getDoc(userRef);
+    
+      if (!docSnap.exists()) {
+        await setDoc(userRef, {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          name: userCredential.user.displayName || '',
+          avatar: userCredential.user.photoURL || '',
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      navigation.navigate('BottomTabs'); // Navigate or update UI
+    } catch (error: any) {
+      console.error('Error during sign-in process:', error);
+      Alert.alert('Login Failed', error.message || 'Failed to sign in with Google');
+    }
+  };
+  
+  const checkPlayServices = async () => {
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+  };
+  
+  const handleGoogleSignIn = async () => {
+    const response = await GoogleSignin.signIn();
+    if (!isSuccessResponse(response)) {
+      throw new Error('Sign-in cancelled or failed without error code.');
+    }
+    return response.data;
+  };
+  
+  const checkAndCreateFirestoreDocument = async (authUser: any) => {
+    const userRef = doc(db, "users", authUser.uid);
+    const docSnap = await getDoc(userRef);
+  
+    if (!docSnap.exists()) {
+      await setDoc(userRef, {
+        uid: authUser.uid,
+        email: authUser.email,
+        name: authUser.displayName || '',
+        avatar: authUser.photoURL || '',
+        createdAt: new Date().toISOString(),
+      });
+    }
+  };
+
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.rootContainer}
     >
@@ -151,7 +212,6 @@ textAlign: 'center'}}>{i18n.t('tagline')}</Text>)}
         </View>
       <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
       >
-
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -167,7 +227,6 @@ textAlign: 'center'}}>{i18n.t('tagline')}</Text>)}
             secureTextEntry
           />
         </View>
-
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={handleLogin}
@@ -182,6 +241,12 @@ textAlign: 'center'}}>{i18n.t('tagline')}</Text>)}
             <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
           </TouchableOpacity>
         </View>
+        <GoogleSigninButton
+              style={styles.googleButton}
+              size={GoogleSigninButton.Size.Wide}
+              color={GoogleSigninButton.Color.Dark}
+              onPress={signIn}
+        />
       </KeyboardAvoidingView>
     </ImageBackground>
   );
@@ -237,6 +302,11 @@ buttonOutline: {
   marginTop: 5,
   borderColor: '#0782F9',
   borderWidth: 2,
+},
+googleButton: {
+  width: '80%',
+  height: 48,
+  marginTop: 10 // Or adjust according to your layout
 },
 buttonText:{
   color: 'white',

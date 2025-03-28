@@ -1,10 +1,18 @@
 (Daily logs of what have been worked on)
 
-### 03-27
-    - Integrate Google Sign-In: added plugins and rebuild the app by:
-    npx expo prebuild --clean
-    npx expo run:android && npx expo run:ios
+### 03-28
+    - Integrated Babel Module Resolver:
+        npm install --save-dev babel-plugin-module-resolver
 
+
+
+### 03-27
+    - Integrate Google Sign-In: added plugins.
+    - Installing Expo Development Builds since needed libraries aren't available in Expo Go
+        Terminal: 
+        npx expo install expo-dev-client
+        npm install -g eas-cli
+        
 ### 03-22
     - updated firebase setup. 
     - Install expo-image

@@ -11,9 +11,9 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '../../src/i18n'; 
 import mime from 'mime';
-import { checkLocation } from '@/utils/locationUtils';
+import { checkLocation } from '../../src/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { TabParamList } from '@/navigationTypes';
+import { TabParamList } from '../../src/navigationTypes';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 

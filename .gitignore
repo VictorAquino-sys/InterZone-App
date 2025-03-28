@@ -61,3 +61,6 @@ credentials.json
 
 # .aab files
 android/
+
+# cache.js
+utils/

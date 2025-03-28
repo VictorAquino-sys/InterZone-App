@@ -1,5 +1,9 @@
 (Fixes & Solutions for issues)
 
+3-28
+* To prebuild Android/IOS folders run:
+npx eas prebuild
+
 03-22
 * Migrate to TypeScript. Run this command to check for type errors without necesssary outputting JavaScript files.
     Terminal

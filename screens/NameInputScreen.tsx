@@ -5,7 +5,7 @@ import { getAuth } from "firebase/auth";
 import i18n from '../src/i18n'; 
 import { db } from '../src/config/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { RootStackParamList } from '@/navigationTypes';
+import { RootStackParamList } from '../src/navigationTypes';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 type NameInputScreenProps = NativeStackScreenProps<RootStackParamList, 'NameInputScreen'>;

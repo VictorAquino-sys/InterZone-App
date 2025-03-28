@@ -21,6 +21,12 @@
       },
       "env": {
         "APP_VARIANT": "development"
+      },
+      "android": {
+        "credentialsSource": "remote",
+        "env": {
+          "GOOGLE_SERVICES_JSON": "@google-service-json"
+        }
       }
     },
     "preview": {

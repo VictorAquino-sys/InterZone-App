@@ -10,6 +10,7 @@ import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PostScreen from './screens/posts/PostScreen';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import NameInputScreen from './screens/NameInputScreen';
 import { PostsProvider } from './src/contexts/PostsContext';
 import { UserProvider, useUser } from './src/contexts/UserContext';
@@ -65,6 +66,12 @@ function AuthenticatedApp() {
   const { user } = useUser();  // Now safely within UserProvider
 
   useEffect(() => {
+    // Set up Google Sign-In
+    GoogleSignin.configure({
+      webClientId: '239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com', // Use the correct client ID
+      offlineAccess: true // True if you need to call Google APIs on behalf of the user when they are offline
+    });
+
     i18n.locale = getLocales()[0].languageCode; // Setup the locale at app start
     console.log("User state:", user);  // Log the user state on each effect execution
 
