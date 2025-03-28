@@ -1,6 +1,8 @@
 (Fixes & Solutions for issues)
 
 3-28
+* to test the app in dev, run:
+    npx eas build --platform android --profile development
 * To prebuild Android/IOS folders run:
 npx eas prebuild
 
