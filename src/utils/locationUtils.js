@@ -10,12 +10,12 @@ export const locationMapping = [
       }
     },
     {
-        city: "Puente Piedra",
-        region: "Lima",
-        bounds: {
-            latitude: { min: -11.8768, max: -11.8516 },
-            longitude: { min: -77.09, max: -77.0744 }
-        }
+      city: "Puente Piedra",
+      region: "Lima",
+      bounds: {
+          latitude: { min: -11.8768, max: -11.8516 },
+          longitude: { min: -77.09, max: -77.0744 }
+      }
     }
   ];
   

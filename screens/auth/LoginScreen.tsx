@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
 import { Alert } from 'react-native';
-import { GoogleSignin, statusCodes, isErrorWithCode, isSuccessResponse, GoogleSigninButton } from '@react-native-google-signin/google-signin';
+import { GoogleSignin, isSuccessResponse, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { UserData } from '../../src/contexts/UserContext'; // Use useUser here
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import i18n from '../../src/i18n';
@@ -212,6 +212,12 @@ textAlign: 'center'}}>{i18n.t('tagline')}</Text>)}
         </View>
       <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
       >
+        <GoogleSigninButton
+            style={styles.googleButton}
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Dark}
+            onPress={signIn}
+        />
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -241,12 +247,7 @@ textAlign: 'center'}}>{i18n.t('tagline')}</Text>)}
             <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
           </TouchableOpacity>
         </View>
-        <GoogleSigninButton
-              style={styles.googleButton}
-              size={GoogleSigninButton.Size.Wide}
-              color={GoogleSigninButton.Color.Dark}
-              onPress={signIn}
-        />
+
       </KeyboardAvoidingView>
     </ImageBackground>
   );
@@ -259,7 +260,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 95,
+    marginTop: '96%',
   },
   titleContainer: {
     // paddingHorizontal: '15%',
@@ -267,58 +268,57 @@ const styles = StyleSheet.create({
     marginBottom : '-30%',
     paddingHorizontal: 15,
   },
-phraseContainer: {
+  phraseContainer: {
     paddingLeft: '18%',
     paddingTop: '10%',
     marginBottom : '-40%',
-},
+  },
   inputContainer: {
     width:'80%',
   },
-input: {
-  backgroundColor:'white',
-  opacity: 0.7,
-  paddingHorizontal: 15,
-  paddingVertical: 10,
-  borderRadius: 10,
-  marginTop: 15,
-},
-buttonContainer: {
-  width:'60%',
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginTop: '5%',
-  marginBottom: '-70%',
-},
-button: {
-  backgroundColor: '#0782F9',
-  width: '100%',
-  padding: 15,
-  borderRadius: 10,
-  alignItems: 'center',
-},
-buttonOutline: {
-  backgroundColor: 'white',
-  marginTop: 5,
-  borderColor: '#0782F9',
-  borderWidth: 2,
-},
-googleButton: {
-  width: '80%',
-  height: 48,
-  marginTop: 10 // Or adjust according to your layout
-},
-buttonText:{
-  color: 'white',
-  fontWeight: '700',
-  fontSize: 16,
-},
-buttonOutlineText: {
-  color: '#0782F9',
-  fontWeight: '700',
-  fontSize: 16,
-},
-rootContainer: {
-  flex: 1,
-},
+  input: {
+    backgroundColor:'white',
+    opacity: 0.7,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 15,
+  },
+  buttonContainer: {
+    width:'60%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '5%',
+  },
+  button: {
+    backgroundColor: '#0782F9',
+    width: '100%',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonOutline: {
+    backgroundColor: 'white',
+    marginTop: 5,
+    borderColor: '#0782F9',
+    borderWidth: 2,
+  },
+  googleButton: {
+    width: '80%',
+    height: 48,
+    marginTop: 10 // Or adjust according to your layout
+  },
+  buttonText:{
+    color: 'white',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  buttonOutlineText: {
+    color: '#0782F9',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  rootContainer: {
+    flex: 1,
+  },
 })

@@ -36,7 +36,7 @@ export default {
     },
     android: {
       package: IS_DEV ? "com.zhd.interzone" : "com.zhd.interzone",
-      versionCode: 16,
+      versionCode: 17,
       jsEngine: "hermes",
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",
