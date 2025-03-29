@@ -119,15 +119,25 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         longitude: location.coords.longitude
       });
   
-      console.log("Reverse Geocode Result:", JSON.stringify(reverseGeocode));
-      let locationDisplay = null;
+      // console.log("Reverse Geocode Result:", JSON.stringify(reverseGeocode));
+
       if (reverseGeocode && reverseGeocode.length > 0) {
-        const { city, region } = reverseGeocode[0];
-        locationDisplay = city ? `${city}, ${region}` : checkLocation(location.coords);
-      } else {
-        locationDisplay = checkLocation(location.coords);
+        const { city, region, isoCountryCode } = reverseGeocode[0];
+        let locationDisplay = null;
+        if (isoCountryCode == 'US' && region !== null) {
+          let acronym: string = region.toUpperCase().slice(0, 2);
+          locationDisplay = `${city}, ${acronym}`;
+          console.log("Testing acronym:", locationDisplay);
+        }
+        else if ( city && region !== null) {
+          locationDisplay = `${city}, ${region}`;
+        } 
+        else {
+          locationDisplay = checkLocation(location.coords);
+        }
+        console.log("Location Display:", locationDisplay);
+        setCity(locationDisplay);  // Update the city state
       }
-      setCity(locationDisplay);  // Update the city state
     } catch (error) {
       console.error("Error fetching location:", error);
       alert("Failed to fetch location. Please try again.");
@@ -169,11 +179,11 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         };
       }));
 
-      console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
+      // console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
 
       setPosts(postsData);
       console.log("Fetched posts:", postsData);
-      console.log("Fetched posts image URLs:", postsData.map(post => post.imageUrl));  // This will log all image URLs
+      // console.log("Fetched posts image URLs:", postsData.map(post => post.imageUrl));  // This will log all image URLs
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {

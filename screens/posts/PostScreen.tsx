@@ -107,27 +107,33 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         longitude: coords.longitude
       });
 
-      console.log("Location fetched:", reverseGeocodeResults);  // Log fetched location
+      // console.log("Location fetched:", reverseGeocodeResults);  // Log fetched location
       // Process reverse geocode results
-      let locationDisplay = null;
       if (reverseGeocodeResults.length > 0) {
-        const { city, region } = reverseGeocodeResults[0];
-        locationDisplay = city ? `${city}, ${region}` : checkLocation(coords);
+        const { city, region, isoCountryCode } = reverseGeocodeResults[0];
+        let locationDisplay = null;
+        if (isoCountryCode == 'US' && region !== null){
+          const acronym: string = region.toUpperCase().slice(0, 2);
+          locationDisplay = `${city}, ${acronym}`;
+          console.log("Testing acronym:", locationDisplay);
+        }
+        else { 
+          locationDisplay = city ? `${city}, ${region}` : checkLocation(coords);
+        }
         // const formattedLocation = `${reverseGeocodeResults[0].city}, ${reverseGeocodeResults[0].region}`;
   
         console.log("Display Location:", locationDisplay); // For debugging
-  
         setLocation(locationDisplay);
         Alert.alert(i18n.t('locationAddedTitle'), `${i18n.t('locationAddedMessage')} ${locationDisplay}`);
       } else {
-        setLocation("Unknown Location");
-        Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
+          setLocation("Unknown Location");
+          Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
       }
     } catch (error) {
         console.error("Failed to fetch location or reverse geocode:", error);
         Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
     } finally {
-      setLocationLoading(false); // End loading after fetching location
+        setLocationLoading(false); // End loading after fetching location
     }
   };
 
