@@ -203,13 +203,15 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.rootContainer}
     >
-        <View style={styles.titleContainer}>
-          {show && (<Text style={{fontSize: 60, color: 'yellow', borderColor: 'red',  textAlign: 'center', fontWeight: 'bold'}}>{i18n.t('appTitle')}</Text>)}
+        <View style={styles.headerContainer}>
+          {show && (
+            <>
+              <Text style={styles.titleText}>{i18n.t('appTitle')}</Text>
+              <Text style={styles.phraseText}>{i18n.t('tagline')}</Text>
+            </>
+          )}
         </View>
-        <View style={styles.phraseContainer}>
-          {show && (<Text style={{fontSize: 25, color: 'white', fontWeight: 'bold',
-textAlign: 'center'}}>{i18n.t('tagline')}</Text>)}
-        </View>
+
       <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
       >
         <GoogleSigninButton
@@ -258,23 +260,38 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    marginTop: '96%',
+    paddingHorizontal: 20,
+    marginTop: '10%',
   },
-  titleContainer: {
-    // paddingHorizontal: '15%',
-    paddingVertical: '20%',
-    marginBottom : '-30%',
-    paddingHorizontal: 15,
+  headerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: '12%',
+    width: '100%',
   },
-  phraseContainer: {
-    paddingLeft: '18%',
-    paddingTop: '10%',
-    marginBottom : '-40%',
+  titleText: {
+    fontSize: 60,
+    color: 'yellow',
+    borderColor: 'red',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+    marginBottom: 10,  // Space between title and phrase
+  },
+  phraseText: {
+    fontSize: 25,
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   inputContainer: {
-    width:'80%',
+    width:'70%',
+    justifyContent: 'center',
   },
   input: {
     backgroundColor:'white',
@@ -304,9 +321,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   googleButton: {
-    width: '80%',
-    height: 48,
-    marginTop: 10 // Or adjust according to your layout
+    width: '70%',
+    height: 50,
+    borderRadius: 10,
+    marginTop: 5 // Or adjust according to your layout
   },
   buttonText:{
     color: 'white',

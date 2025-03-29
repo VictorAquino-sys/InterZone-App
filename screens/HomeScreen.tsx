@@ -12,7 +12,7 @@ import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
-import { addDoc, deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
+import { deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { checkLocation } from '../src/utils/locationUtils';
 import i18n from '../src/i18n'; 
@@ -180,7 +180,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       }));
 
       // console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
-
       setPosts(postsData);
       console.log("Fetched posts:", postsData);
       // console.log("Fetched posts image URLs:", postsData.map(post => post.imageUrl));  // This will log all image URLs
@@ -224,7 +223,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       };
 
       fetchUserData(); // Fetch latest user name
-
           // Fetch location only if not already fetching
       if (!isFetching) {
         console.log("Fetching user location...");
