@@ -55,7 +55,7 @@ google-services/
 ios/certs/*
 
 # GoogleService-info.plist
-GoogleService-info.plist
+# GoogleService-info.plist
 
 credentials.json
 

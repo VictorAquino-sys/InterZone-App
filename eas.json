@@ -17,7 +17,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "credentialsSource": "local"
+        "credentialsSource": "local",
+        "simulator": true
       },
       "env": {
         "APP_VARIANT": "development"
@@ -27,6 +28,12 @@
         "env": {
           "GOOGLE_SERVICES_JSON": "@google-service-json"
         }
+      }
+    },
+    "ios-simulator": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
       }
     },
     "preview": {

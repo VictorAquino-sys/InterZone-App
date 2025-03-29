@@ -17,9 +17,9 @@ export default {
     assetBundlePatterns: ["**/*"],
     ios: {
       supportsTablet: false,
-      sdkVersion: "18.0",
-      buildNumber: "1.0.3",
-      bundleIdentifier: IS_DEV ? "com.interzone.app.dev" : "com.interzone.app",
+      sdkVersion: "19.0",
+      buildNumber: "1.0.4",
+      bundleIdentifier: IS_DEV ? "com.interzone.app" : "com.interzone.app",
       runtimeVersion: {
         policy: "appVersion"
       },
