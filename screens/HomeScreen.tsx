@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState, FunctionComponent } from 'react';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
-import { StyleSheet, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
+import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { Asset } from 'expo-asset';
 import defaultProfileImg from '../assets/unknownuser.png';
@@ -412,7 +412,10 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         </View>
 
         {loading ? (
-          <Text style={styles.loadingText}>Loading posts...</Text>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading posts...</Text>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
         ) : !user ? (
           <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
         ) : posts.length === 0 ? (
@@ -467,6 +470,11 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'white' // or any other background color you want
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   loadingText: {
     fontSize: 16,
