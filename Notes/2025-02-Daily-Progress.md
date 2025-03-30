@@ -1,5 +1,14 @@
 (Daily logs of what have been worked on)
 
+### 03-29
+    Implementing drop-down menu for categories
+    dependencies
+    For Android
+    npm install @react-native-picker/picker --save
+
+    For IOS
+    https://www.npmjs.com/package/@react-native-picker/picker
+
 ### 03-28
     - Integrated Babel Module Resolver:
         npm install --save-dev babel-plugin-module-resolver

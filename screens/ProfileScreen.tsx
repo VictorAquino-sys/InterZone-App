@@ -221,8 +221,8 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                 ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.newName}>{newName}</Text>
-                        <TouchableOpacity onPress={toggleEdit}>
-                            <Ionicons name="pencil" size={24} color="gray" />
+                        <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
+                            <Ionicons name="pencil" size={24} color="gray"/>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -230,7 +230,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
             {isEditing && (
                 <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
             )}
-            <Button title={i18n.t('logoutButton')} onPress={handleLogout} />
+            <TouchableOpacity
+                style={[styles.buttonContainer, { marginTop: 20 }]} // Additional top margin for separation
+                onPress={handleLogout}
+            >
+                <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
+            </TouchableOpacity>
+            
         </View>
     );
 };
@@ -243,6 +249,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        backgroundColor: 'aliceblue'
     },
     profilePic: {
         width: 150,
@@ -253,17 +260,20 @@ const styles = StyleSheet.create({
         borderColor: '#ddd' // Optional: adds a border for better visibility
     },
     title: {
-        fontSize: 24,
+        fontSize: 34,
         fontWeight: 'bold',
-        marginBottom: 20,   // Corrected from 'marginButtom'
+        marginBottom: 30,   // Corrected from 'marginButtom'
     },
     nameContainer: {
         marginBottom: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     newName: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginRight: 10,
+        marginLeft: 25,
+        marginTop: 10,
     },
     input: {
         fontSize: 18,
@@ -272,4 +282,18 @@ const styles = StyleSheet.create({
         padding: 10,
         width: '100%',
     },
+    buttonContainer: {
+        backgroundColor: '#4A90E2', // Change as necessary
+        borderRadius: 10,
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 10,
+        width: '60%',
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 20,
+        fontWeight: 'bold',
+    }
 });

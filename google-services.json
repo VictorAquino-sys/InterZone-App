@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "239395273948-39nqttl1fse8c9or7eptojp1ngf7go7k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zhd.interzone",
+            "certificate_hash": "d1035a3590b32da2ab7a86be57820e08ba99da84"
+          }
+        },
+        {
           "client_id": "239395273948-tqisng7f4hs0rv1vl04c45vbgqajvcf1.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -37,6 +45,13 @@
             {
               "client_id": "239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "239395273948-077epqqqkcd2f7vm427ip36em3ltkosm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.interzone.app"
+              }
             }
           ]
         }

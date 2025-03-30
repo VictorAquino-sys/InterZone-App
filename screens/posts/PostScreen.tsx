@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, FunctionComponent } from 'react';
+import React, { useContext, useState, useEffect, useRef, FunctionComponent } from 'react';
 import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
@@ -9,7 +9,8 @@ import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
-import i18n from '../../src/i18n'; 
+import i18n from '../../src/i18n';
+import { Picker } from '@react-native-picker/picker';
 import mime from 'mime';
 import { checkLocation } from '../../src/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -27,6 +28,10 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [location, setLocation] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>('');
+  // const pickerRef = useRef<Picker<string> | null>(null);  // Use generic to specify the element type
+
   const { user } = useUser(); // Use the useUser hook
   const { setPosts } = usePosts();
   const storage = getStorage();
@@ -154,6 +159,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       return;
     }
 
+    if (!selectedCategory) {
+      Alert.alert("Category Required", "Please select a category for your post.");
+      return;
+    }
+
     setUploading(true);
 
     try {
@@ -210,22 +220,26 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+    <KeyboardAvoidingView style={{ flex:1  }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1}}>
         <View style={styles.container}>
-          <TextInput
-            multiline
-            placeholder={i18n.t('postPlaceholder')}
-            maxLength={200}
-            style={{height: 300}}
-            value={postText}
-            onChangeText={(text) => {
-              setPostText(text);
-              setCharCount(text.length); // Update character count as user types
-            }}
-          />
+          <Text style={styles.screenTitle}>Create Post</Text>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              multiline
+              placeholder={i18n.t('postPlaceholder')}
+              maxLength={250}
+              style={{height: 150}}
+              value={postText}
+              onChangeText={(text) => {
+                setPostText(text);
+                setCharCount(text.length); // Update character count as user types
+              }}
+            />
+          </View>
           <Text style={styles.charCount}>
-            {charCount} / 200
+            {charCount} / 250
           </Text>
 
           {imageUri && (
@@ -234,18 +248,44 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
           <View style={styles.iconsContainer}>
             <TouchableOpacity onPress={pickImage} disabled={locationLoading}>
-                <Ionicons name="image-outline" size={24} color={locationLoading ? "gray" : "black"} />
+                <Ionicons name="image-outline" size={30} color={locationLoading ? "gray" : "#FF9966"} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleAddLocation}>
               {locationLoading ? (
                 <ActivityIndicator  size="small" color="blue" /> // Change to a spinner or different icon color
                 ) : (
-                <Ionicons name="location-outline" size={24} color="b2ff59" />
+                <Ionicons name="location-outline" size={28} color="#009999" />
               )}            
             </TouchableOpacity>
           </View>
 
-          <Button title={uploading || uploading ? "Uploading..." : i18n.t('doneButton')} onPress={handleDone} disabled={uploading || locationLoading} />
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue, itemIndex) => setSelectedCategory(itemValue)}
+              enabled={!locationLoading}                  
+              style={styles.pickerStyle}
+            >
+              <Picker.Item label="Select a category" value="" color="grey"/>
+              <Picker.Item label="Restaurants" value="restaurants" color="cornflowerblue"/>
+              <Picker.Item label="Events" value="events" color="cornflowerblue"/>
+              <Picker.Item label="Music" value="music" color="cornflowerblue"/>
+              <Picker.Item label="News" value="news" color="cornflowerblue"/>
+              <Picker.Item label="Study hub" value="study hub" color="cornflowerblue"/>
+              <Picker.Item label="Petpals" value="petpals" color="cornflowerblue"/>
+              <Picker.Item label="Deals" value="deals" color="cornflowerblue"/>
+              <Picker.Item label="Random" value="random" color="cornflowerblue"/>          
+            </Picker>
+          </View>
+
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={handleDone}
+            disabled={uploading || locationLoading}
+            activeOpacity={0.8} // Optional: Controls the opacity on touch
+          >
+            <Text style={styles.buttonText}>{uploading ? "Uploading..." : i18n.t('doneButton')}</Text>
+          </TouchableOpacity>
         </View>
     </ScrollView>
   </KeyboardAvoidingView>
@@ -258,59 +298,78 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    paddingTop: 100,
-    backgroundColor: 'white',
+    paddingTop: '28%',
+    backgroundColor: 'seashell',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
   },
   charCount: {
     textAlign: 'right',
     marginRight: 10, // Adjust as needed
     color: '#666'
   },
-  postButton: {
-    backgroundColor: '#b2ff59',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 6,
-  },
-  postButtonText: {
-    color: 'black',
-    fontWeight: 'bold',
+  inputContainer: {
+    marginTop: 15,
+    marginBottom: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    backgroundColor: 'white', // Ensure background matches
   },
   textInput: {
     flex: 1,
-    marginTop: 50,
+    // marginTop: 20,
     padding: 10,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     fontSize: 18,
     textAlignVertical: 'top',
+    minHeight: 100, // Ensure it's visually sufficient for multiline input
   },
   iconsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 20,
   },
-  createOptions: {
-    marginTop: 20,
-  },
-  createOptionButton: {
-    backgroundColor: '#f1f1f1',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  createOptionText: {
-    fontSize: 16,
-  },
   imagePreview: { 
     width: '100%', 
     height: 200, 
     resizeMode: 'cover', 
-    marginTop: 10 }
+    marginTop: 10 
+  },
+  pickerStyle: {
+    height: 50,
+    width: '100%',
+    color: '#555',
+  },
+  pickerContainer: {
+    marginBottom: 30,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: 'azure', // Background color for the picker container
+  },
+  buttonContainer: {
+    marginTop: 40,
+    width: '80%',
+    alignSelf: 'center',
+    backgroundColor: '#4A90E2', // Set the background color of the button
+    padding: 10, // Add padding for the button
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+    alignItems: 'center', // Center the text inside the button
+    justifyContent: 'center', // Center the text vertically
+  },
+  buttonText: {
+    color: 'white', // Text color
+    fontSize: 20, // Font size
+    fontWeight: 'bold', // Font weight
+  },
 });

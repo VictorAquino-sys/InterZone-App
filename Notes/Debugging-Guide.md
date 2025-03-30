@@ -4,7 +4,9 @@
 * to test the app in dev, run:
     npx eas build --platform android --profile development
 * To prebuild Android/IOS folders run:
-npx eas prebuild
+    npx expo prebuild --clean
+* For production:
+    npx eas build --platform android --profile production
 
 03-22
 * Migrate to TypeScript. Run this command to check for type errors without necesssary outputting JavaScript files.
