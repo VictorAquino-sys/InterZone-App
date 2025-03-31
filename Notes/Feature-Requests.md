@@ -7,7 +7,7 @@ Provide categories:
     Implement the dropdown for category selection in the PostScreen.tsx. 
     This allows you to structure the data with categories from the outset, which is easier than retrofitting data categorization later. (DONE)
 
-    Enhance the HomeScreen to display categories for exisiting posts, which can be a quick upgrade to the user interface and immediately improve the user experience.
+    Enhance the HomeScreen to display categories for exisiting posts, which can be a quick upgrade to the user interface and immediately improve the user experience. (Done)
 [Medium]
 Develop Business Profiles:
     Once categories are in place and working smoothly, start designing and implementing the business profile feature. This includes setting up the different registration process, profile management capabilities, and the prioritization in feeds.
