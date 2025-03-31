@@ -14,6 +14,7 @@ export interface Post {
         avatar: string;
     };
     likedBy?: string[];
+    categoryKey: string;
 }
 
 // Define the type for the posts and the context structure

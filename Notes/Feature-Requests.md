@@ -4,7 +4,8 @@ Prioritize them with High (must-have), Medium (nice-to-have), and Low (low-prior
 # 3-29
 [High]  
 Provide categories:
-    Implement the dropdown for category selection in the PostScreen.tsx This allows you to structure the data with categories from the outset, which is easier than retrofitting data categorization later.
+    Implement the dropdown for category selection in the PostScreen.tsx. 
+    This allows you to structure the data with categories from the outset, which is easier than retrofitting data categorization later. (DONE)
 
     Enhance the HomeScreen to display categories for exisiting posts, which can be a quick upgrade to the user interface and immediately improve the user experience.
 [Medium]

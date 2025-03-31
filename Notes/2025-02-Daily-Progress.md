@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 03-30
+    Implemented a dropdown menu for category selection in PostScreen
+    Category Filtering on Home Screen and adding visual indicators like category icons
+
 ### 03-29
     Implementing drop-down menu for categories
     dependencies
@@ -12,8 +16,6 @@
 ### 03-28
     - Integrated Babel Module Resolver:
         npm install --save-dev babel-plugin-module-resolver
-
-
 
 ### 03-27
     - Integrate Google Sign-In: added plugins.

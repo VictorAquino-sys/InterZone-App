@@ -160,7 +160,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
 
     if (!selectedCategory) {
-      Alert.alert("Category Required", "Please select a category for your post.");
+      Alert.alert(i18n.t('categoryRequired'), i18n.t('selectCategory'));
       return;
     }
 
@@ -196,7 +196,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           uid: authUser.uid,
           name: latestUserData.name || "Anonymous", // Use updated name
           avatar: latestUserData.avatar || "", 
-        }
+        },
+        categoryKey: selectedCategory
       };
 
       // Add post to Firestore
@@ -266,15 +267,15 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
               enabled={!locationLoading}                  
               style={styles.pickerStyle}
             >
-              <Picker.Item label="Select a category" value="" color="grey"/>
-              <Picker.Item label="Restaurants" value="restaurants" color="cornflowerblue"/>
-              <Picker.Item label="Events" value="events" color="cornflowerblue"/>
-              <Picker.Item label="Music" value="music" color="cornflowerblue"/>
-              <Picker.Item label="News" value="news" color="cornflowerblue"/>
-              <Picker.Item label="Study hub" value="study hub" color="cornflowerblue"/>
-              <Picker.Item label="Petpals" value="petpals" color="cornflowerblue"/>
-              <Picker.Item label="Deals" value="deals" color="cornflowerblue"/>
-              <Picker.Item label="Random" value="random" color="cornflowerblue"/>          
+              <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
+              <Picker.Item label={i18n.t('categories.restaurants')} value="restaurants" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.events')} value="events" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.music')} value="music" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.news')} value="news" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.studyhub')} value="study hub" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.petpals')} value="petpals" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.deals')} value="deals" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.random')} value="random" color="cornflowerblue"/>          
             </Picker>
           </View>
 

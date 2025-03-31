@@ -21,7 +21,7 @@
     "updateProfileButton": "Actualizar Perfil",
     "logoutButton": "Cerrar sesión",
 
-    "postPlaceholder": "Habla Barrio! Que tienes en mente?",
+    "postPlaceholder": "¿Qué estás pensando?",
     "doneButton": "Publicar",
     "emptyPostTitle": "Publicación vacía",
     "emptyPostMessage": "Por favor, introduce algún texto antes de publicar.",
@@ -41,8 +41,12 @@
         "news": "Noticias",
         "studyhub": "Centro de Estudio",
         "petpals": "Mascotas",
-        "deals": "Promociones"
+        "deals": "Descuentos",
+        "random": "Random"
     },
+    "categoryRequired": "Categoría requerida.",
+    "selectCategory": "Selecciona una categoría",
+
     "anonymous": "Anónimo",
     "unknown": "Desconocido",
     "confirmDeleteTitle": "Confirmar eliminación",

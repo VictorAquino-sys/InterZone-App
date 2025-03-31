@@ -42,8 +42,12 @@
       "news": "News",
       "studyhub": "Study Hub",
       "petpals": "Pet Pals",
-      "deals": "Deals"
+      "deals": "Deals",
+      "random": "Random"
     },
+    "categoryRequired": "Category required.",
+    "selectCategory": "Select a category",
+
     "unknown": "Unknown",
     "confirmDeleteTitle": "Confirm Delete",
     "confirmDeleteMessage": "Are you sure you want to delete this post?",

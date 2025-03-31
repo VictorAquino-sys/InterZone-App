@@ -39,17 +39,18 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   // Search Bar State
   const [searchText, setSearchText] = useState<string>('');
   const categories = [
-    { key: 'events', label: i18n.t('categories.events') },
-    { key: 'restaurants', label: i18n.t('categories.restaurants')},
-    { key: 'music', label: i18n.t('categories.music')},
-    { key: 'news', label: i18n.t('categories.news')},
-    { key: 'study hub', label: i18n.t('categories.studyhub')},
-    { key: 'petpals', label: i18n.t('categories.petpals')},
-    { key: 'deals', label: i18n.t('categories.deals')}
+    { key: 'events', label: i18n.t('categories.events'), icon: require('../assets/events_icon.png') },
+    { key: 'restaurants', label: i18n.t('categories.restaurants'), icon: require('../assets/food_icon.png')},
+    { key: 'music', label: i18n.t('categories.music'), icon: require('../assets/music_icon.png')},
+    { key: 'news', label: i18n.t('categories.news'), icon: require('../assets/news_icon.png')},
+    { key: 'study hub', label: i18n.t('categories.studyhub'), icon: require('../assets/studyhub_icon.png')},
+    { key: 'petpals', label: i18n.t('categories.petpals'), icon: require('../assets/petpals_icon.png')},
+    { key: 'deals', label: i18n.t('categories.deals'), icon: require('../assets/deals_icon.png')},
+    { key: 'random', label: i18n.t('categories.random'), icon: require('../assets/random_icon.png')}
   ];
   // State to show the funny message
   const [funnyMessage, setFunnyMessage] = useState<string>('');
-  
+
   // variables for user's location
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [city, setCity] = useState<string | null>(null); // To store the city name
@@ -158,8 +159,14 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         let avatarUrl = "";
         try {
           if (data.user.avatar) {
-            const avatarRef = storageRef(getStorage(), data.user.avatar);
-            avatarUrl = await getDownloadURL(avatarRef);
+                      // Check if the URL is a Firebase Storage URL
+            if (data.user.avatar.startsWith('https://firebasestorage.googleapis.com/')) {
+              const avatarRef = storageRef(getStorage(), data.user.avatar);
+              avatarUrl = await getDownloadURL(avatarRef);
+            } else {
+            // If it's a direct URL (like a Google profile image), use it as is
+              avatarUrl = data.user.avatar;
+            }
           }
         } catch (error) {
           console.error("Failed to load avatar:", error);
@@ -175,7 +182,8 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             uid: data.user.uid,
             name: data.user.name,
             avatar: avatarUrl || "", // fallback to empty string
-          }
+          },
+          categoryKey: data.categoryKey
         };
       }));
 
@@ -330,6 +338,8 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
   // Handle category click
   const handleCategoryClick = (category: string) => {
+    // navigation.navigate(`${categoryKey}Screen`);
+
     setFunnyMessage(i18n.t('funnyMessage'));
 
     // Remove the message after 3 seconds
@@ -345,19 +355,26 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       // Optionally, return a placeholder or nothing if the user is null
       return null;
     }
+    
+    const category = categories.find(cat => cat.key === item.categoryKey) || categories[0];
 
     return (
       <View style={styles.postItem}>
-        <View style={styles.userContainer}>
-          {/* Clickable Avatar */}
-          <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
-            <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
-          </TouchableOpacity>
-          <View style={styles.postDetails}>
-            <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
-            <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-            <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
+        <View style={styles.postHeader}>
+          {/* <Image source={category.icon} style={styles.categoryIcon} /> */}
+          <View style={styles.userContainer}>
+            <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
+              <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
+            </TouchableOpacity>
+
+            <View style={styles.postDetails}>
+              <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+              <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
+              <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
+            </View>
+
           </View>
+          <Image source={category.icon} style={styles.categoryIcon} />
         </View>
 
         <Text style={styles.postText}>{item.content}</Text>
@@ -482,6 +499,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: "gray",
   },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  categoryIcon: {
+    width: 40,
+    height: 40,
+    marginRight: 15,
+    marginBottom: 20,
+  },
   noUserText: {
     fontSize: 16,
     textAlign: "center",
@@ -500,10 +528,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   container: {
-    // marginTop: 20,
     flex: 1,
     backgroundColor: 'white',
-    // paddingTop: 16,
   },
   userContainer: {
     flexDirection: 'row',
@@ -511,7 +537,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   topBar: {
-    // paddingTop: Platform.OS === 'ios' ? 5 : 10, // Increase padding for iOS
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
@@ -579,7 +604,6 @@ const styles = StyleSheet.create({
   postItem: {
     padding: 8,
     borderTopWidth: 0.5,
-    // borderTopWidth: 0.6,
     borderTopColor: 'pearl river',
     width: '100%', // Ensure post items take full width
   },
