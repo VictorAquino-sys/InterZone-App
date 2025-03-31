@@ -18,7 +18,7 @@ export default {
     ios: {
       supportsTablet: false,
       sdkVersion: "19.0",
-      buildNumber: "1.0.5",
+      buildNumber: "1.0.6",
       bundleIdentifier: IS_DEV ? "com.interzone.app" : "com.interzone.app",
       runtimeVersion: {
         policy: "appVersion"

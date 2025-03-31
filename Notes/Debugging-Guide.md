@@ -1,12 +1,33 @@
 (Fixes & Solutions for issues)
 
+3-31
+    For github, when divergent branches occurs, do the following:
+    1.
+    git add .
+    git commit -am "some text"
+    git pull --rebase
+    
+    Optional in case of conflits:
+    git add <filename>
+    git rebase --continue
+    2.
+    finally:
+    git push
+ 
 3-28
 * to test the app in dev, run:
     npx eas build --platform android --profile development
-* To prebuild Android/IOS folders run:
+* To prebuild folders run:
+    Android
     npx expo prebuild --clean
+    IOS
+    npx eas build:configure
 * For production:
+    Android
     npx eas build --platform android --profile production
+    IOS/Submit
+    npx eas build --platform ios 
+    npx eas submit --platform ios 
 
 03-22
 * Migrate to TypeScript. Run this command to check for type errors without necesssary outputting JavaScript files.
