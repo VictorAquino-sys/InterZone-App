@@ -17,7 +17,11 @@
 3-28
 * to test the app in dev, run:
     npx eas build --platform android --profile development
+    to test on IOS
+    npx eas build --platform ios --profile ios-simulatory
 * To prebuild folders run:
+    for android/ios
+    npx expo rebuild
     Android
     npx expo prebuild --clean
     IOS

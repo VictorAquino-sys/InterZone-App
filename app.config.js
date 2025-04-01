@@ -18,11 +18,9 @@ export default {
     ios: {
       supportsTablet: false,
       sdkVersion: "19.0",
-      buildNumber: "1.0.6",
+      buildNumber: "1.0.8",
       bundleIdentifier: IS_DEV ? "com.interzone.app" : "com.interzone.app",
-      runtimeVersion: {
-        policy: "appVersion"
-      },
+      runtimeVersion: "sdkVersion",
       usesAppleSignIn: true,
       jsEngine: "hermes",
       infoPlist: {
@@ -106,9 +104,7 @@ export default {
     },
     updates: {
       url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6",
-      runtimeVersion: {
-        policy: "appVersion"
-      }
+      runtimeVersion: "1.0.0"
     }
   }
 };
