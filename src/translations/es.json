@@ -44,8 +44,11 @@
         "deals": "Descuentos",
         "random": "Random"
     },
+
+    "createPost": "Crear Publicación",
     "categoryRequired": "Categoría requerida.",
     "selectCategory": "Selecciona una categoría",
+    "imagePreview": "Imagen Prevista",
 
     "anonymous": "Anónimo",
     "unknown": "Desconocido",

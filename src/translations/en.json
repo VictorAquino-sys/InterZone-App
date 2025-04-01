@@ -45,8 +45,11 @@
       "deals": "Deals",
       "random": "Random"
     },
+
+    "createPost": "Create Post",
     "categoryRequired": "Category required.",
     "selectCategory": "Select a category",
+    "imagePreview": "Image Preview",
 
     "unknown": "Unknown",
     "confirmDeleteTitle": "Confirm Delete",

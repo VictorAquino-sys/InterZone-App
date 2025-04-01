@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useRef, FunctionComponent } from 'react';
-import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { usePosts } from '../../src/contexts/PostsContext';
@@ -224,13 +224,13 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     <KeyboardAvoidingView style={{ flex:1  }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1}}>
         <View style={styles.container}>
-          <Text style={styles.screenTitle}>Create Post</Text>
+          <Text style={styles.screenTitle}>{i18n.t('createPost')}</Text>
 
           <View style={styles.inputContainer}>
             <TextInput
               multiline
               placeholder={i18n.t('postPlaceholder')}
-              maxLength={250}
+              maxLength={300}
               style={{height: 150}}
               value={postText}
               onChangeText={(text) => {
@@ -238,13 +238,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                 setCharCount(text.length); // Update character count as user types
               }}
             />
+            <Text style={styles.charCount}>
+              {charCount} / 300
+            </Text>
           </View>
-          <Text style={styles.charCount}>
-            {charCount} / 250
-          </Text>
 
           {imageUri && (
-            <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+            <View style={styles.imagePreviewContainer}>
+              <Text style={styles.previewText}>{i18n.t('imagePreview')}</Text>
+              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+            </View>
           )}
 
           <View style={styles.iconsContainer}>
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    paddingTop: '28%',
+    paddingTop: '8%',
     backgroundColor: 'seashell',
   },
   screenTitle: {
@@ -324,7 +327,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    // marginTop: 20,
     padding: 10,
     backgroundColor: 'white',
     borderBottomWidth: 1,
@@ -337,27 +339,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 20,
+    marginBottom: Platform.OS == 'ios' ? '5%': 15,
+  },
+  imagePreviewContainer: {
+    alignItems: 'flex-start',
+  },
+  previewText: {
+    fontSize: 15,
+    color: '#666',
+    fontStyle: 'italic',
   },
   imagePreview: { 
     width: '100%', 
-    height: 200, 
+    height: 150, 
     resizeMode: 'cover', 
     marginTop: 10 
   },
   pickerStyle: {
-    height: 50,
+    height: Platform.OS === 'ios' ? 10 : 50,
     width: '100%',
     color: '#555',
   },
   pickerContainer: {
-    marginBottom: 30,
+    marginBottom: Platform.OS === 'ios' ? '20%' : 30,
     marginHorizontal: 20,
-    borderWidth: 1,
+    borderWidth: Platform.OS === 'ios' ? 0 : 1,
     borderColor: '#ccc',
-    backgroundColor: 'azure', // Background color for the picker container
+    backgroundColor: Platform.OS === 'ios' ? 'transparent': 'azure', // Background color for the picker container
   },
   buttonContainer: {
-    marginTop: 40,
+    marginTop: Platform.OS === 'ios' ? '35%' : 40,
     width: '80%',
     alignSelf: 'center',
     backgroundColor: '#4A90E2', // Set the background color of the button
