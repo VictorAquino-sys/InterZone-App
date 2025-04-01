@@ -221,7 +221,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex:1  }}>
+    <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS === 'ios' ? "padding": undefined}>
       <ScrollView contentContainerStyle={{ flexGrow: 1}}>
         <View style={styles.container}>
           <Text style={styles.screenTitle}>{i18n.t('createPost')}</Text>
