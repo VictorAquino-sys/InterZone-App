@@ -1,5 +1,12 @@
 (Daily logs of what have been worked on)
 
+### 04-2
+    Fixed IOS posts with images by using Expo ImageManipulator
+    Installation:
+    npx expo install expo-image-manipulator
+    additional for IOS:
+    npx pod-install
+
 ### 04-1
     Refined layout and functionality for PostScreen on both IOS and Android.
 
