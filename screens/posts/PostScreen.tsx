@@ -11,6 +11,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '../../src/i18n';
 import { Picker } from '@react-native-picker/picker';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import mime from 'mime';
 import { checkLocation } from '../../src/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -40,11 +41,25 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
   // Asynchronous function to upload image and return the download URL
   const uploadImageToStorage = async (uri:string): Promise<string | null> => {
-    if (!uri) return null;
+    if (!uri) {
+      console.error("No URI provided for upload");
+      return null;
+    }
+    
     try {
         setUploading(true);
+        console.log("Preparing to fetch the image blob from URI");
+
         const response = await fetch(uri);
         const blob = await response.blob();
+
+        if(!blob || blob.size === 0) {
+          console.error("Blob is empty or Failed to create blob from URI:", uri);
+          return null;
+        }
+
+        console.log("setting timeout to 5000");
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Extract the file extension and set MIME type
         const fileExtension = uri.split('.').pop() ?? 'jpg';
@@ -57,6 +72,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         const imageName = `postImages/${authUser.uid}/${Date.now()}.${fileExtension}`;
         const imageRef = ref(storage, imageName);
 
+        console.log("Starting upload for image:", imageName, "with MIME type", mimeType);
+
         await uploadBytes(imageRef, blob, { contentType: mimeType });
 
         const downloadUrl = await getDownloadURL(imageRef);
@@ -65,10 +82,33 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         return downloadUrl;
     } catch (error: any) {
         console.error("Error uploading image:", error);
+        if (error.code) {
+          console.error("Firebase error code:", error.code);
+        }
         Alert.alert("Upload Error", (error as Error).message || "Unknow error occurred");
         return null;
     } finally {
         setUploading(false);
+    }
+  };
+
+  const resizeImage = async (uri: string): Promise<string> => {
+    const resizedPhoto = await manipulateAsync(
+      uri,
+      [{ resize: { width: 1080 } }], // Resize to width of 1080 while maintaining aspect ratio
+      { compress: 0.7, format: SaveFormat.JPEG }
+    );
+    return resizedPhoto.uri;
+  };
+
+  const handleImageUpload = async (uri: string): Promise<string> => {
+    try {
+      const resizedUri = await resizeImage(uri);
+      const downloadUrl = await uploadImageToStorage(resizedUri);
+      return downloadUrl || "";
+    } catch (error) {
+        console.error("Error handling the image upload:", error);
+        return ""; 
     }
   };
 
@@ -83,11 +123,12 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        quality: 0.5,
+        quality: 1,
     });
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri); // Store selected image URI
+      handleImageUpload(result.assets[0].uri); // Pass URI to function, ensuring it's a string
     } else {
       console.log('Image picker was canceled or no image was selected');
     }
@@ -176,10 +217,14 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       // Upload image if provided
       let imageUrl = "";
       if (imageUri) {
-        console.log("Uploading image...");
-        imageUrl = await uploadImageToStorage(imageUri) || '';
-        if (!imageUrl) {
+        console.log("Resizing and uploading image...");
+        const uploadUrl = await handleImageUpload(imageUri);
+        // imageUrl = await uploadImageToStorage(imageUri) || '';
+        if (uploadUrl) {
+          imageUrl = uploadUrl;
+        } else {
           Alert.alert("Upload Failed", "Could not upload image. Try again.");
+          setUploading(false);
           return;
         }
       }
