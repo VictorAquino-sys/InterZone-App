@@ -1,5 +1,8 @@
 (Daily logs of what have been worked on)
 
+### 04-1
+    Refined layout and functionality for PostScreen on both IOS and Android.
+
 ### 03-30
     Implemented a dropdown menu for category selection in PostScreen
     Category Filtering on Home Screen and adding visual indicators like category icons
