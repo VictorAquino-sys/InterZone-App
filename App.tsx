@@ -16,12 +16,12 @@ import { PostsProvider } from './src/contexts/PostsContext';
 import { UserProvider, useUser } from './src/contexts/UserContext';
 import { RootStackParamList } from '@/navigationTypes';
 import { TabParamList } from '@/navigationTypes';
+import CategoryScreen from './screens/CategoryScreen';
+import { categories } from './src/config/categoryData';
 
 // Create the native stack navigator with type annotations
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
 // Create the bottom tab navigator normally, no type needed unless passing specific props
-// const Tab = createBottomTabNavigator();
 const Tab = createBottomTabNavigator<TabParamList>();
 
 function HomeStack(){
@@ -29,7 +29,7 @@ function HomeStack(){
     <Stack.Navigator>
       <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-      {/* <Stack.Screen name="PostScreen" component={PostScreen} /> */}
+      <Stack.Screen name="CategoryScreen" component={CategoryScreen} options={({ route }) => ({ title: route.params.title })}/>
     </Stack.Navigator>
   )
 }

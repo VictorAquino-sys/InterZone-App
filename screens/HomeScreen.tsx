@@ -3,7 +3,7 @@ import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { Asset } from 'expo-asset';
-import defaultProfileImg from '../assets/unknownuser.png';
+// import defaultProfileImg from '../assets/unknownuser.png';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Post, usePosts } from '../src/contexts/PostsContext';
@@ -14,6 +14,7 @@ import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
 import { deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
+import { categories, getCategoryByKey } from '../src/config/categoryData';
 import { checkLocation } from '../src/utils/locationUtils';
 import i18n from '../src/i18n'; 
 import { RootStackParamList } from '../src/navigationTypes';
@@ -32,24 +33,27 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  const defaultUri = Asset.fromModule(defaultProfileImg).uri;
+  // const defaultUri = Asset.fromModule(defaultProfileImg).uri;
 
   const [imageOpacity, setImageOpacity] = useState<number>(1); // State to force refresh
 
   // Search Bar State
   const [searchText, setSearchText] = useState<string>('');
-  const categories = [
-    { key: 'events', label: i18n.t('categories.events'), icon: require('../assets/events_icon.png') },
-    { key: 'restaurants', label: i18n.t('categories.restaurants'), icon: require('../assets/food_icon.png')},
-    { key: 'music', label: i18n.t('categories.music'), icon: require('../assets/music_icon.png')},
-    { key: 'news', label: i18n.t('categories.news'), icon: require('../assets/news_icon.png')},
-    { key: 'study hub', label: i18n.t('categories.studyhub'), icon: require('../assets/studyhub_icon.png')},
-    { key: 'petpals', label: i18n.t('categories.petpals'), icon: require('../assets/petpals_icon.png')},
-    { key: 'deals', label: i18n.t('categories.deals'), icon: require('../assets/deals_icon.png')},
-    { key: 'random', label: i18n.t('categories.random'), icon: require('../assets/random_icon.png')}
-  ];
+  // const categories = [
+  //   { key: 'events', label: i18n.t('categories.events'), icon: require('../assets/events_icon.png') },
+  //   { key: 'restaurants', label: i18n.t('categories.restaurants'), icon: require('../assets/food_icon.png')},
+  //   { key: 'music', label: i18n.t('categories.music'), icon: require('../assets/music_icon.png')},
+  //   { key: 'news', label: i18n.t('categories.news'), icon: require('../assets/news_icon.png')},
+  //   { key: 'study hub', label: i18n.t('categories.studyhub'), icon: require('../assets/studyhub_icon.png')},
+  //   { key: 'petpals', label: i18n.t('categories.petpals'), icon: require('../assets/petpals_icon.png')},
+  //   { key: 'deals', label: i18n.t('categories.deals'), icon: require('../assets/deals_icon.png')},
+  //   { key: 'random', label: i18n.t('categories.random'), icon: require('../assets/random_icon.png')}
+  // ];
+
+  // Extracting category keys from the categories array
+  // type CategoryKey = typeof categories[number]['key'];
   // State to show the funny message
-  const [funnyMessage, setFunnyMessage] = useState<string>('');
+  // const [funnyMessage, setFunnyMessage] = useState<string>('');
 
   // variables for user's location
   const [isFetching, setIsFetching] = useState<boolean>(false);
@@ -222,7 +226,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                         avatar: userData.avatar || prevUser.avatar
                       };
                    });
-                    setProfileImageUrl(userData.avatar || defaultUri); // Set the profile image URL from the user data
+                    setProfileImageUrl(userData.avatar); // Set the profile image URL from the user data
                 }
             }
         } catch (error) {
@@ -336,16 +340,18 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     category.label.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Handle category click
-  const handleCategoryClick = (category: string) => {
-    // navigation.navigate(`${categoryKey}Screen`);
-
-    setFunnyMessage(i18n.t('funnyMessage'));
+  // Handle category click to navigate to dynamic screens based on category key
+  const handleCategoryClick = (categoryKey: string) => {
+    const category = getCategoryByKey(categoryKey);
+    if(category) {
+      navigation.navigate('CategoryScreen', { categoryKey: category.key, title: category.label});
+    }
+    // setFunnyMessage(i18n.t('funnyMessage'));
 
     // Remove the message after 3 seconds
-    setTimeout(() => {
-      setFunnyMessage('');
-    }, 3000);
+    // setTimeout(() => {
+      // setFunnyMessage('');
+    // }, 3000);
   };
 
   const renderItem = ({ item }: { item: Post }) =>  {
@@ -412,9 +418,12 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             }}
             activeOpacity={0.5} // Manage active opacity here
           >
-            <Image 
-                source={{ uri: profileImageUrl || defaultUri }}
-                style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
+            <Avatar 
+              name={user?.name || ''}
+              imageUri={profileImageUrl}
+              size={36}
+                // source={{ uri: profileImageUrl || defaultUri }}
+                // style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
             />
           </TouchableOpacity>
           
@@ -456,7 +465,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                   </View>
 
                   {/* Display Funny Message (if exists) */}
-                  {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null}
+                  {/* {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null} */}
               </View>
             }
             data={posts}
