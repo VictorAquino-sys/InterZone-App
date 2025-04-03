@@ -39,21 +39,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
   // Search Bar State
   const [searchText, setSearchText] = useState<string>('');
-  // const categories = [
-  //   { key: 'events', label: i18n.t('categories.events'), icon: require('../assets/events_icon.png') },
-  //   { key: 'restaurants', label: i18n.t('categories.restaurants'), icon: require('../assets/food_icon.png')},
-  //   { key: 'music', label: i18n.t('categories.music'), icon: require('../assets/music_icon.png')},
-  //   { key: 'news', label: i18n.t('categories.news'), icon: require('../assets/news_icon.png')},
-  //   { key: 'study hub', label: i18n.t('categories.studyhub'), icon: require('../assets/studyhub_icon.png')},
-  //   { key: 'petpals', label: i18n.t('categories.petpals'), icon: require('../assets/petpals_icon.png')},
-  //   { key: 'deals', label: i18n.t('categories.deals'), icon: require('../assets/deals_icon.png')},
-  //   { key: 'random', label: i18n.t('categories.random'), icon: require('../assets/random_icon.png')}
-  // ];
-
-  // Extracting category keys from the categories array
-  // type CategoryKey = typeof categories[number]['key'];
-  // State to show the funny message
-  // const [funnyMessage, setFunnyMessage] = useState<string>('');
 
   // variables for user's location
   const [isFetching, setIsFetching] = useState<boolean>(false);
@@ -281,47 +266,45 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     if (imageUrl) {
       const storage = getStorage(); // Make sure storage is initialized
       // Create a reference to the file to delete
+      // const imageRef = storageRef(storage, imageUrl);
+
+    //   // Delete the file
+    //   deleteObject(imageRef)
+    //       .then(() => {
+    //           console.log('Image successfully deleted!');
+    //       }).catch((error) => {
+    //           console.error('Error removing image: ', error);
+    //       });
+    // }
+      console.log("Attempting to delete post:", postId);
+      // Check if there is an image URL to delete
+      // if (imageUrl) {
       const imageRef = storageRef(storage, imageUrl);
 
       // Delete the file
       deleteObject(imageRef)
           .then(() => {
               console.log('Image successfully deleted!');
-          }).catch((error) => {
-              console.error('Error removing image: ', error);
+          })
+          .catch((error) => {
+            if (error.code === 'storage/object-not-found') {
+                console.log('No image found, nothing to delete.');
+            } else {
+                console.error('Error removing image: ', error);
+            }
           });
     }
-
-    console.log("Attempting to delete post:", postId);
-      // Check if there is an image URL to delete
-      if (imageUrl) {
-        const imageRef = storageRef(storage, imageUrl);
-
-        // Delete the file
-        deleteObject(imageRef)
-            .then(() => {
-                console.log('Image successfully deleted!');
-            })
-            .catch((error) => {
-              if (error.code === 'storage/object-not-found') {
-                  console.log('No image found, nothing to delete.');
-              } else {
-                  console.error('Error removing image: ', error);
-              }
-            });
-      }
-
-      // Proceed to delete the post document from Firestore regardless of the image deletion
-      try {
-          await deleteDoc(doc(db, "posts", postId));
-          console.log('Post successfully deleted!');
-          Alert.alert(i18n.t('deleteSuccessTitle'), i18n.t('deleteSuccessMessage'));
-          // Remove the post from the local state to update UI instantly
-          setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-      } catch (error) {
-          console.error('Error deleting post: ', error);
-          Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage'));
-      }
+    // Proceed to delete the post document from Firestore regardless of the image deletion
+    try {
+        await deleteDoc(doc(db, "posts", postId));
+        console.log('Post successfully deleted!');
+        Alert.alert(i18n.t('deleteSuccessTitle'), i18n.t('deleteSuccessMessage'));
+        // Remove the post from the local state to update UI instantly
+        setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+    } catch (error) {
+        console.error('Error deleting post: ', error);
+        Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage'));
+    }
   };
 
   // Function to handle opening the modal
@@ -646,7 +629,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,  // Small vertical padding for easier tapping
     paddingHorizontal: 30, // Horizontal padding to ensure the touch area is just enough
     alignItems: 'flex-end' // Align to the start of the flex container
-},
+  },
   deleteText: {
     color: 'red',
     fontSize: 12, // Ensure the font size is appropriate
