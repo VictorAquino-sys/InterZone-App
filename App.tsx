@@ -14,6 +14,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import NameInputScreen from './screens/NameInputScreen';
 import { PostsProvider } from './src/contexts/PostsContext';
 import { UserProvider, useUser } from './src/contexts/UserContext';
+import { TriviaProvider } from '@/contexts/TriviaContext';
 import { RootStackParamList } from '@/navigationTypes';
 import { TabParamList } from '@/navigationTypes';
 import CategoryScreen from './screens/CategoryScreen';
@@ -116,9 +117,11 @@ export default function App() {
   return (
     <UserProvider> 
       <PostsProvider>
-        <NavigationContainer>
-          <AuthenticatedApp />
-        </NavigationContainer>
+        <TriviaProvider>
+          <NavigationContainer>
+            <AuthenticatedApp />
+          </NavigationContainer>
+        </TriviaProvider>
       </PostsProvider>
     </UserProvider>
   );

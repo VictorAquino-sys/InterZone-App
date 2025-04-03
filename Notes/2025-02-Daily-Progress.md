@@ -1,6 +1,13 @@
 (Daily logs of what have been worked on)
 
-### 04-2
+### 04-03
+-   Install Firebase Admin SDK to populate Firestore with trivia data:
+    npm install --save firebase-admin
+    Also:
+    npm install --save @types/body-parser
+
+
+### 04-02
 -   Fixed IOS posts with images by using Expo ImageManipulator
     Installation:
     npx expo install expo-image-manipulator

@@ -43,13 +43,16 @@
       "studyhub": "Study Hub",
       "petpals": "Pet Pals",
       "deals": "Deals",
-      "random": "Random"
+      "random": "Random",
+      "trivia": "Mind Gym"
     },
+    "testYourKnowledge": "Test Your Knowledge",
 
     "createPost": "Create Post",
     "categoryRequired": "Category required.",
     "selectCategory": "Select a category",
     "imagePreview": "Image Preview",
+    "EmptyCategoryScreen": "You could be the first one to publish..",
 
     "unknown": "Unknown",
     "confirmDeleteTitle": "Confirm Delete",
@@ -63,6 +66,4 @@
     "deleteErrorTitle": "Error Deleting Post",
     "deleteErrorMessage": "There was an error deleting the post: {error}",
     "noPosts": "No posts yet in your city. Be the first to share something!"
-
-
 }  

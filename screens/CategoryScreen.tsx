@@ -10,6 +10,8 @@ import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'fire
 import { deleteDoc, doc} from "firebase/firestore";
 import LikeButton from '../src/components/LikeButton';
 import Avatar from '../src/components/Avatar';
+import { categories } from '@/config/categoryData';
+import Trivia from '../src/components/Trivia';
 
 type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
@@ -18,7 +20,11 @@ const CategoryScreen = () => {
     const { posts, setPosts } = usePosts();
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const { categoryKey } = route.params;
+    const category = categories.find(cat => cat.key === categoryKey);
     const { user } = useUser();
+
+    const [triviaActive, setTriviaActive] = useState(false);
 
     // Assuming each post has a 'timestamp' field that's a Date or a number
     const filteredPosts = posts
@@ -39,6 +45,10 @@ const CategoryScreen = () => {
     // Function to handle closing the modal
     const closeImageModal = () => {
         setModalVisible(false);
+    };
+
+    const toggleTrivia = () => {
+        setTriviaActive(!triviaActive);
     };
 
     const formatDate = (timestamp: Timestamp | undefined) => {
@@ -103,48 +113,58 @@ const CategoryScreen = () => {
     };
 
     return (
-        <View style={styles.container}>
-            {/* <Text style={styles.header}>Category: {route.params.title}</Text> */}
-            <FlatList
-                data={filteredPosts}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.postItem}>
-                        <View style={styles.userContainer}>
-                            <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
-                                {/* <Image source={{ uri: item.user.avatar || undefined }} style={styles.avatar} /> */}
-                                <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
-                            </TouchableOpacity>
+        <View style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
+            {/* Add a button in the CategoryScreen render method */}
+            {categoryKey === 'music' && !triviaActive && (
+                <TouchableOpacity style={styles.triviaButton} onPress={toggleTrivia}>
+                    <Text style={styles.triviaButtonText}>{i18n.t('testYourKnowledge')}</Text>
+                </TouchableOpacity>
+            )}
+            {triviaActive ? (
+                <Trivia onTriviaComplete={toggleTrivia} />
+                ) : (
+                <FlatList
+                    data={filteredPosts}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.postItem}>
+                            <View style={styles.userContainer}>
+                                <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
+                                    {/* <Image source={{ uri: item.user.avatar || undefined }} style={styles.avatar} /> */}
+                                    <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
+                                </TouchableOpacity>
 
-                            <View style={styles.postDetails}>
-                                <Text style={styles.userName}>{item.user.name}</Text>   
-                                <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-                                <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
+                                <View style={styles.postDetails}>
+                                    <Text style={styles.userName}>{item.user.name}</Text>   
+                                    <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
+                                    <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
+                                </View>
+                                
                             </View>
-                            
+
+                            <Text style={styles.postText}>{item.content}</Text>
+
+                            {item.imageUrl && (
+                                <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
+                                    <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+                                </TouchableOpacity>
+                            )}
+
+                            {/* Like Button Component */}
+                            <LikeButton postId={item.id} userId={user?.uid || ''} />
+
+                            {/* Allow users to delete their own posts */}
+                            {user?.uid == item.user?.uid && (
+                                <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
+                                    <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
+                    )}
+                    ListEmptyComponent={<Text style={styles.emptyCategoryText}>{i18n.t('EmptyCategoryScreen')}</Text>}
+                />
+            )}
 
-                        <Text style={styles.postText}>{item.content}</Text>
-
-                        {item.imageUrl && (
-                            <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
-                                <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-                            </TouchableOpacity>
-                        )}
-
-                        {/* Like Button Component */}
-                        <LikeButton postId={item.id} userId={user?.uid || ''} />
-
-                        {/* Allow users to delete their own posts */}
-                        {user?.uid == item.user?.uid && (
-                            <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
-                                <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                )}
-                ListEmptyComponent={<Text>No Posts available in this category</Text>}
-            />
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -162,7 +182,7 @@ const CategoryScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'azure',
+        // backgroundColor: 'azure',
     },
     header: {
         fontSize: 22,
@@ -220,6 +240,9 @@ const styles = StyleSheet.create({
         color: 'red',
         fontSize: 12, // Ensure the font size is appropriate
     },
+    emptyCategoryText: {
+        fontSize: 14,
+    },
     fullScreenModal: {
         flex: 1,
         justifyContent: 'center',
@@ -230,7 +253,21 @@ const styles = StyleSheet.create({
         width: '90%',
         height: '90%',
         resizeMode: 'contain'
-    }
+    },
+    triviaButton: {
+        paddingHorizontal: 20,
+        width: '60%',
+        padding: 10,
+        alignSelf: 'center',
+        marginVertical: 10,
+        backgroundColor: '#26c6da',
+        alignItems: 'center',
+        borderRadius: 5
+    },
+    triviaButtonText: {
+        color: 'white',
+        fontSize: 16,
+    },
 });
 
 export default CategoryScreen;

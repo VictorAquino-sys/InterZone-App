@@ -42,13 +42,16 @@
         "studyhub": "Centro de Estudio",
         "petpals": "Mascotas",
         "deals": "Descuentos",
-        "random": "Random"
+        "random": "Random",
+        "trivia": "Smart Sparks"
     },
+    "testYourKnowledge": "Cuanto sabes sobre musica?",
 
     "createPost": "Crear Publicación",
     "categoryRequired": "Categoría requerida.",
     "selectCategory": "Selecciona una categoría",
     "imagePreview": "Imagen Prevista",
+    "EmptyCategoryScreen": "Quieres ser el primero en publicar?..", 
 
     "anonymous": "Anónimo",
     "unknown": "Desconocido",
