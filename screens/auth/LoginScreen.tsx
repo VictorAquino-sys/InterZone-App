@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
-import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword } from "firebase/auth";
+import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
@@ -90,6 +90,21 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       Alert.alert(i18n.t('SignUpError'), errorMessage);
     }
   };
+
+  const handlePasswordReset = async () => {
+    if (email.trim() === '') {
+        Alert.alert('Input Error', 'Please enter your email address to receive a password reset link.');
+        return;
+    }
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        Alert.alert('Check your email', 'A link to reset your password has been sent to your email address.');
+    } catch (error: any) {
+        console.error('Password Reset Error:', error);
+        Alert.alert('Password Reset Failed', error.message || 'Failed to send password reset email.');
+    }
+};
 
   // Handle user login and ensure Firestore data is locked
   const handleLogin = async () => {
@@ -248,6 +263,12 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
           >
             <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handlePasswordReset}
+            style={[styles.button, styles.buttonForgotPass]}
+          >
+            <Text style={styles.buttonForgotPassText}>{i18n.t('forgotPasswordButton')}</Text>
+          </TouchableOpacity>
         </View>
 
       </KeyboardAvoidingView>
@@ -263,13 +284,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: '10%',
+    marginTop: '3%',
   },
   headerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: '12%',
+    paddingTop: '10%',
     width: '100%',
   },
   titleText: {
@@ -320,6 +341,13 @@ const styles = StyleSheet.create({
     borderColor: '#0782F9',
     borderWidth: 2,
   },
+  buttonForgotPass: {
+    backgroundColor: 'white',
+    marginTop: 8,
+    borderColor: '#00897b',
+    borderWidth: 2,
+    width: "80%",
+  },
   googleButton: {
     width: '70%',
     height: 50,
@@ -335,6 +363,11 @@ const styles = StyleSheet.create({
     color: '#0782F9',
     fontWeight: '700',
     fontSize: 16,
+  },
+  buttonForgotPassText: {
+    color: '#00897b',
+    fontWeight: '700',
+    fontSize: 14,  
   },
   rootContainer: {
     flex: 1,

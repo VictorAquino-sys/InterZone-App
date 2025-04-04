@@ -2,7 +2,7 @@
     "loginButton": "Iniciar sesión",
     "welcomeMessage": "¡Bienvenido a la aplicación!",
     "appTitle": "InterZone",
-    "tagline": "Asegurate!",
+    "tagline": "Conecta con tu comunidad!",
     "saveButton": "Guardar",
     "registerButton": "Registrate",
     "loginError": "Error de inicio de sesión",
@@ -13,6 +13,7 @@
     "genericError": "Ocurrió un error. Inténtalo de nuevo.",
     "emailAlreadyInUse": "La dirección de correo electrónico ya está en uso. Por favor, usa otro correo electrónico.",
     "passwordRequirement": "La contraseña debe tener al menos 6 caracteres y no mas de 20.",
+    "forgotPasswordButton": "Olvidaste tu contraseña?",
     
     "nameInputPrompt": "Introduce tu nombre",
     "saveName": "Guardar",

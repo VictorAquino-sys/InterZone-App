@@ -1,6 +1,9 @@
 (Requested features & Ideas)
 Prioritize them with High (must-have), Medium (nice-to-have), and Low (low-priority)
 
+# 4-04
+1. Recuperar contrasenia, compartir y comentarios.
+
 # 4-03
 1. User Personalization and Settings
 Allow users to customize themes or set preferences for how they view the app, including dark mode.
