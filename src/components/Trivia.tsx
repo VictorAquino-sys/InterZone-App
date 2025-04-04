@@ -18,17 +18,16 @@ const Trivia = ({ onTriviaComplete }: TriviaProps) => {
         setSelectedAnswer(answer);
         setIsAnswered(true);
         setTimeout(() => {
+            const isCorrect = answer === trivia[currentQuestionIndex].correct_answer.en;
+            const message = isCorrect ? 'Correct!' : 'Wrong Answer!';
             // Logic to handle answer, check correctness, and move to next question
-            if (answer === trivia[currentQuestionIndex].correct_answer.en) {
-                alert('Correct!');
-            } else {
-                alert('Wrong Answer!');
-            }
+
             const nextQuestionIndex = currentQuestionIndex + 1;
             if (nextQuestionIndex < trivia.length) {
+                alert(message); // Display result of the current answer
                 setCurrentQuestionIndex(nextQuestionIndex);
             } else {
-                alert('Trivia completed!');
+                alert(`${message}\nTrivia completed!`); // Combine feedback and completion message
                 onTriviaComplete(); // Call the callback when trivia is completed
                 // Reset or end the trivia session
             }
