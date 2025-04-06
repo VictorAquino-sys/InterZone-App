@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
 import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, TextInput, TouchableOpacity, Keyboard } from 'react-native';
+import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
@@ -219,6 +219,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   return (
     <ImageBackground source={image} resizeMode="cover" style={styles.rootContainer}
     >
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerContainer}>
           {show && (
             <>
@@ -228,51 +229,52 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
           )}
         </View>
 
-      <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
-      >
-        <GoogleSigninButton
-            style={styles.googleButton}
-            size={GoogleSigninButton.Size.Wide}
-            color={GoogleSigninButton.Color.Dark}
-            onPress={signIn}
-        />
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={text => setEmail(text)}
+        <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
+        >
+          <GoogleSigninButton
+              style={styles.googleButton}
+              size={GoogleSigninButton.Size.Wide}
+              color={GoogleSigninButton.Color.Dark}
+              onPress={signIn}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={text => setPassword(text)}
-            secureTextEntry
-          />
-        </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            onPress={handleLogin}
-            style={styles.button} 
-          >
-            <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleSignUp}
-            style={[styles.button, styles.buttonOutline]} 
-          >
-            <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handlePasswordReset}
-            style={[styles.button, styles.buttonForgotPass]}
-          >
-            <Text style={styles.buttonForgotPassText}>{i18n.t('forgotPasswordButton')}</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={text => setEmail(text)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={text => setPassword(text)}
+              secureTextEntry
+            />
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              onPress={handleLogin}
+              style={styles.button} 
+            >
+              <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSignUp}
+              style={[styles.button, styles.buttonOutline]} 
+            >
+              <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handlePasswordReset}
+              style={[styles.button, styles.buttonForgotPass]}
+            >
+              <Text style={styles.buttonForgotPassText}>{i18n.t('forgotPasswordButton')}</Text>
+            </TouchableOpacity>
+          </View>
 
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </ImageBackground>
   );
 };
@@ -285,14 +287,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: '1%',
+    // marginTop: '1%',
     marginBottom: 20,
+  },
+  safeArea:{
+    flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   headerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: 20,
+    paddingTop: 10,
     width: '100%',
   },
   titleText: {
