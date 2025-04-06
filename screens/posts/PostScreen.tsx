@@ -174,9 +174,14 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         console.log("Reverse Geocode:", reverseGeocode);
         
         if (reverseGeocode?.length > 0) {
-          const { city, region } = reverseGeocode[0];
-          locationDisplay = city && region ? `${city}, ${region}` : null;
-        }
+          const { city, region, isoCountryCode } = reverseGeocode[0];
+          if (isoCountryCode === 'US' && region) {
+            const regionCode = region.toUpperCase().slice(0, 2);
+            locationDisplay = city ? `${city}, ${regionCode}` : null;
+          } else {
+            locationDisplay = city && region ? `${city}, ${region}` : null;
+          }
+        }  
       }
   
       if (locationDisplay) {
