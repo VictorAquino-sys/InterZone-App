@@ -16,7 +16,7 @@
  
 3-28
 * to test the app in dev, run:
-    Android
+    android
     npx eas build --platform android --profile development
     to test on IOS
     npx eas build --platform ios --profile ios-simulator
