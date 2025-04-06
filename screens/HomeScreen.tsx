@@ -326,6 +326,10 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
+  // useEffect(() => {
+  //   console.log("Categories with Labels:", categories.map(cat => cat.label));
+  // }, []);
+
   const renderItem = ({ item }: { item: Post }) =>  {
     // console.log("Post user avatar:", item.user.avatar);
 
