@@ -285,13 +285,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: '3%',
+    marginTop: '1%',
+    marginBottom: 20,
   },
   headerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: '10%',
+    paddingTop: 20,
     width: '100%',
   },
   titleText: {
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
     width: '70%',
     height: 50,
     borderRadius: 10,
-    marginTop: 5 // Or adjust according to your layout
+    marginTop: 1 // Or adjust according to your layout
   },
   buttonText:{
     color: 'white',
