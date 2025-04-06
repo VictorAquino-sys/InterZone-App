@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { Modal, View, Text, StyleSheet, Alert, FlatList, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { usePosts } from '@/contexts/PostsContext';
@@ -7,11 +7,13 @@ import { Timestamp } from 'firebase/firestore';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
-import { deleteDoc, doc} from "firebase/firestore";
+import { deleteDoc, doc, getDoc} from "firebase/firestore";
 import LikeButton from '../src/components/LikeButton';
 import Avatar from '../src/components/Avatar';
 import { categories } from '@/config/categoryData';
 import Trivia from '../src/components/Trivia';
+import HistoryTrivia from '@/components/HistoryTrivia';
+import { useFocusEffect } from '@react-navigation/native';
 
 type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
@@ -25,6 +27,27 @@ const CategoryScreen = () => {
     const { user } = useUser();
 
     const [triviaActive, setTriviaActive] = useState(false);
+    const [historyTriviaActive, setHistoryTriviaActive] = useState(false);
+    const [isPeruvian, setIsPeruvian] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useFocusEffect(
+        React.useCallback(() => {
+          const checkUserCountry = async () => {
+            if (user?.uid) {
+              const userRef = doc(db, "users", user.uid);
+              const userSnap = await getDoc(userRef);
+              if (userSnap.exists()) {
+                const userData = userSnap.data();
+                console.log("Fetched user data on focus:", userData);
+                setIsPeruvian(userData.country === 'Peru');
+              }
+            }
+          };
+      
+          checkUserCountry();
+        }, [user?.uid])
+      );
 
     // Assuming each post has a 'timestamp' field that's a Date or a number
     const filteredPosts = posts
@@ -49,6 +72,15 @@ const CategoryScreen = () => {
 
     const toggleTrivia = () => {
         setTriviaActive(!triviaActive);
+    };
+
+    const toggleHistoryTrivia = () => {
+        console.log("History Trivia button pressed. Current isPeruvian:", isPeruvian);
+        if (!isPeruvian) {
+            alert("History Trivia is not available in your location");
+        } else {
+            setHistoryTriviaActive(!historyTriviaActive);
+        }
     };
 
     const formatDate = (timestamp: Timestamp | undefined) => {
@@ -112,6 +144,21 @@ const CategoryScreen = () => {
         }
     };
 
+    // const refreshUserData = async () => {
+    //     if (user?.uid) {
+    //       const userRef = doc(db, "users", user.uid);
+    //       const userSnap = await getDoc(userRef);
+    //       if (userSnap.exists()) {
+    //         const updatedUser = {
+    //           ...user,
+    //           ...userSnap.data(),
+    //         };
+    //         console.log("Refreshed user data:", updatedUser);
+    //         setIsPeruvian(updatedUser.country === 'Peru');
+    //       }
+    //     }
+    //   };      
+
     return (
         <View style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
             {/* Add a button in the CategoryScreen render method */}
@@ -120,9 +167,24 @@ const CategoryScreen = () => {
                     <Text style={styles.triviaButtonText}>{i18n.t('testYourKnowledge')}</Text>
                 </TouchableOpacity>
             )}
+
+            {/* <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={refreshUserData}>
+            <Text style={styles.refreshButtonText}>Refresh User Data</Text>
+            </TouchableOpacity> */}
+
+            {categoryKey === "study hub" && isPeruvian && !historyTriviaActive && (
+                <TouchableOpacity style={styles.triviaButton} onPress={toggleHistoryTrivia}>
+                    <Text style={styles.triviaButtonText}>{i18n.t('Villareal')}</Text>
+                </TouchableOpacity>
+            )}
+
             {triviaActive ? (
                 <Trivia onTriviaComplete={toggleTrivia} />
-                ) : (
+            ) : historyTriviaActive ? (
+                <HistoryTrivia onTriviaComplete={toggleHistoryTrivia} />
+            ) : (
                 <FlatList
                     data={filteredPosts}
                     keyExtractor={item => item.id}
@@ -267,6 +329,20 @@ const styles = StyleSheet.create({
     triviaButtonText: {
         color: 'white',
         fontSize: 16,
+    },
+
+
+
+    refreshButton: {
+        marginVertical: 10,
+        backgroundColor: '#4CAF50',
+        padding: 10,
+        borderRadius: 5,
+    },
+    refreshButtonText: {
+        color: 'white',
+        fontSize: 16,
+        textAlign: 'center',
     },
 });
 

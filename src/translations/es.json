@@ -47,12 +47,14 @@
         "trivia": "Smart Sparks"
     },
     "testYourKnowledge": "Cuanto sabes sobre musica?",
+    "Villareal": "Villareal - Historia Universal",
 
     "createPost": "Crear Publicación",
     "categoryRequired": "Categoría requerida.",
     "selectCategory": "Selecciona una categoría",
     "imagePreview": "Imagen Prevista",
     "EmptyCategoryScreen": "Quieres ser el primero en publicar?..", 
+
 
     "anonymous": "Anónimo",
     "unknown": "Desconocido",

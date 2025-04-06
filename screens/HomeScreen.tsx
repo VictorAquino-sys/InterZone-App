@@ -19,7 +19,7 @@ import { checkLocation } from '../src/utils/locationUtils';
 import i18n from '../src/i18n'; 
 import { RootStackParamList } from '../src/navigationTypes';
 import { Accuracy } from 'expo-location';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, setDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
@@ -49,96 +49,119 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   console.log("HomeScreen");
 
   useEffect(() => {
-    async function handleUserChanges() {
+    async function handleCityOrUserChange() {
+      if (!user?.uid || !city) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        if (!user?.uid) return;
-        console.log("Checking if user has a name...");
+        // if (!user?.uid || !city) return;
   
-        // Fetch user name from Firestore or AsyncStorage
+        console.log("User UID or City changed, handling updates...");
+  
+        // Check user name
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
   
-        if (userSnap.exists() && userSnap.data().name) {
-            console.log("User has a name:", userSnap.data().name);
-        } else {
-            const storedName = await AsyncStorage.getItem('userName' + user.uid);
-            if (storedName) {
-                console.log("Name found in AsyncStorage:", storedName);
-            } else {
-                console.log("No name found, redirecting to NameInputScreen...");
-                navigation.replace('NameInputScreen', { userId: user.uid });
-                return; // Ensure no further execution if navigating away
-            }
+        if (!(userSnap.exists() && userSnap.data().name)) {
+          const storedName = await AsyncStorage.getItem('userName' + user.uid);
+          if (!storedName) {
+            console.log("Redirecting to NameInputScreen...");
+            navigation.replace('NameInputScreen', { userId: user.uid });
+            return;
+          }
         }
   
-        // Fetch posts if the city is known
-        if (city) {
-          console.log("User is set and city is available, fetching posts:", city);
-          fetchPostsByCity(city);
+        // Fetch posts if city has changed
+        if (city !== prevCityRef.current) {
+          console.log("✅ City updated:", city, "Fetching posts now...");
+          // setLoading(true);
+          await fetchPostsByCity(city);
+          prevCityRef.current = city;
         }
       } catch (error) {
-        console.error("Error handling user changes:", error);
+        console.error("Error handling updates:", error);
+        setLoading(false);
+      } finally {
+        setLoading(false); // Always called explicitly here
       }
     }
   
-    handleUserChanges();
-  }, [user?.uid, city]); // Dependency on both user UID and city
+    handleCityOrUserChange();
+  }, [user?.uid, city]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchLatestPosts = async () => {
+        if (city) {
+          setLoading(true);
+          console.log("🔄 Fetching latest posts on screen focus for city:", city);
+          await fetchPostsByCity(city);
+          setLoading(false);
+        }
+      };
+  
+      fetchLatestPosts();
+    }, [city])
+  );
 
   const fetchLocation = async () => {
-    try {
-      const isLocationEnabled = await Location.hasServicesEnabledAsync();
-      if (!isLocationEnabled) {
-        alert('Please enable your location services.');
-        return;
-      }
-  
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Permission to access location was denied');
-        return;
-      }
-  
-      let location = await Location.getCurrentPositionAsync({ 
-        accuracy: Accuracy.Balanced,
-        mayShowUserSettingsDialog: true,
-        timeInterval: 5000,
-      });
-  
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude
-      });
-  
-      // console.log("Reverse Geocode Result:", JSON.stringify(reverseGeocode));
+    console.log("🔍 Starting fetchLocation...");
+    setLoading(true); // Explicitly reset loading at start
 
-      if (reverseGeocode && reverseGeocode.length > 0) {
-        const { city, region, isoCountryCode } = reverseGeocode[0];
-        let locationDisplay = null;
-        if (isoCountryCode == 'US' && region !== null) {
-          let acronym: string = region.toUpperCase().slice(0, 2);
-          locationDisplay = `${city}, ${acronym}`;
-          console.log("Testing acronym:", locationDisplay);
+    try {
+      const enabled = await Location.hasServicesEnabledAsync();
+      if (!enabled) {
+        alert('Please enable location services.');
+        setLoading(false);
+        return;
+      }
+  
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Location permission denied.');
+        setLoading(false);
+        return;
+      }
+  
+      const location = await Location.getCurrentPositionAsync({ accuracy: Accuracy.Balanced });
+      console.log("✅ Location obtained:", location.coords);
+  
+      const matchedLocation = checkLocation(location.coords);
+      console.log("Matched Location:", matchedLocation);
+  
+      let locationDisplay = matchedLocation;
+      
+      if (!matchedLocation) {
+        const reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
+        console.log("Reverse Geocode:", reverseGeocode);
+        
+        if (reverseGeocode?.length > 0) {
+          const { city, region } = reverseGeocode[0];
+          locationDisplay = city && region ? `${city}, ${region}` : null;
         }
-        else if ( city && region !== null) {
-          locationDisplay = `${city}, ${region}`;
-        } 
-        else {
-          locationDisplay = checkLocation(location.coords);
-        }
-        console.log("Location Display:", locationDisplay);
-        setCity(locationDisplay);  // Update the city state
+      }
+  
+      if (locationDisplay) {
+        console.log("✅ Setting city to:", locationDisplay);
+        setCity(locationDisplay);
+      } else {
+        console.warn("⚠️ No valid city from location");
+        setLoading(false);
       }
     } catch (error) {
-      console.error("Error fetching location:", error);
-      alert("Failed to fetch location. Please try again.");
+      console.error("🚨 Error in fetchLocation:", error);
+      setLoading(false);
     }
-  };  
+  };
+  
   
   const fetchPostsByCity = async (cityName: string): Promise<void> => {
     if (!cityName) return; //Prevent running if city isn't set
 
     try {
-      console.log("Fetching posts for city:", cityName);
+      // console.log("Fetching posts for city:", cityName);
       const postsRef = collection(db, "posts");
       const q = query(postsRef, where("city", "==", cityName), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
@@ -146,6 +169,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       const postsData: Post[] = await Promise.all(querySnapshot.docs.map(async (doc) => {
         const data = doc.data();
         let avatarUrl = "";
+
         try {
           if (data.user.avatar) {
                       // Check if the URL is a Firebase Storage URL
@@ -187,55 +211,35 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      // Reset image opacity when the screen is focused
-      setImageOpacity(1);
-
-      // Fetch latest user data
-      const fetchUserData = async () => {
-        try {
-            if (user?.uid) {
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
-
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    console.log("Fetched updated user:", userData);
-                    setUser(prevUser => {
-                      if (!prevUser) return null;  // Handle case where previous user is null
-
-                      return {
-                        uid: prevUser.uid,  // Assume uid is always present in the previous user
-                        name: userData.name || prevUser.name,
-                        avatar: userData.avatar || prevUser.avatar
-                      };
-                   });
-                    setProfileImageUrl(userData.avatar); // Set the profile image URL from the user data
-                }
-            }
-        } catch (error) {
-            console.error("Error fetching updated user data:", error);
+  useEffect(() => {
+    const initializeScreen = async () => {
+      console.log("🚀 Initializing HomeScreen...");
+      setLoading(true);
+  
+      if (user?.uid) {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setUser(prevUser => prevUser ? ({
+            uid: prevUser.uid,
+            name: userData.name || prevUser.name,
+            avatar: userData.avatar || prevUser.avatar
+          }) : prevUser);
+  
+          setProfileImageUrl(userData.avatar);
         }
-      };
-
-      fetchUserData(); // Fetch latest user name
-          // Fetch location only if not already fetching
-      if (!isFetching) {
-        console.log("Fetching user location...");
-        fetchLocation();
+      } else {
+        setLoading(false);  // Explicitly stop loading if no user
+        return;
       }
-
-      // Fetch posts when city is available & changed
-      if (city && city !== prevCityRef.current) {
-        console.log("Fetching posts for city:", city);
-        setIsFetching(true);
-        fetchPostsByCity(city).finally(() => setIsFetching(false));
-        prevCityRef.current = city;
-      }
-
-    }, [city, user?.uid])
-  );
+  
+      await fetchLocation();  // Explicitly call here and nowhere else
+    };
+  
+    initializeScreen();
+  }, [user?.uid]); // Depend explicitly on user.uid
 
   const formatDate = (timestamp: Timestamp | undefined) => {
     if (!timestamp) return 'Unknown date'; // Handle undefined or null timestamps
@@ -266,16 +270,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     if (imageUrl) {
       const storage = getStorage(); // Make sure storage is initialized
       // Create a reference to the file to delete
-      // const imageRef = storageRef(storage, imageUrl);
 
-    //   // Delete the file
-    //   deleteObject(imageRef)
-    //       .then(() => {
-    //           console.log('Image successfully deleted!');
-    //       }).catch((error) => {
-    //           console.error('Error removing image: ', error);
-    //       });
-    // }
       console.log("Attempting to delete post:", postId);
       // Check if there is an image URL to delete
       // if (imageUrl) {
@@ -329,16 +324,10 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     if(category) {
       navigation.navigate('CategoryScreen', { categoryKey: category.key, title: category.label});
     }
-    // setFunnyMessage(i18n.t('funnyMessage'));
-
-    // Remove the message after 3 seconds
-    // setTimeout(() => {
-      // setFunnyMessage('');
-    // }, 3000);
   };
 
   const renderItem = ({ item }: { item: Post }) =>  {
-    console.log("Post user avatar:", item.user.avatar);
+    // console.log("Post user avatar:", item.user.avatar);
 
     if (!user) {
       // Optionally, return a placeholder or nothing if the user is null
@@ -588,11 +577,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ffd700',
   },
-  profilePic: {
-    height: '100%',
-    width: '100%',
-    resizeMode: 'cover', // Ensures the image covers the space without stretching
-  },
+  // profilePic: {
+  //   height: '100%',
+  //   width: '100%',
+  //   resizeMode: 'cover', // Ensures the image covers the space without stretching
+  // },
   postItem: {
     padding: 8,
     borderTopWidth: 0.5,

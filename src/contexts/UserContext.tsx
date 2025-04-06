@@ -5,12 +5,15 @@
 // Import necessary hooks and functions from React and Firebase
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
+import { db } from '../../src/config/firebase';
 
 // Define Typescript interface for user data used in the app context
 export interface User {
   uid: string;
   name: string;
   avatar?: string;
+  country?: string;
 }
 
 // Define a separate interface for the full Firestore user document
@@ -20,11 +23,13 @@ export interface UserData {
   email?: string;
   avatar?: string;
   createdAt?: string;
+  country?: string;
 }
 
 // Define Typescript for context value.
 interface UserContextType {
   user: User | null;
+  loading: boolean; // Add loading state
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   updateUserProfile: (updates: Partial<User>) => void;
 }
@@ -41,26 +46,39 @@ interface UserProviderProps {
 export const UserProvider = ({ children }: UserProviderProps ) => {
   // State hook to manage user data, with TypeScript types.
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true); // Initialize loading as true
   // Get the Firebase authentication object.
   const auth = getAuth();
 
   // Effect hook to manage authentication state changes.
   useEffect(() => {
     // Listen for changes in the authentication state.
-    const unsubscribe = auth.onAuthStateChanged((firebaseUser: FirebaseUser | null) => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      setLoading(true); // Set loading true when auth state changes
       if (firebaseUser) {
-        // If a user is authenticated, format and set user data in state.
-        const updatedUser: User = {
-          uid: firebaseUser.uid,
-          name: firebaseUser.displayName || "Default Name",
-          avatar: firebaseUser.photoURL || ""
-        };
-        console.log("User logged in:", updatedUser);
-        setUser(updatedUser);
+        const userRef = doc(db, "users", firebaseUser.uid);
+        const userSnap = await getDoc(userRef);
+
+        if(userSnap.exists()) {
+          const userData = userSnap.data() as UserData;
+          // If a user is authenticated, format and set user data in state.
+          const updatedUser: User = {
+            uid: firebaseUser.uid,
+            name: userData.name || firebaseUser.displayName || "Default Name",
+            avatar: userData.avatar || firebaseUser.photoURL || "",
+            country: userData.country || "Unknown"
+          };
+          console.log("User logged in with updated data:", updatedUser);
+          setUser(updatedUser);
+        } else {
+          console.log("No user data available");
+          setUser(null);
+        }
       } else {
         console.log("User logged out");
         setUser(null);
       }
+      setLoading(false); // Set loading false once user data is fetched
     });
 
     // Cleanup function to unsubscribe from the auth listener on component unmount.
@@ -76,7 +94,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
   if (!UserContext) throw new Error('useUser must be used within a UserProvider');
   // Provide the user object and associated functions to children components.
   return (
-    <UserContext.Provider value={{ user, setUser, updateUserProfile }}>
+    <UserContext.Provider value={{ user, loading, setUser, updateUserProfile }}>
       {children}
     </UserContext.Provider>
   );

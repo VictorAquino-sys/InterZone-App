@@ -17,7 +17,7 @@ const Avatar: React.FC<AvatarProps> = ({
   backgroundColor = '#ccc',
   color = '#fff'
 }) => {
-  console.log("Avatar props:", { name, imageUri });  // Add this to log props being received
+  // console.log("Avatar props:", { name, imageUri });  // Add this to log props being received
   const firstLetter = name ? name[0].toUpperCase() : '?'; // Default to '?' if no name is provided
 
   return (

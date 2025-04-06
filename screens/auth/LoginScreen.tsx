@@ -124,6 +124,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       // Store user data locally
       await AsyncStorage.setItem('user', JSON.stringify(authUser));
       await AsyncStorage.setItem('userName' + authUser.uid, userData?.name || ""); // Save name
+      await AsyncStorage.setItem('userCountry' + authUser.uid, userData?.country || "Unknown"); // Save country
 
       console.log("User logged in:", authUser.email);
       console.log("Fetched name:", userData?.name); 

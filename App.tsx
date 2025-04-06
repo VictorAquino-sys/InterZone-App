@@ -18,7 +18,8 @@ import { TriviaProvider } from '@/contexts/TriviaContext';
 import { RootStackParamList } from '@/navigationTypes';
 import { TabParamList } from '@/navigationTypes';
 import CategoryScreen from './screens/CategoryScreen';
-import { categories } from './src/config/categoryData';
+import { HistoryTriviaProvider } from '@/contexts/HistoryTriviaContext';
+// import { categories } from './src/config/categoryData';
 
 // Create the native stack navigator with type annotations
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -118,9 +119,11 @@ export default function App() {
     <UserProvider> 
       <PostsProvider>
         <TriviaProvider>
-          <NavigationContainer>
-            <AuthenticatedApp />
-          </NavigationContainer>
+          <HistoryTriviaProvider>
+            <NavigationContainer>
+              <AuthenticatedApp />
+            </NavigationContainer>
+          </HistoryTriviaProvider>
         </TriviaProvider>
       </PostsProvider>
     </UserProvider>

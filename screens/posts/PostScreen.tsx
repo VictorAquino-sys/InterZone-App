@@ -10,9 +10,11 @@ import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '../../src/i18n';
+import { Accuracy } from 'expo-location';
 import { Picker } from '@react-native-picker/picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import mime from 'mime';
+import { useFocusEffect } from '@react-navigation/native';
 import { checkLocation } from '../../src/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../../src/navigationTypes';
@@ -26,9 +28,13 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [postText, setPostText] = useState<string>('');
   const [charCount, setCharCount] = useState<number>(0); 
+  const [city, setCity] = useState<string | null>(null); // To store the city name
   const [location, setLocation] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
+
+  const [locationIconVisible, setLocationIconVisible] = useState(true);
+
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>('');
   // const pickerRef = useRef<Picker<string> | null>(null);  // Use generic to specify the element type
@@ -135,53 +141,67 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   };
 
   const handleAddLocation = async () => {
-    setLocationLoading(true); // Start loading when the location fetch begins
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Location Permission Denied', 'Please enable location permissions in your settings.');
-      setLocationLoading(false); // End loading on permission denial
-      return;
-    }
+    console.log("🔍 Starting fetchLocation...");
+    setLocationLoading(true); // start loading spinner
 
     try {
-      // Fetch current location coordinates
-      const currentLocation = await Location.getCurrentPositionAsync({});
-      const coords = currentLocation.coords; // Properly define coords
+      const enabled = await Location.hasServicesEnabledAsync();
+      if (!enabled) {
+        alert('Please enable location services.');
+        setLocationLoading(false);
 
-      const reverseGeocodeResults = await Location.reverseGeocodeAsync({
-        latitude: coords.latitude,
-        longitude: coords.longitude
-      });
-
-      // console.log("Location fetched:", reverseGeocodeResults);  // Log fetched location
-      // Process reverse geocode results
-      if (reverseGeocodeResults.length > 0) {
-        const { city, region, isoCountryCode } = reverseGeocodeResults[0];
-        let locationDisplay = null;
-        if (isoCountryCode == 'US' && region !== null){
-          const acronym: string = region.toUpperCase().slice(0, 2);
-          locationDisplay = `${city}, ${acronym}`;
-          console.log("Testing acronym:", locationDisplay);
-        }
-        else { 
-          locationDisplay = city ? `${city}, ${region}` : checkLocation(coords);
-        }
-        // const formattedLocation = `${reverseGeocodeResults[0].city}, ${reverseGeocodeResults[0].region}`;
+        return;
+      }
   
-        console.log("Display Location:", locationDisplay); // For debugging
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Location permission denied.');
+        setLocationLoading(false);
+
+        return;
+      }
+  
+      const location = await Location.getCurrentPositionAsync({ accuracy: Accuracy.Balanced });
+      console.log("✅ Location obtained:", location.coords);
+  
+      const matchedLocation = checkLocation(location.coords);
+      console.log("Matched Location:", matchedLocation);
+  
+      let locationDisplay = matchedLocation;
+      
+      if (!matchedLocation) {
+        const reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
+        console.log("Reverse Geocode:", reverseGeocode);
+        
+        if (reverseGeocode?.length > 0) {
+          const { city, region } = reverseGeocode[0];
+          locationDisplay = city && region ? `${city}, ${region}` : null;
+        }
+      }
+  
+      if (locationDisplay) {
+        console.log("✅ Setting city to:", locationDisplay);
         setLocation(locationDisplay);
-        Alert.alert(i18n.t('locationAddedTitle'), `${i18n.t('locationAddedMessage')} ${locationDisplay}`);
+        setLocationIconVisible(false); // Hide icon after getting location
+
       } else {
-          setLocation("Unknown Location");
-          Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
+        console.warn("⚠️ No valid city from location");
+        alert("Couldn't determine your location clearly. Try again.");
       }
     } catch (error) {
-        console.error("Failed to fetch location or reverse geocode:", error);
-        Alert.alert(i18n.t('locationErrorTitle'), i18n.t('locationErrorMessage'));
+      console.error("🚨 Error in fetchLocation:", error);
+      alert("Failed to fetch location clearly. Try again.");
     } finally {
-        setLocationLoading(false); // End loading after fetching location
+      setLocationLoading(false); // stop loading spinner
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setLocationIconVisible(true); // Reset icon visibility
+      setLocation(null);            // Reset location text
+    }, [])
+  );  
 
   // Handle Creating a Post
   const handleDone = async () => {
@@ -299,13 +319,23 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             <TouchableOpacity onPress={pickImage} disabled={locationLoading}>
                 <Ionicons name="image-outline" size={30} color={locationLoading ? "gray" : "#FF9966"} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleAddLocation}>
-              {locationLoading ? (
-                <ActivityIndicator  size="small" color="blue" /> // Change to a spinner or different icon color
+
+
+            {locationIconVisible ? (
+              <TouchableOpacity onPress={handleAddLocation}>
+                {locationLoading ? (
+                  <ActivityIndicator size="small" color="blue" />
                 ) : (
-                <Ionicons name="location-outline" size={28} color="#009999" />
-              )}            
-            </TouchableOpacity>
+                  <Ionicons name="location-outline" size={28} color="#009999" />
+                )}
+              </TouchableOpacity>
+            ) : (
+              location && (
+                <Text style={{ textAlign: 'center', color: '#333', marginTop: 8 }}>
+                  📍 {location}
+                </Text>
+              )
+            )}
           </View>
 
           <View style={styles.pickerContainer}>
