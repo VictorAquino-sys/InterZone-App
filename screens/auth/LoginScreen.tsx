@@ -11,6 +11,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import i18n from '../../src/i18n';
 import { NativeStackScreenProps } from '@react-navigation/native-stack'; 
 import { RootStackParamList } from '../../src/navigationTypes';
+import * as RNLocalize from 'react-native-localize';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -53,18 +54,23 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
       const authUser = userCredentials.user;
 
+      const country = RNLocalize.getCountry();
+      const language = RNLocalize.getLocales()[0].languageCode;
+
       // Create Firestore user document
       await setDoc(doc(db, "users", authUser.uid), {
         uid: authUser.uid,
         email: authUser.email,
         name: "",
         avatar: "",
+        country,
+        language, // ✅ added
         createdAt: new Date().toISOString(),
       });
 
       // Save user data in AsyncStorage
       await AsyncStorage.setItem('user', JSON.stringify(authUser));
-      console.log("User signed up:", authUser.email);
+      console.log("User signed up:", authUser.email, "| Country:", country);
 
       navigation.navigate('NameInputScreen', {userId: authUser.uid});
     } catch (error :any) {
@@ -173,15 +179,23 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       const docSnap = await getDoc(userRef);
     
       if (!docSnap.exists()) {
+        const country = RNLocalize.getCountry(); // 🌍 Get country from device settings
+        const language = RNLocalize.getLocales()[0].languageCode;
+
         await setDoc(userRef, {
           uid: userCredential.user.uid,
           email: userCredential.user.email,
           name: userCredential.user.displayName || '',
           avatar: userCredential.user.photoURL || '',
+          country, // ✅ Store country at account creation
+          language, // ✅ added
           createdAt: new Date().toISOString(),
         });
-      }
 
+        console.log("📦 Created Firestore document for Google user with country:", country);
+      } else {
+        console.log("✅ Firestore user already exists for:", userCredential.user.email);
+      }
       navigation.navigate('BottomTabs'); // Navigate or update UI
     } catch (error: any) {
       console.error('Error during sign-in process:', error);

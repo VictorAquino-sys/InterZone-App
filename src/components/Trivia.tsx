@@ -1,61 +1,57 @@
 // TriviaComponent.jsx
 import React, {useState}  from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { useTrivia } from '@/contexts/TriviaContext'; // Make sure you have this hook
+import { TriviaQuestion, useTrivia } from '@/contexts/TriviaContext'; // Make sure you have this hook
 
 // Define the props type for the Trivia component
 interface TriviaProps {
+    triviaData: TriviaQuestion[];
+    language: 'en' | 'es';
     onTriviaComplete: () => void; // Assumes onTriviaComplete is a function taking no arguments and returning void
 }
 
-const Trivia = ({ onTriviaComplete }: TriviaProps) => {
-    const { trivia, loading, error } = useTrivia();
+const Trivia = ({ triviaData, language, onTriviaComplete }: TriviaProps) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [isAnswered, setIsAnswered] = useState(false);
 
     const handleAnswer = (answer: string) => {
-        setSelectedAnswer(answer);
         setIsAnswered(true);
-        setTimeout(() => {
-            const isCorrect = answer === trivia[currentQuestionIndex].correct_answer.en;
-            const message = isCorrect ? 'Correct!' : 'Wrong Answer!';
-            // Logic to handle answer, check correctness, and move to next question
+        const question = triviaData[currentQuestionIndex];
+        const correctAnswer = question.correct_answer[language];
+        const isCorrect = answer === correctAnswer;
+        const message = isCorrect ? 'Correct!' : 'Wrong Answer!';
 
-            const nextQuestionIndex = currentQuestionIndex + 1;
-            if (nextQuestionIndex < trivia.length) {
-                alert(message); // Display result of the current answer
-                setCurrentQuestionIndex(nextQuestionIndex);
+        setTimeout(() => {
+            alert(message);
+            if (currentQuestionIndex + 1 < triviaData.length) {
+                setCurrentQuestionIndex(currentQuestionIndex + 1);
             } else {
-                alert(`${message}\nTrivia completed!`); // Combine feedback and completion message
-                onTriviaComplete(); // Call the callback when trivia is completed
-                // Reset or end the trivia session
+                alert("Trivia completed!");
+                onTriviaComplete();
             }
             setIsAnswered(false);
-            setSelectedAnswer(null);
         }, 500);
     };
 
-    if (loading) return <ActivityIndicator />;
-    if (error) return <Text style={styles.errorText}>{error}</Text>;
-    if (!trivia.length) return <Text>No trivia questions available</Text>;
+    if (!triviaData.length) return <Text>No trivia questions available</Text>;
 
-    const question = trivia[currentQuestionIndex];
+    const question = triviaData[currentQuestionIndex];
 
     return (
         <View style={styles.triviaContainer}>
-            <Text style={styles.question}>{question.question.en}</Text>
+            <Text style={styles.question}>{question.question[language]}</Text>
             {question.type === 'multiple' ? (
-                [...question.incorrect_answers.map(a => a.en), question.correct_answer.en]
+                [question.correct_answer[language], ...question.incorrect_answers.map(a => a[language])]
                 .sort(() => Math.random() - 0.5) // Shuffle answers
+                .filter(answer => answer !== undefined) // Filter out undefined answers
                 .map((answer, index) => (
-                    <TouchableOpacity key={index} style={styles.answerButton} onPress={() => handleAnswer(answer)}>
+                    <TouchableOpacity key={index} style={styles.answerButton} onPress={() => handleAnswer(answer as string)}>
                         <Text style={styles.answerText}>{answer}</Text>
                     </TouchableOpacity>
                 ))
             ) : (
                 ['True', 'False'].map((answer, index) => (
-                    <TouchableOpacity key={index} style={styles.answerButton} onPress={() => handleAnswer(answer)}>
+                    <TouchableOpacity key={index} style={styles.answerButton} onPress={() => handleAnswer(question.correct_answer[language] === 'True' ? 'True' : 'False')}>
                         <Text style={styles.answerText}>{answer}</Text>
                     </TouchableOpacity>
                 ))

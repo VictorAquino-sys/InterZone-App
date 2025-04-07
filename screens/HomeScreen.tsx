@@ -12,7 +12,7 @@ import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
-import { deleteDoc, collection, doc, getDocs, getDoc, query, where, orderBy } from "firebase/firestore";
+import { deleteDoc, collection, doc, getDocs, getDoc, updateDoc, query, where, orderBy } from "firebase/firestore";
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { categories, getCategoryByKey } from '../src/config/categoryData';
 import { checkLocation } from '../src/utils/locationUtils';
@@ -132,13 +132,16 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       console.log("Matched Location:", matchedLocation);
   
       let locationDisplay = matchedLocation;
-      
-      if (!matchedLocation) {
-        const reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
-        console.log("Reverse Geocode:", reverseGeocode);
-        
-        if (reverseGeocode?.length > 0) {
-          const { city, region, isoCountryCode } = reverseGeocode[0];
+      let country: string | null = null;
+
+      const reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
+      console.log("Reverse Geocode:", reverseGeocode[0]);
+
+      if (reverseGeocode?.length > 0) {
+        const { city, region, isoCountryCode, country: countryName } = reverseGeocode[0];
+        country = countryName || null;
+
+        if (!matchedLocation) {
           if (isoCountryCode === 'US' && region) {
             const regionCode = region.toUpperCase().slice(0, 2);
             locationDisplay = city ? `${city}, ${regionCode}` : null;
@@ -153,10 +156,27 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         setCity(locationDisplay);
       } else {
         console.warn("⚠️ No valid city from location");
+      }
+
+      // 🔥 Update Firestore and User Context here
+      if (user?.uid && (city || country)) {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, { country });
+
+        setUser(prev => prev ? {
+          ...prev,
+          ...(country ? { country } : {})
+        } : prev);
+
+        console.log("📝 Updated user country in Firestore:", country);
+      } else {
+        console.warn("⚠️ No valid city from location");
         setLoading(false);
       }
+
     } catch (error) {
       console.error("🚨 Error in fetchLocation:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -207,7 +227,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
       // console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
       setPosts(postsData);
-      console.log("Fetched posts:", postsData);
+      // console.log("Fetched posts:", postsData);
       // console.log("Fetched posts image URLs:", postsData.map(post => post.imageUrl));  // This will log all image URLs
     } catch (error) {
       console.error("Error fetching posts:", error);
@@ -227,12 +247,22 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          setUser(prevUser => prevUser ? ({
-            uid: prevUser.uid,
-            name: userData.name || prevUser.name,
-            avatar: userData.avatar || prevUser.avatar
-          }) : prevUser);
   
+          setUser(prevUser => {
+            const updated = prevUser ? {
+              ...prevUser,
+              name: userData.name || prevUser.name,
+              avatar: userData.avatar || prevUser.avatar
+            } : prevUser;
+
+            console.log("👀 Updated user context:", updated);
+            console.log("✅ Country preserved?", updated?.country);
+            console.log("✅ Language preserved?", updated?.language);
+
+            return updated;
+          });
+
+          console.log("📦 Firestore user data:", userData);
           setProfileImageUrl(userData.avatar);
         }
       } else {

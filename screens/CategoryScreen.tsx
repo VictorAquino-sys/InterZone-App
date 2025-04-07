@@ -14,6 +14,7 @@ import { categories } from '@/config/categoryData';
 import Trivia from '../src/components/Trivia';
 import HistoryTrivia from '@/components/HistoryTrivia';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTrivia } from '../src/contexts/TriviaContext'; // Make sure this is imported
 
 type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
@@ -25,6 +26,7 @@ const CategoryScreen = () => {
     const { categoryKey } = route.params;
     const category = categories.find(cat => cat.key === categoryKey);
     const { user } = useUser();
+    const { trivia } = useTrivia(); // Using the trivia context
 
     const [triviaActive, setTriviaActive] = useState(false);
     const [historyTriviaActive, setHistoryTriviaActive] = useState(false);
@@ -47,7 +49,7 @@ const CategoryScreen = () => {
       
           checkUserCountry();
         }, [user?.uid])
-      );
+    );
 
     // Assuming each post has a 'timestamp' field that's a Date or a number
     const filteredPosts = posts
@@ -87,6 +89,30 @@ const CategoryScreen = () => {
         if (!timestamp) return 'Unknown date'; // Handle undefined or null timestamps
         const date = new Date(timestamp.seconds * 1000); // Convert timestamp to Date object
         return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    };
+
+    useEffect(() => {
+        console.log("Current user language:", user?.language);  // Check what language is being set
+      }, [user?.language]);
+
+    // Render Trivia with language settings
+    const renderTrivia = () => {
+        const language = (user?.language || 'en') as 'en' | 'es'; // Assert the type directly here
+        console.log("Rendering trivia in language:", language); // Check the actual language being passed
+        const triviaData = trivia.filter(t => t.category === "Entertainment: Music"); // You might need to adjust this string
+    
+        if (triviaData.length === 0) {
+            console.log("No trivia data available for category:", categoryKey);
+            return <Text>No trivia questions available</Text>;
+        }
+
+        return (
+            <Trivia 
+                triviaData={triviaData} 
+                language={language} 
+                onTriviaComplete={toggleTrivia} 
+            />
+        );
     };
 
     const handleDeletePost = (postId: string, imageUrl: string | null) => {
@@ -144,21 +170,6 @@ const CategoryScreen = () => {
         }
     };
 
-    // const refreshUserData = async () => {
-    //     if (user?.uid) {
-    //       const userRef = doc(db, "users", user.uid);
-    //       const userSnap = await getDoc(userRef);
-    //       if (userSnap.exists()) {
-    //         const updatedUser = {
-    //           ...user,
-    //           ...userSnap.data(),
-    //         };
-    //         console.log("Refreshed user data:", updatedUser);
-    //         setIsPeruvian(updatedUser.country === 'Peru');
-    //       }
-    //     }
-    //   };      
-
     return (
         <View style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
             {/* Add a button in the CategoryScreen render method */}
@@ -168,12 +179,6 @@ const CategoryScreen = () => {
                 </TouchableOpacity>
             )}
 
-            {/* <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={refreshUserData}>
-            <Text style={styles.refreshButtonText}>Refresh User Data</Text>
-            </TouchableOpacity> */}
-
             {categoryKey === "study hub" && isPeruvian && !historyTriviaActive && (
                 <TouchableOpacity style={styles.triviaButton} onPress={toggleHistoryTrivia}>
                     <Text style={styles.triviaButtonText}>{i18n.t('Villareal')}</Text>
@@ -181,7 +186,7 @@ const CategoryScreen = () => {
             )}
 
             {triviaActive ? (
-                <Trivia onTriviaComplete={toggleTrivia} />
+                renderTrivia() // Here we call renderTrivia instead of directly using the Trivia component
             ) : historyTriviaActive ? (
                 <HistoryTrivia onTriviaComplete={toggleHistoryTrivia} />
             ) : (

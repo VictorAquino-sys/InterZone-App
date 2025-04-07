@@ -2,6 +2,12 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+### 4-07
+- Needs fix:
+ LOG  [expo-image]: Prop "resizeMode" is deprecated, use "contentFit" instead
+ LOG  VirtualizedList: You have a large list that is slow to update - make sure your renderItem function renders components that follow React performance best practices 
+like PureComponent, shouldComponentUpdate, etc. {"contentLength": 8309.3330078125, "dt": 2857, "prevDt": 1891}
+
 3-01
 1. Transition to "com.interzona.app" (instead of "com.zhd.app") on Android to be consistent with Apple. I am creating a Bundle ID "com.interzone.app" on Apple.
 

@@ -7,6 +7,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
 import { db } from '../../src/config/firebase';
+import * as RNLocalize from 'react-native-localize';
 
 // Define Typescript interface for user data used in the app context
 export interface User {
@@ -14,6 +15,7 @@ export interface User {
   name: string;
   avatar?: string;
   country?: string;
+  language?: string;
 }
 
 // Define a separate interface for the full Firestore user document
@@ -58,6 +60,8 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
       if (firebaseUser) {
         const userRef = doc(db, "users", firebaseUser.uid);
         const userSnap = await getDoc(userRef);
+        const locale = RNLocalize.getLocales()[0].languageCode;
+        console.log("Locale from RNLocalize:", locale); // Check what RNLocalize returns
 
         if(userSnap.exists()) {
           const userData = userSnap.data() as UserData;
@@ -66,7 +70,8 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             uid: firebaseUser.uid,
             name: userData.name || firebaseUser.displayName || "Default Name",
             avatar: userData.avatar || firebaseUser.photoURL || "",
-            country: userData.country || "Unknown"
+            country: userData.country || "Unknown",
+            language: RNLocalize.getLocales()[0].languageCode
           };
           console.log("User logged in with updated data:", updatedUser);
           setUser(updatedUser);
