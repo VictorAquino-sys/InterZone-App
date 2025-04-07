@@ -34,6 +34,30 @@ export const locationMapping = [
     }
   },
   {
+    city: "Surquillo",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.125983638573148, max: -12.10296878205531 },
+      longitude: { min: -77.0272334306012, max: -76.99464440195062 }
+    }
+  },
+  {
+    city: "San Isidro",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.111014427925095, max: -12.088711664604169 },
+      longitude: { min: -77.06065125743169, max: -77.00799412987234 }
+    }
+  },
+  {
+    city: "Miraflores",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.14008085702441, max: -12.103052468195516 },
+      longitude: { min: -77.05611002222805, max: -77.00175773858118 }
+    }
+  },
+  {
     city: "Santiago de Surco",
     region: "Lima",
     bounds: {
@@ -47,6 +71,14 @@ export const locationMapping = [
     bounds: {
         latitude: { min: -12.012183023772721, max: -11.931904792605645 },
         longitude: { min: -77.08714870008724, max: -77.06031773009111 }
+    }
+  },
+  {
+    city: "San Miguel",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.09716803203449, max: -12.06049042620012 },
+      longitude: { min: -77.11145299342755, max: -77.07222837043251 }
     }
   },
   {

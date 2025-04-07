@@ -188,7 +188,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         console.log("✅ Setting city to:", locationDisplay);
         setLocation(locationDisplay);
         setLocationIconVisible(false); // Hide icon after getting location
-
       } else {
         console.warn("⚠️ No valid city from location");
         alert("Couldn't determine your location clearly. Try again.");
