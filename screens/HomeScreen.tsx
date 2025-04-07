@@ -399,7 +399,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         {/* Display Image if Available */}
         {item.imageUrl && (
           <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
-            <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+            <Image source={{ uri: item.imageUrl }} style={styles.postImage} contentFit='cover' />
           </TouchableOpacity>
         )}
 
@@ -493,7 +493,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           onRequestClose={closeImageModal}
         >
           <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
-            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} />
+            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} contentFit='contain'/>
           </TouchableOpacity>
         </Modal>
       </View>
@@ -665,7 +665,6 @@ const styles = StyleSheet.create({
   postImage: {
     width: '100%', 
     height: 200, 
-    resizeMode: 'cover', 
     marginTop: 10
   },
   fullScreenModal: {
@@ -677,6 +676,6 @@ const styles = StyleSheet.create({
   fullScreenImage: {
     width: '90%',
     height: '90%',
-    resizeMode: 'contain'
+    // resizeMode: 'contain'
   }
 });

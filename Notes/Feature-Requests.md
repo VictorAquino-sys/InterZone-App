@@ -8,7 +8,7 @@ Prioritize them with High (must-have), Medium (nice-to-have), and Low (low-prior
 1. User Personalization and Settings
 Allow users to customize themes or set preferences for how they view the app, including dark mode.
 
-Implement user profile customization where users can edit their details, change avatars, and manage settings.
+Implement user profile customization where users can edit their details, change avatars, and manage settings. (Done)
 
 2. Advanced Filtering and Sorting Options
 Provide more sophisticated filters (e.g., by date range, user ratings, tags).
