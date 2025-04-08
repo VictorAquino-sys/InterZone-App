@@ -18,11 +18,35 @@ export const locationMapping = [
     }
   },
   {
+    city: "San Martin de Porres",
+    region: "Lima",
+    bounds: {
+        latitude: { min: -12.038565306524266, max: -11.937226989067794 },
+        longitude: { min: -77.12745679212587, max: -77.04380759740644 }
+    }
+  },
+  {
     city: "Callao",
     region: "Callao",
-    bounds: {
-      latitude: { min: -12.077089700759503, max: -11.981055470497372 },
+    bounds: { 
+      latitude: { min: -12.05291, max: -11.981055470497372 },
       longitude: { min: -77.17018082063697, max: -77.0821185337119 }
+    }
+  },
+  {
+    city: "La Perla",
+    region: "Callao",
+    bounds: {
+      latitude: { min: -12.079405854005051, max: -12.063353709120369 },
+      longitude: { min: -77.13267369243474, max: -77.104371024003 }
+    }
+  },
+  {
+    city: "Bellavista",
+    region: "Callao",
+    bounds: {
+      latitude: { min: -12.067135846259314, max: -12.052111219121988 },
+      longitude: { min: -77.13334837197381, max: -77.1000 }
     }
   },
   {
@@ -78,7 +102,7 @@ export const locationMapping = [
     region: "Lima",
     bounds: {
       latitude: { min: -12.09716803203449, max: -12.06049042620012 },
-      longitude: { min: -77.11145299342755, max: -77.07222837043251 }
+      longitude: { min: -77.1000, max: -77.07222837043251 }
     }
   },
   {
@@ -119,6 +143,14 @@ export const locationMapping = [
     bounds: {
       latitude: { min: -12.157304488161095, max: -12.130902947945863 },
       longitude: { min: -77.02954150765831, max: -77.01284743902683 }
+    }
+  },
+  {
+    city: "Chorrillos",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.230289751137503, max: -12.154826534050303 },
+      longitude: { min: -77.03967273584827, max: -76.97362072518618 }
     }
   }
 ];
