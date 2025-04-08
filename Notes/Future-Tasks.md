@@ -2,6 +2,10 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+### 4-09
+    Push Notification Settings: Let drivers subscribe to alerts for specific zones.
+    Time-limited posts: Posts auto-expire after X hours since alerts like these are time-sensitive.
+
 ### 4-08
     Tag location reports with a source: 'fallback' field in Firestore to filter these cases.
     Add a toast/snackbar confirmation instead of a second Alert.alert() for less intrusive experience.
