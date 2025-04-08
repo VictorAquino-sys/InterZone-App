@@ -32,6 +32,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [location, setLocation] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
+  const [manualCoords, setManualCoords] = useState<string>(''); // for user input
 
   const [locationIconVisible, setLocationIconVisible] = useState(true);
 
@@ -190,13 +191,45 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         setLocationIconVisible(false); // Hide icon after getting location
       } else {
         console.warn("⚠️ No valid city from location");
-        alert("Couldn't determine your location clearly. Try again.");
+
+        Alert.alert(
+          i18n.t('locationNotDeterminedTitle'),
+          i18n.t('locationNotDeterminedMessage'),
+          [
+            { text: "Cancel", style: "cancel"},
+            {
+              text: i18n.t('shareCoordinates'),
+              onPress: () => {
+                const { latitude, longitude } = location.coords;
+                const coordString = `Lat: ${latitude.toFixed(4)}, Lon:${longitude.toFixed(4)}`;
+                setLocation(coordString);
+                setLocationIconVisible(false);
+                sendCoordinatesToFirebase(latitude, longitude);
+                Alert.alert(i18n.t('thankYou'), i18n.t('coordinatesShared'));
+              }
+            }
+          ]
+        );
       }
     } catch (error) {
       console.error("🚨 Error in fetchLocation:", error);
       alert("Failed to fetch location clearly. Try again.");
     } finally {
       setLocationLoading(false); // stop loading spinner
+    }
+  };
+
+  const sendCoordinatesToFirebase = async (latitude: number, longitude: number) => {
+    try {
+      await addDoc(collection(db, "locationReports"), {
+        userId: authUser?.uid || "anonymous",
+        latitude,
+        longitude,
+        timestamp: Timestamp.fromDate(new Date()),
+      });
+      console.log("📍 Coordinates submitted to Firebase");
+    } catch (error) {
+      console.error("🔥 Failed to send coordinates:", error);
     }
   };
 

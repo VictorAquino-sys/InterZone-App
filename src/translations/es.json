@@ -55,6 +55,11 @@
     "imagePreview": "Imagen Prevista",
     "EmptyCategoryScreen": "Quieres ser el primero en publicar?..", 
 
+    "locationNotDeterminedTitle": "Ubicación no determinada",
+    "locationNotDeterminedMessage": "No pudimos determinar tu ubicación con claridad. ¿Te gustaría compartir tus coordenadas con nosotros para ayudar a mejorar la app?",
+    "shareCoordinates": "Compartir coordenadas",
+    "thankYou": "¡Gracias!",
+    "coordinatesShared": "Tus coordenadas han sido compartidas.",
 
     "anonymous": "Anónimo",
     "unknown": "Desconocido",

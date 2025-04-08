@@ -2,6 +2,14 @@
 
 export const locationMapping = [
   {
+    city: "Ancon",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -11.817206009041655, max: -11.730198225508747 },
+      longitude: { min: -77.19830558063897, max: -77.13950711684538 }
+    }
+  },
+  {
     city: "Ciudad Pachacutec",
     region: "Lima",
     bounds: {
@@ -58,6 +66,22 @@ export const locationMapping = [
     }
   },
   {
+    city: "Los Olivos",
+    region: "Lima",
+    bounds: {
+        latitude: { min: -12.012183023772721, max: -11.931904792605645 },
+        longitude: { min: -77.08714870008724, max: -77.06031773009111 }
+    }
+  },
+  {
+    city: "Rimac",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.043252300132176, max: -11.998360789685263 },
+      longitude: { min: -77.05276192339355, max: -77.0131672813164 }
+    }
+  },
+  {
     city: "Surquillo",
     region: "Lima",
     bounds: {
@@ -90,14 +114,6 @@ export const locationMapping = [
     }
   },
   {
-    city: "Los Olivos",
-    region: "Lima",
-    bounds: {
-        latitude: { min: -12.012183023772721, max: -11.931904792605645 },
-        longitude: { min: -77.08714870008724, max: -77.06031773009111 }
-    }
-  },
-  {
     city: "San Miguel",
     region: "Lima",
     bounds: {
@@ -114,11 +130,11 @@ export const locationMapping = [
     }
   },
   {
-    "city": "Jesus Maria",
-    "region": "Lima",
-    "bounds": {
-      "latitude": { "min": -12.092817, "max": -12.064553 },
-      "longitude": { "min": -77.062867, "max": -77.036700 }
+    city: "Jesus Maria",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.092817, max: -12.064553 },
+      longitude: { min: -77.062867, max: -77.036700 }
     }
   },
   {
@@ -135,14 +151,6 @@ export const locationMapping = [
     bounds: {
       latitude: { min: -12.111939345853775, max: -12.080278629183972 },
       longitude: { min: -77.01193500854673, max: -76.97917505408647 }
-    }
-  },
-  {
-    city: "Ancon",
-    region: "Lima",
-    bounds: {
-      latitude: { min: -11.817206009041655, max: -11.730198225508747 },
-      longitude: { min: -77.19830558063897, max: -77.13950711684538 }
     }
   },
   {

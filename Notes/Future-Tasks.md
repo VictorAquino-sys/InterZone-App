@@ -2,6 +2,11 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+### 4-08
+    Tag location reports with a source: 'fallback' field in Firestore to filter these cases.
+    Add a toast/snackbar confirmation instead of a second Alert.alert() for less intrusive experience.
+    Use Platform.select() if ever want platform-specific messaging (iOS vs Android).
+
 ### 4-07
 - Needs fix: (Done)
  LOG  [expo-image]: Prop "resizeMode" is deprecated, use "contentFit" instead (Done)

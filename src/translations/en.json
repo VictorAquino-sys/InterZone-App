@@ -56,6 +56,12 @@
     "imagePreview": "Image Preview",
     "EmptyCategoryScreen": "You could be the first one to publish..",
 
+    "locationNotDeterminedTitle": "Location Not Determined",
+    "locationNotDeterminedMessage": "Couldn't determine your location clearly. Would you like to share your raw coordinates with us to help improve the app?",
+    "shareCoordinates": "Share Coordinates",
+    "thankYou": "Thank you!",
+    "coordinatesShared": "Your coordinates have been shared.",
+
     "unknown": "Unknown",
     "confirmDeleteTitle": "Confirm Delete",
     "confirmDeleteMessage": "Are you sure you want to delete this post?",
