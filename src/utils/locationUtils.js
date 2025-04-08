@@ -114,6 +114,14 @@ export const locationMapping = [
     }
   },
   {
+    "city": "Jesus Maria",
+    "region": "Lima",
+    "bounds": {
+      "latitude": { "min": -12.092817, "max": -12.064553 },
+      "longitude": { "min": -77.062867, "max": -77.036700 }
+    }
+  },
+  {
     city: "La Molina",
     region: "Lima",
     bounds: {
