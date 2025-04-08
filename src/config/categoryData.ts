@@ -12,7 +12,7 @@ export const categories: Category[] = [
     new Category('random', i18n.t('categories.random'), require('../../assets/random_icon.png'), '#b2ebf2'),
     new Category('ruteros', i18n.t('categories.ruteros'), require('../../assets/ruteros_icon.png'), '#b2ebf2'),
     new Category('hotels', i18n.t('categories.hotels'), require('../../assets/hoteles_icon.png'), '#b2ebf2'),
-    new Category('business', i18n.t('categories.business'), require('../../assets/businessman_icon.png'), '#b2ebf2'),
+    new Category('business', i18n.t('categories.business'), require('../../assets/business_icon.png'), '#b2ebf2'),
 ];
 
 export function getCategoryByKey(key: string): Category | undefined {
