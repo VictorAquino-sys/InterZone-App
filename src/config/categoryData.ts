@@ -10,6 +10,9 @@ export const categories: Category[] = [
     new Category('petpals', i18n.t('categories.petpals'), require('../../assets/petpals_icon.png'), '#fff8e1'),
     new Category('deals', i18n.t('categories.deals'), require('../../assets/deals_icon.png'), '#FFF7EE'),
     new Category('random', i18n.t('categories.random'), require('../../assets/random_icon.png'), '#b2ebf2'),
+    new Category('ruteros', i18n.t('categories.ruteros'), require('../../assets/ruteros_icon.png'), '#b2ebf2'),
+    new Category('hotels', i18n.t('categories.hotels'), require('../../assets/hoteles_icon.png'), '#b2ebf2'),
+    new Category('business', i18n.t('categories.business'), require('../../assets/businessman_icon.png'), '#b2ebf2'),
 ];
 
 export function getCategoryByKey(key: string): Category | undefined {
