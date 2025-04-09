@@ -18,7 +18,7 @@ export default {
     ios: {
       supportsTablet: false,
       sdkVersion: "19.0",
-      buildNumber: "1.0.10",
+      buildNumber: "1.0.13",
       bundleIdentifier: IS_DEV ? "com.interzone.app" : "com.interzone.app",
       runtimeVersion: "sdkVersion",
       usesAppleSignIn: true,

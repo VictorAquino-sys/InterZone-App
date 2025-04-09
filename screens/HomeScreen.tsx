@@ -426,7 +426,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         {/* Display Image if Available */}
         {item.imageUrl && (
           <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
-            <Image source={{ uri: item.imageUrl }} style={styles.postImage} resizeMode='cover' />
+              <View style={styles.postImageWrapper}>
+                <Image source={{ uri: item.imageUrl }} style={styles.postImage} resizeMode='cover' />
+              </View>
           </TouchableOpacity>
         )}
 
@@ -739,16 +741,20 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12, // Ensure the font size is appropriate
   },
-  postImage: {
-    width: '100%',
-    height: 220,
-    borderRadius: 12,
-    marginTop: 8,
+  postImageWrapper: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 1,
+    borderRadius: 12,
+    backgroundColor: '#fff', // Necessary for iOS to calculate shadow properly
+    marginTop: 8,
+  },
+  postImage: {
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
   },
   fullScreenModal: {
     flex: 1,
