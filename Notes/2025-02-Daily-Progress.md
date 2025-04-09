@@ -1,5 +1,13 @@
 (Daily logs of what have been worked on)
 
+### 04--09
+    - Add friend request system (send, accept, decline)
+    - Add Friends List with ability to unfriend users
+    - Add editable description to Profile with character limit and i18n
+    - Improve UI/UX for Profile screen and edit icons
+    - Enable private messaging with real-time chat updates
+    - Add i18n.t() localization for all screens (EN/ES)
+
 ### 04-08
     install dependencies to cloud Function Unfriend
     cd functions
