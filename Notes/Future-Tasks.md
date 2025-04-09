@@ -3,6 +3,7 @@ Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
 ### 4-09
+    Add push notifications when a new message is received
     Push Notification Settings: Let drivers subscribe to alerts for specific zones.
     Time-limited posts: Posts auto-expire after X hours since alerts like these are time-sensitive.
 
