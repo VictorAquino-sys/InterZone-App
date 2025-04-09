@@ -19,7 +19,13 @@ import { RootStackParamList } from '@/navigationTypes';
 import { TabParamList } from '@/navigationTypes';
 import CategoryScreen from './screens/CategoryScreen';
 import { HistoryTriviaProvider } from '@/contexts/HistoryTriviaContext';
-// import { categories } from './src/config/categoryData';
+
+import FriendsHomeScreen from './screens/FriendsHomeScreen';
+import PeopleScreen from './screens/PeopleScreen';
+import FriendRequestsScreen from './screens/FriendRequestsScreen';
+import UserProfileScreen from './screens/UserProfileScreen';
+import FriendsScreen from 'screens/FriendsScreen';
+import ChatScreen from 'screens/ChatScreen';
 
 // Create the native stack navigator with type annotations
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -32,6 +38,13 @@ function HomeStack(){
       <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="CategoryScreen" component={CategoryScreen} options={({ route }) => ({ title: route.params.title })}/>
+
+      <Stack.Screen name="FriendsHome" component={FriendsHomeScreen} />
+      <Stack.Screen name="People" component={PeopleScreen} />
+      <Stack.Screen name="Requests" component={FriendRequestsScreen} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+      <Stack.Screen name="FriendsList" component={FriendsScreen} options={{ title: 'My Friends' }} />
+      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
     </Stack.Navigator>
   )
 }

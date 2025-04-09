@@ -18,10 +18,33 @@
 
     "nameInputPrompt": "Enter your name",
     "saveName": "Save Name",
-
     "profileTitle": "Profile",
     "updateProfileButton": "Update Profile",
     "logoutButton": "Logout",
+    "yourNote": "Your Note:",
+    "saveNote": "Save Note",
+    "saving": "Saving...",
+    "noNote": "No note added yet.",
+    "descriptionPlaceholder": "Write something about yourself...",
+
+    "friendsTitle": "Friends",
+    "findPeople": "Find People",
+    "friendRequests": "Friend Requests",
+    "myFriends": "My Friends",
+
+    "incomingRequests": "Incoming Friend Requests",
+    "accept": "Accept",
+    "decline": "Decline",
+  
+    "removeFriendTitle": "Remove Friend",
+    "removeFriendMessage": "Are you sure you want to unfriend this person?",
+    "unfriend": "Unfriend",
+    "noFriends": "You have no friends yet 😢",
+    "peopleNearby": "People Nearby",
+    "addFriend": "Add Friend",
+
+    "typeMessage": "Type a message...",
+    "send": "Send",
 
     "postPlaceholder": "What's on your mind, neighbor?",
     "doneButton": "Send",

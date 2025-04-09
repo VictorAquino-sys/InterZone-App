@@ -16,6 +16,7 @@ export interface User {
   avatar?: string;
   country?: string;
   language?: string;
+  description?: string;
 }
 
 // Define a separate interface for the full Firestore user document

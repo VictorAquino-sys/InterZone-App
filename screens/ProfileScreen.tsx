@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useContext, FunctionComponent } from 'react';
-import { View, Text, StyleSheet, Button, Image, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Button, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
@@ -31,6 +32,11 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const { user, setUser } = useUser();
     const [loading, setLoading] = useState<boolean>(false);
 
+    const [description, setDescription] = useState('');
+    const [savingNote, setSavingNote] = useState(false);
+    const [isEditingNote, setIsEditingNote] = useState(false);
+
+
     useEffect(() => {
         navigation.setOptions({
             headerShown: false,
@@ -50,8 +56,8 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         if (docSnap.exists()) {
                             const userData = docSnap.data();
                             setNewName(userData.name || 'Default Name');
-
                             setProfilePic(authUser.photoURL || userData.avatar || '');
+                            setDescription(userData.description || ''); // <-- New
                         }
                     }
                 } catch (error) {
@@ -66,6 +72,36 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted'){
             alert('Sorry, we need camera roll permissions to make this work!');
+        }
+    };
+
+    // Save note function
+    const handleSaveDescription = async () => {
+        if (!authUser) return;
+
+        const trimmed = description.trim();
+        const original = user?.description?.trim() || '';
+
+          // 1. Check if there's an actual change
+        if (trimmed === original) {
+            setIsEditingNote(false);
+            Keyboard.dismiss();
+            return; // Do nothing if no change
+        }
+
+        try {
+            setSavingNote(true);
+            const userRef = doc(db, "users", authUser.uid);
+            await updateDoc(userRef, { description });
+            setUser(prev => prev ? { ...prev, description: trimmed } : prev);
+            Alert.alert("✅ Note saved!");
+        } catch (error) {
+            console.error("Error saving description:", error);
+            Alert.alert("❌ Failed to save your note.");
+        } finally {
+            setSavingNote(false);
+            setIsEditingNote(false);
+            Keyboard.dismiss(); // ⌨️ Dismiss the keyboard
         }
     };
 
@@ -205,10 +241,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
+            
             <TouchableOpacity onPress={pickImageProfile}>
-            <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150}/>
+                <Avatar key={profilePic} name={newName} imageUri={profilePic} size={100}/>
             </TouchableOpacity>
+            
             {loading && <ActivityIndicator size="large" color="#0000ff" />} 
+            
             <View style={styles.nameContainer}>
                 {isEditing ? (
                     <TextInput
@@ -227,9 +266,51 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                     </View>
                 )}
             </View>
+            
             {isEditing && (
                 <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
             )}
+
+            
+            {/* 📝 Description Editor Section */}
+            <View style={styles.descriptionWrapper}>
+                <Text style={styles.label}>{i18n.t('yourNote')}</Text>
+
+                {isEditingNote ? (
+                    <>
+                    <TextInput
+                        style={styles.descriptionInput}
+                        multiline
+                        maxLength={150}
+                        placeholder={i18n.t('descriptionPlaceholder')}
+                        value={description}
+                        onChangeText={setDescription}
+                    />
+                    <View style={styles.characterCountWrapper}>
+                        <Text style={styles.characterCount}>{description.length}/150</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={handleSaveDescription}
+                        style={styles.saveButton}
+                        disabled={savingNote}
+                    >
+                        <Text style={styles.saveButtonText}>
+                        {savingNote ? i18n.t('saving') : i18n.t('saveNote')}
+                        </Text>
+                    </TouchableOpacity>
+                    </>
+                ) : (
+                    <View style={styles.noteRow}>
+                        <Text style={styles.noteText}>
+                            {description ? description : i18n.t('noNote')}
+                        </Text>
+                        <TouchableOpacity onPress={() => setIsEditingNote(true)}>
+                            <Ionicons name="create-outline" size={20} color="#4A90E2" style={{ marginLeft: 8 }} />
+                        </TouchableOpacity>
+                    </View>
+                )}
+                </View>
+
             <TouchableOpacity
                 style={[styles.buttonContainer, { marginTop: 20 }]} // Additional top margin for separation
                 onPress={handleLogout}
@@ -282,6 +363,16 @@ const styles = StyleSheet.create({
         padding: 10,
         width: '100%',
     },
+    characterCountWrapper: {
+        alignSelf: 'flex-end',
+        marginBottom: 4,
+        marginTop: -8,
+        paddingRight: 4,
+    },
+    characterCount: {
+        fontSize: 12,
+        color: '#666',
+    },
     buttonContainer: {
         backgroundColor: '#4A90E2', // Change as necessary
         borderRadius: 10,
@@ -295,5 +386,57 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 20,
         fontWeight: 'bold',
-    }
+    },
+    descriptionWrapper: {
+        width: '100%',
+        marginTop: 20,
+    },
+    noteRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    noteText: {
+        flex: 1,
+        fontSize: 14,
+        color: '#333',
+        fontStyle: 'italic',
+        paddingVertical: 4,
+        // paddingRight: 8,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginTop: 20,
+        marginBottom: 8,
+    },
+    descriptionInput: {
+        width: '100%',
+        minHeight: 80,
+        padding: 12,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 10,
+        textAlignVertical: 'top',
+        backgroundColor: 'white',
+        fontSize: 14,
+        marginBottom: 12,
+    },
+    saveButton: {
+        backgroundColor: '#007aff',
+        paddingVertical: 10,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+        alignSelf: 'center',
+        minWidth: 160,              // Prevents it from being too small
+        maxWidth: '80%',            // Prevents it from being too wide
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    saveButtonText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 16,
+        textAlign: 'center',
+    },
 });

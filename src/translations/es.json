@@ -17,10 +17,32 @@
     
     "nameInputPrompt": "Introduce tu nombre",
     "saveName": "Guardar",
-
     "profileTitle": "Perfil",
     "updateProfileButton": "Actualizar Perfil",
     "logoutButton": "Cerrar sesión",
+    "yourNote": "Tu nota:",
+    "saveNote": "Guardar nota",
+    "saving": "Guardando...",
+    "noNote": "Aún no has añadido ninguna nota.",
+    "descriptionPlaceholder": "Escribe algo sobre ti...",
+
+    "friendsTitle": "Amigos",
+    "findPeople": "Buscar personas",
+    "friendRequests": "Solicitudes de amistad",
+    "myFriends": "Mis amigos",
+
+    "incomingRequests": "Solicitudes de amistad",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "removeFriendTitle": "Eliminar amigo",
+    "removeFriendMessage": "¿Estás seguro de que quieres eliminar a esta persona?",
+    "unfriend": "Eliminar",
+    "noFriends": "Aún no tienes amigos 😢",
+    "peopleNearby": "Personas Cercanas",
+    "addFriend": "Agregar",
+
+    "typeMessage": "Escribe un mensaje...",
+    "send": "Enviar",
 
     "postPlaceholder": "¿Qué estás pensando?",
     "doneButton": "Publicar",

@@ -42,8 +42,8 @@ const CategoryScreen = () => {
               if (userSnap.exists()) {
                 const userData = userSnap.data();
                 console.log("Fetched user data on focus:", userData);
-                setIsPeruvian(userData.country === 'Peru');
-              }
+                setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
+            }
             }
           };
       

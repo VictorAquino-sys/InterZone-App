@@ -1,5 +1,12 @@
 (Daily logs of what have been worked on)
 
+### 04-08
+    install dependencies to cloud Function Unfriend
+    cd functions
+    npm install firebase-functions firebase-admin
+    npm install -g firebase-tools
+
+
 ### 04-03
 -   Install Firebase Admin SDK to populate Firestore with trivia data:
     npm install --save firebase-admin

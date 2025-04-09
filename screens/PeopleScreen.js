@@ -1,0 +1,53 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../src/config/firebase';
+import { sendFriendRequest } from '../services/friendService';
+import { useUser } from '../src/contexts/UserContext';
+import i18n from '../src/i18n';
+
+const PeopleScreen = () => {
+  const [users, setUsers] = useState([]);
+  const { user } = useUser();
+  const currentUserId = user?.uid;
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const snapshot = await getDocs(collection(db, 'users'));
+      const userList = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(user => user.id !== currentUserId); // exclude self
+      setUsers(userList);
+    };
+
+    fetchUsers();
+  }, [currentUserId]);
+
+  const handleAddFriend = async (toUserId) => {
+    await sendFriendRequest(currentUserId, toUserId);
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{i18n.t('peopleNearby')}</Text>
+      <FlatList
+        data={users}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.userItem}>
+            <Text>{item.name || item.id}</Text>
+            <Button title={i18n.t('addFriend')} onPress={() => handleAddFriend(item.id)} />
+          </View>
+        )}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
+  userItem: { marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between' }
+});
+
+export default PeopleScreen;

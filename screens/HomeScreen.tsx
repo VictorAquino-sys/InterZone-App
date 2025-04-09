@@ -1,7 +1,9 @@
-import React, { useContext, useEffect, useRef, useState, FunctionComponent } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useRef, useState, FunctionComponent } from 'react';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
-import { Image } from 'expo-image';
+// import { Image } from 'expo-image';
+import { Image } from 'react-native';
+import friendsIcon from '../assets/addfriends_icon.png'
 import { Asset } from 'expo-asset';
 // import defaultProfileImg from '../assets/unknownuser.png';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -180,6 +182,24 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('FriendsHome')}
+          style={{ marginRight: 16 }}
+        >
+          <Image
+            source={friendsIcon}
+            style={{ width: 26, height: 26 }}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
   
   
   const fetchPostsByCity = async (cityName: string): Promise<void> => {
@@ -385,7 +405,14 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
 
             <View style={styles.postDetails}>
-              <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+              <TouchableOpacity 
+                onPress={() => {
+                  if (item.user?.uid) {
+                    navigation.navigate('UserProfile', { userId: item.user.uid });
+                  }
+                }}>
+                <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+              </TouchableOpacity>
               <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
               <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
             </View>
@@ -399,13 +426,14 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         {/* Display Image if Available */}
         {item.imageUrl && (
           <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
-            <Image source={{ uri: item.imageUrl }} style={styles.postImage} contentFit='cover' />
+            <Image source={{ uri: item.imageUrl }} style={styles.postImage} resizeMode='cover' />
           </TouchableOpacity>
         )}
 
         {/* Like Button Component */}
-        <LikeButton postId={item.id} userId={user.uid} />
-
+        <View style={styles.likeButtonWrapper}>
+          <LikeButton postId={item.id} userId={user.uid} />
+        </View>
         {/* Allow users to delete their own posts */}
         {user?.uid == item.user?.uid && (
           <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
@@ -438,14 +466,28 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             />
           </TouchableOpacity>
           
-          {/* Search Bar */}
-          <TextInput
-            style={styles.searchBar}
-            placeholder={i18n.t('searchPlaceholder')}
-            placeholderTextColor="#888"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
+          <View style={styles.searchWithIcon}>
+            {/* Search Bar */}
+            <TextInput
+              style={styles.searchBar}
+              placeholder={i18n.t('searchPlaceholder')}
+              placeholderTextColor="#888"
+              value={searchText}
+              onChangeText={setSearchText}
+            />
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('FriendsHome')}
+              style={styles.iconWrapper}
+              activeOpacity={0.7}
+            >
+              <Image
+                source={friendsIcon}
+                style={styles.friendsIcon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {loading ? (
@@ -493,7 +535,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           onRequestClose={closeImageModal}
         >
           <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
-            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} contentFit='contain'/>
+            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} resizeMode='contain'/>
           </TouchableOpacity>
         </Modal>
       </View>
@@ -506,7 +548,11 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: 'white' // or any other background color you want
+    backgroundColor: '#f5f5f5' // or any other background color you want
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -522,6 +568,14 @@ const styles = StyleSheet.create({
   postHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  likeButtonWrapper: {
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
     alignItems: 'center',
   },
   categoryIcon: {
@@ -547,21 +601,31 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
   },
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
   userContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    flex: 1,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderBottomColor: '#ddd',
+  },
+  searchWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconWrapper: {
+    // marginLeft: 2,
+    padding: 4,
+    marginRight: 10,
+  },
+  friendsIcon: {
+    width: 28,
+    height: 28,
   },
   profilePicContainer: {
     height: 40,
@@ -581,7 +645,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     elevation: 2, // Shadow effect for Android
-    marginRight: 20,  // Adjust the right spacing
+    marginRight: 25,  // Adjust the right spacing
     marginLeft: 10,
     fontSize: 14,
   },
@@ -591,19 +655,26 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginBottom: 5,
     alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    // elevation: 2,
+    paddingVertical: 6,
   },
   categoryItem: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 20,
-    paddingLeft: 15,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginRight: 12,
-    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    borderColor: '#007aff',
+    borderWidth: 1,
   },
   categoryText: {
-    fontSize: 13,
-    fontWeight: 'bold',
+    color: '#0097a7',
+    fontWeight: '600',
   },
   funnyMessage: {
     fontSize: 14,
@@ -616,19 +687,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ffd700',
   },
-  // profilePic: {
-  //   height: '100%',
-  //   width: '100%',
-  //   resizeMode: 'cover', // Ensures the image covers the space without stretching
-  // },
   postItem: {
-    padding: 8,
-    borderTopWidth: 0.5,
-    borderTopColor: 'pearl river',
-    width: '100%', // Ensure post items take full width
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginVertical: 8,
+    marginHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   postText: {
     fontSize: 14,
+    marginTop: 4,
+    marginBottom: 8,
+    lineHeight: 20,  
   },
   avatar: {
     width: 50,
@@ -637,7 +714,7 @@ const styles = StyleSheet.create({
   },
   postDetails: {
     marginLeft: 10,
-    flexDirection: 'column',
+    flexShrink: 1,  // Prevent overflow
   },
   userName: {
     fontWeight: 'bold',
@@ -663,9 +740,15 @@ const styles = StyleSheet.create({
     fontSize: 12, // Ensure the font size is appropriate
   },
   postImage: {
-    width: '100%', 
-    height: 200, 
-    marginTop: 10
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 1,
   },
   fullScreenModal: {
     flex: 1,
