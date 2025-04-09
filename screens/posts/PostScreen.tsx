@@ -392,7 +392,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
               <Picker.Item label={i18n.t('categories.deals')} value="deals" color="cornflowerblue"/>
               <Picker.Item label={i18n.t('categories.random')} value="random" color="cornflowerblue"/>  
               <Picker.Item label={i18n.t('categories.ruteros')} value="ruteros" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.bussiness')} value="bussiness" color="cornflowerblue"/>            
+              <Picker.Item label={i18n.t('categories.business')} value="business" color="cornflowerblue"/> 
+              <Picker.Item label={i18n.t('categories.hotels')} value="hotels" color="cornflowerblue"/>             
             </Picker>
           </View>
 
