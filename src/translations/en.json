@@ -42,9 +42,11 @@
     "noFriends": "You have no friends yet 😢",
     "peopleNearby": "People Nearby",
     "addFriend": "Add Friend",
+    "requestSent": "Sent",
 
     "typeMessage": "Type a message...",
     "send": "Send",
+    "NoPhoto": "No profile image available",
 
     "postPlaceholder": "What's on your mind, neighbor?",
     "doneButton": "Send",

@@ -40,9 +40,11 @@
     "noFriends": "Aún no tienes amigos 😢",
     "peopleNearby": "Personas Cercanas",
     "addFriend": "Agregar",
+    "requestSent": "Enviado",
 
     "typeMessage": "Escribe un mensaje...",
     "send": "Enviar",
+    "NoPhoto": "No hay foto disponible",
 
     "postPlaceholder": "¿Qué estás pensando?",
     "doneButton": "Publicar",

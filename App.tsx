@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { getLocales } from 'expo-localization';
-import i18n from './src/i18n';
+import i18n from '@/i18n';
 import { NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -87,7 +87,7 @@ function AuthenticatedApp() {
       offlineAccess: true // True if you need to call Google APIs on behalf of the user when they are offline
     });
 
-    i18n.locale = getLocales()[0].languageCode; // Setup the locale at app start
+    (i18n as any).locale = getLocales()[0].languageCode;
     console.log("User state:", user);  // Log the user state on each effect execution
 
     // Set a timeout to handle cases where authentication status remains unresolved.

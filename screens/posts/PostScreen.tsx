@@ -9,7 +9,7 @@ import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
-import i18n from '../../src/i18n';
+import i18n from '@/i18n';
 import { Accuracy } from 'expo-location';
 import { Picker } from '@react-native-picker/picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';

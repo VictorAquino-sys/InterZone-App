@@ -5,7 +5,7 @@ import { useUser } from '../src/contexts/UserContext';
 import { fetchMessages, sendMessage, getOrCreateConversation } from '../services/chatService';
 import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { db } from '../src/config/firebase';
-import i18n from '../src/i18n';
+import i18n from '@/i18n';
 
 type Message = {
   id: string;

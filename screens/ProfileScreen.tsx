@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useContext, FunctionComponent } from 'react';
-import { View, Text, StyleSheet, Button, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Button, ScrollView, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,7 +11,7 @@ import { db } from '../src/config/firebase';
 import { Alert } from 'react-native';
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import i18n from '../src/i18n'; 
+import i18n from '@/i18n'; 
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import mime from "mime";
 import { ActivityIndicator } from 'react-native';
@@ -239,86 +239,93 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
-            
-            <TouchableOpacity onPress={pickImageProfile}>
-                <Avatar key={profilePic} name={newName} imageUri={profilePic} size={100}/>
-            </TouchableOpacity>
-            
-            {loading && <ActivityIndicator size="large" color="#0000ff" />} 
-            
-            <View style={styles.nameContainer}>
-                {isEditing ? (
-                    <TextInput
-                        value={newName}
-                        onChangeText={setNewName}
-                        style={styles.input}
-                        autoFocus={true}
-                        onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
-                    />
-                ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={styles.newName}>{newName}</Text>
-                        <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
-                            <Ionicons name="pencil" size={24} color="gray"/>
-                        </TouchableOpacity>
-                    </View>
-                )}
-            </View>
-            
-            {isEditing && (
-                <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
-            )}
-
-            
-            {/* 📝 Description Editor Section */}
-            <View style={styles.descriptionWrapper}>
-                <Text style={styles.label}>{i18n.t('yourNote')}</Text>
-
-                {isEditingNote ? (
-                    <>
-                    <TextInput
-                        style={styles.descriptionInput}
-                        multiline
-                        maxLength={150}
-                        placeholder={i18n.t('descriptionPlaceholder')}
-                        value={description}
-                        onChangeText={setDescription}
-                    />
-                    <View style={styles.characterCountWrapper}>
-                        <Text style={styles.characterCount}>{description.length}/150</Text>
-                    </View>
-                    <TouchableOpacity
-                        onPress={handleSaveDescription}
-                        style={styles.saveButton}
-                        disabled={savingNote}
-                    >
-                        <Text style={styles.saveButtonText}>
-                        {savingNote ? i18n.t('saving') : i18n.t('saveNote')}
-                        </Text>
-                    </TouchableOpacity>
-                    </>
-                ) : (
-                    <View style={styles.noteRow}>
-                        <Text style={styles.noteText}>
-                            {description ? description : i18n.t('noNote')}
-                        </Text>
-                        <TouchableOpacity onPress={() => setIsEditingNote(true)}>
-                            <Ionicons name="create-outline" size={20} color="#4A90E2" style={{ marginLeft: 8 }} />
-                        </TouchableOpacity>
-                    </View>
-                )}
-                </View>
-
-            <TouchableOpacity
-                style={[styles.buttonContainer, { marginTop: 20 }]} // Additional top margin for separation
-                onPress={handleLogout}
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            <ScrollView
+                contentContainerStyle={styles.container}
+                keyboardShouldPersistTaps="handled"
             >
-                <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
-            </TouchableOpacity>
+                <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
             
-        </View>
+                <TouchableOpacity onPress={pickImageProfile}>
+                    <Avatar key={profilePic} name={newName} imageUri={profilePic} size={100} />
+                </TouchableOpacity>
+                
+                {loading && <ActivityIndicator size="large" color="#0000ff" />} 
+                
+                <View style={styles.nameContainer}>
+                    {isEditing ? (
+                        <TextInput
+                            value={newName}
+                            onChangeText={setNewName}
+                            style={styles.input}
+                            autoFocus={true}
+                            onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
+                        />
+                    ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={styles.newName}>{newName}</Text>
+                            <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
+                                <Ionicons name="pencil" size={24} color="gray"/>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View>
+                
+                {isEditing && (
+                    <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
+                )}
+
+                
+                {/* 📝 Description Editor Section */}
+                <View style={styles.descriptionWrapper}>
+                    <Text style={styles.label}>{i18n.t('yourNote')}</Text>
+
+                    {isEditingNote ? (
+                        <>
+                        <TextInput
+                            style={styles.descriptionInput}
+                            multiline
+                            maxLength={150}
+                            placeholder={i18n.t('descriptionPlaceholder')}
+                            value={description}
+                            onChangeText={setDescription}
+                        />
+                        <View style={styles.characterCountWrapper}>
+                            <Text style={styles.characterCount}>{description.length}/150</Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={handleSaveDescription}
+                            style={styles.saveButton}
+                            disabled={savingNote}
+                        >
+                            <Text style={styles.saveButtonText}>
+                                {savingNote ? i18n.t('saving') : i18n.t('saveNote')}
+                            </Text>
+                        </TouchableOpacity>
+                        </>
+                    ) : (
+                        <View style={styles.noteRow}>
+                            <Text style={styles.noteText}>
+                                {description ? description : i18n.t('noNote')}
+                            </Text>
+                            <TouchableOpacity onPress={() => setIsEditingNote(true)}>
+                                <Ionicons name="create-outline" size={20} color="#4A90E2" style={{ marginLeft: 8 }} />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    </View>
+
+                <TouchableOpacity
+                    style={[styles.buttonContainer, { marginTop: 20 }]} // Additional top margin for separation
+                    onPress={handleLogout}
+                >
+                    <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 

@@ -18,7 +18,7 @@ import { deleteDoc, collection, doc, getDocs, getDoc, updateDoc, query, where, o
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { categories, getCategoryByKey } from '../src/config/categoryData';
 import { checkLocation } from '../src/utils/locationUtils';
-import i18n from '../src/i18n'; 
+import i18n from '@/i18n'; 
 import { RootStackParamList } from '../src/navigationTypes';
 import { Accuracy } from 'expo-location';
 import { Timestamp, setDoc } from 'firebase/firestore';
@@ -400,8 +400,18 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.postHeader}>
           {/* <Image source={category.icon} style={styles.categoryIcon} /> */}
           <View style={styles.userContainer}>
-            <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
-              <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
+            <TouchableOpacity onPress={() => {
+              if (item.user?.avatar) {
+                openImageModal(item.user.avatar);
+              } else {
+                Alert.alert(i18n.t('NoPhoto')); // Optional: show message if no image
+              }
+            }}>
+              <Avatar
+                key={item.id} 
+                name={item.user?.name} 
+                imageUri={item.user?.avatar || undefined }
+              />
             </TouchableOpacity>
 
             <View style={styles.postDetails}>

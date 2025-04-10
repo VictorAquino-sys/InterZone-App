@@ -9,7 +9,7 @@ import { useUser } from '../src/contexts/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes';
-import i18n from '../src/i18n';
+import i18n from '@/i18n';
 
 type Friend = {
   uid: string;

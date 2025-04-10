@@ -9,6 +9,7 @@ import { sendFriendRequest } from '../services/friendService';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes'; // update path if needed
+import i18n from '@/i18n';
 
 type RouteParams = {
   userId: string;
@@ -120,11 +121,15 @@ const UserProfileScreen = () => {
                 onPress={() => setIsModalVisible(false)}
                 activeOpacity={1}
             >
-            <Image
-                source={{ uri: profile.avatar }}
-                style={styles.fullScreenImage}
-                resizeMode="contain"
-            />
+              {profile.avatar ? (
+                <Image
+                  source={{ uri: profile.avatar }}
+                  style={styles.fullScreenImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <Text style={{ color: 'white', fontSize: 16 }}>{i18n.t('NoPhoto')}</Text>
+              )}
             </TouchableOpacity>
         </Modal>
     </View>
