@@ -2,6 +2,12 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+### 4-10
+    ★ eas-cli@16.3.0 is now available.
+    To upgrade, run:
+    npm install -g eas-cli
+    Proceeding with outdated version.
+
 ### 4-09
     Add category "Games"
     Add push notifications when a new message is received
