@@ -5,7 +5,10 @@
     npm install rss-parser (not used)
     npm i fast-xml-parser
     npm install dayjs --save
+    expo install expo-constants
+    npm install react-native-check-version
 
+    - Added updatechecker
 
 ### 04--09
     - Add friend request system (send, accept, decline)

@@ -23,6 +23,7 @@ import { RootStackParamList } from '../src/navigationTypes';
 import { Accuracy } from 'expo-location';
 import { Timestamp, setDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import UpdateChecker from '../src/components/UpdateChecker';
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
 
@@ -501,6 +502,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* 🔔 Version update checker */}
+        <UpdateChecker />
 
         {loading ? (
           <View style={styles.loadingContainer}>
