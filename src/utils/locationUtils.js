@@ -82,6 +82,14 @@ export const locationMapping = [
     }
   },
   {
+    city: "Lima",
+    region: "Provincia de Lima",
+    bounds: {
+      latitude: { min: -12.0675, max: -12.0351 },
+      longitude: { min: -77.0880, max: -77.0179 }
+    }
+  },
+  {
     city: "Surquillo",
     region: "Lima",
     bounds: {
