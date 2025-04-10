@@ -1,5 +1,12 @@
 (Daily logs of what have been worked on)
 
+### 04-10
+    TO use rss, install dependency:
+    npm install rss-parser (not used)
+    npm i fast-xml-parser
+    npm install dayjs --save
+
+
 ### 04--09
     - Add friend request system (send, accept, decline)
     - Add Friends List with ability to unfriend users

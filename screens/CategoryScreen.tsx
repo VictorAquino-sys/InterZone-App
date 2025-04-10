@@ -15,6 +15,7 @@ import Trivia from '../src/components/Trivia';
 import HistoryTrivia from '@/components/HistoryTrivia';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTrivia } from '../src/contexts/TriviaContext'; // Make sure this is imported
+import NewsFeedContent from '@/components/NewsFeedContent';
 
 type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
@@ -189,6 +190,8 @@ const CategoryScreen = () => {
                 renderTrivia() // Here we call renderTrivia instead of directly using the Trivia component
             ) : historyTriviaActive ? (
                 <HistoryTrivia onTriviaComplete={toggleHistoryTrivia} />
+            ) : categoryKey === 'news' ? (
+                <NewsFeedContent /> // ✅ This renders RSS-based news!
             ) : (
                 <FlatList
                     data={filteredPosts}

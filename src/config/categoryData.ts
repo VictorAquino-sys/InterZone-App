@@ -1,5 +1,5 @@
 import { Category } from '../classes/Category';
-import i18n from '../i18n';
+import i18n from '@/i18n';
 
 export const categories: Category[] = [
     new Category('events', i18n.t('categories.events'), require('../../assets/events_icon.png'), '#e8f5e9'),
