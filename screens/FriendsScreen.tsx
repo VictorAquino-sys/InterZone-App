@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes';
 import i18n from '@/i18n';
+import { unfriendUser } from 'services/friendService';
 
 type Friend = {
   uid: string;
@@ -83,8 +84,7 @@ const FriendsScreen = () => {
 
     try {
       // Remove friend from both users
-      await deleteDoc(doc(db, `users/${user.uid}/friends/${friendId}`));
-      await deleteDoc(doc(db, `users/${friendId}/friends/${user.uid}`));
+      await unfriendUser(user.uid, friendId);
 
       // Update UI
       setFriends(prev => prev.filter(friend => friend.uid !== friendId));

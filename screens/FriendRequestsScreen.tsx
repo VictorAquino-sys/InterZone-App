@@ -8,7 +8,7 @@ import { Timestamp } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes';
-import i18n from '../src/i18n';
+import i18n from '@/i18n';
 
 type FriendRequest = {
   id: string;
@@ -64,7 +64,12 @@ const FriendRequestsScreen = () => {
         })
       );
 
-      setRequests(requestList);
+      const filteredRequests = requestList.filter(
+        (req, index, self) =>
+          index === self.findIndex((r) => r.fromUserId === req.fromUserId)
+      );
+
+      setRequests(filteredRequests);
     };
 
     fetchRequests();

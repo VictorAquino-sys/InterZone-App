@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Button, StyleSheet, TouchableOpacity } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../src/config/firebase';
 import { sendFriendRequest } from '../services/friendService';
 import { useUser } from '../src/contexts/UserContext';
@@ -9,26 +9,57 @@ import { useNavigation } from '@react-navigation/native';
 
 const PeopleScreen = () => {
   const [users, setUsers] = useState([]);
+  const [friendIds, setFriendIds] = useState(new Set());
+  const [pendingIds, setPendingIds] = useState(new Set());
   const { user } = useUser();
   const currentUserId = user?.uid;
-  const [requestsSent, setRequestsSent] = useState({});
   const navigation = useNavigation();
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const snapshot = await getDocs(collection(db, 'users'));
-      const userList = snapshot.docs
+    const fetchData = async () => {
+      if (!currentUserId) return;
+
+      // Fetch all users except self
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const userList = usersSnapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(user => user.id !== currentUserId); // exclude self
+        .filter(user => user.id !== currentUserId);
       setUsers(userList);
+
+      // Fetch current user's friends
+      const friendsSnapshot = await getDocs(collection(db, `users/${currentUserId}/friends`));
+      const friendsSet = new Set(friendsSnapshot.docs.map(doc => doc.id));
+      setFriendIds(friendsSet);
+
+      // Fetch friend requests where currentUser is either sender or receiver
+      const sentQuery = query(
+        collection(db, 'friend_requests'),
+        where('fromUserId', '==', currentUserId)
+      );
+      const receivedQuery = query(
+        collection(db, 'friend_requests'),
+        where('toUserId', '==', currentUserId)
+      );
+
+      const [sentSnap, receivedSnap] = await Promise.all([
+        getDocs(sentQuery),
+        getDocs(receivedQuery),
+      ]);
+
+      const pendingSet = new Set();
+      sentSnap.forEach(doc => pendingSet.add(doc.data().toUserId));
+      receivedSnap.forEach(doc => pendingSet.add(doc.data().fromUserId));
+      setPendingIds(pendingSet);
     };
 
-    fetchUsers();
+    fetchData();
   }, [currentUserId]);
 
   const handleAddFriend = async (toUserId) => {
-    await sendFriendRequest(currentUserId, toUserId);
-    setRequestsSent(prev => ({ ...prev, [toUserId]: true }));
+    const status = await sendFriendRequest(currentUserId, toUserId);
+    if (status === 'success') {
+      setPendingIds(prev => new Set(prev.add(toUserId)));
+    }
   };
 
   return (
@@ -38,8 +69,9 @@ const PeopleScreen = () => {
         data={users}
         keyExtractor={item => item.id}
         renderItem={({ item }) => {
-          const isSent = requestsSent[item.id];
-  
+          const isFriend = friendIds.has(item.id);
+          const isPending = pendingIds.has(item.id);
+
           return (
             <View style={styles.userItem}>
               <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: item.id })}>
@@ -47,12 +79,28 @@ const PeopleScreen = () => {
                   {item.name || item.id}
                 </Text>
               </TouchableOpacity>
-              <Button
-                title={isSent ? i18n.t('requestSent') : i18n.t('addFriend')}
-                onPress={() => handleAddFriend(item.id)}
-                color={isSent ? 'gray' : '#007AFF'}
-                disabled={isSent}
-              />
+
+              {!isFriend && !isPending && (
+                <Button
+                  title={i18n.t('addFriend')}
+                  onPress={() => handleAddFriend(item.id)}
+                  color="#007AFF"
+                />
+              )}
+              {isPending && (
+                <Button
+                  title={i18n.t('requestSent')}
+                  disabled
+                  color="gray"
+                />
+              )}
+              {isFriend && (
+                <Button
+                  title={i18n.t('friends')}
+                  disabled
+                  color="green"
+                />
+              )}
             </View>
           );
         }}
@@ -73,7 +121,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     flex: 1,
-    marginRight: 8, // spacing between name and button
+    marginRight: 8,
     fontSize: 16,
   },
 });

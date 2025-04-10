@@ -5,7 +5,7 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
-import { sendFriendRequest } from '../services/friendService';
+import { sendFriendRequest, unfriendUser, areUsersFriends, hasSentFriendRequest } from '../services/friendService';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes'; // update path if needed
@@ -41,18 +41,15 @@ const UserProfileScreen = () => {
           });
         }
 
-        // Check if friend request already exists
-        const requestQuery = query(
-          collection(db, 'friend_requests'),
-          where('fromUserId', '==', user?.uid),
-          where('toUserId', '==', userId)
-        );
-        const requestSnap = await getDocs(requestQuery);
-        setAlreadyRequested(!requestSnap.empty);
+        if (user?.uid && userId) {
+          const [isFriend, hasRequested] = await Promise.all([
+            areUsersFriends(user.uid, userId),
+            hasSentFriendRequest(user.uid, userId),
+          ]);
+          setAlreadyFriends(isFriend);
+          setAlreadyRequested(hasRequested);
+        }
 
-        // Check if already friends
-        const friendDoc = await getDoc(doc(db, `users/${user?.uid}/friends/${userId}`));
-        setAlreadyFriends(friendDoc.exists());
       } catch (err) {
         console.error('Error loading profile:', err);
       } finally {
@@ -66,10 +63,35 @@ const UserProfileScreen = () => {
   }, [user?.uid]);
 
   const handleSendRequest = async () => {
+    if (!user?.uid) {
+      console.error("No user ID found.");
+      Alert.alert("❌ You must be logged in to send a friend request.");
+      return;
+    }
+  
     try {
-      await sendFriendRequest(user?.uid, userId);
-      setAlreadyRequested(true);
-      Alert.alert("✅ Friend request sent!");
+      const status = await sendFriendRequest(user.uid, userId);
+  
+      switch (status) {
+        case 'already_friends':
+          Alert.alert("✅ You're already friends.");
+          break;
+        case 'request_already_sent':
+          Alert.alert("📨 Friend request already sent.");
+          break;
+        case 'reverse_request_exists':
+          Alert.alert("👀 This user already sent you a request.");
+          break;
+        case 'self_request_not_allowed':
+          Alert.alert("⚠️ You can't send a request to yourself.");
+          break;
+        case 'success':
+          setAlreadyRequested(true);
+          Alert.alert("✅ Friend request sent!");
+          break;
+        default:
+          Alert.alert("❌ Could not send friend request.");
+      }
     } catch (err) {
       console.error('Error sending friend request:', err);
       Alert.alert("❌ Could not send friend request.");
@@ -100,9 +122,46 @@ const UserProfileScreen = () => {
         ) : null}
 
         {!isOwnProfile && (
-            alreadyFriends ? (
-                <Button title="Message" onPress={() => navigation.navigate('Chat', { otherUserId: profile.id })} />
-            ) : alreadyRequested ? (
+          alreadyFriends ? (
+            <>
+              <Button
+                title="Message"
+                onPress={() => navigation.navigate('Chat', { otherUserId: profile.id })}
+              />
+              <View style={{ marginTop: 10 }}>
+                <Button
+                  title="Unfriend"
+                  color="red"
+                  onPress={() => {
+                    Alert.alert(
+                      "Unfriend",
+                      `Are you sure you want to remove ${profile.name || 'this user'} from your friends list?`,
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Unfriend",
+                          style: "destructive",
+                          onPress: async () => {
+                              if (!user?.uid) {
+                                Alert.alert("❌ You must be logged in to unfriend someone.");
+                                return;
+                              }
+                              const status = await unfriendUser(user.uid, userId);                            
+                              if (status === 'success') {
+                                setAlreadyFriends(false);
+                                Alert.alert("✅ User unfriended.");
+                            } else {
+                              Alert.alert("❌ Failed to unfriend user.");
+                            }
+                          }
+                        }
+                      ]
+                    );
+                  }}
+                />
+              </View>
+            </>
+          ) : alreadyRequested ? (
                 <Text style={styles.status}>⏳ Request already sent</Text>
             ) : (
                 <Button title="Add Friend" onPress={handleSendRequest} />
