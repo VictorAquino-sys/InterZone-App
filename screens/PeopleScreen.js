@@ -64,7 +64,7 @@ const PeopleScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{i18n.t('peopleNearby')}</Text>
+      {/* <Text style={styles.title}>{i18n.t('peopleNearby')}</Text> */}
       <FlatList
         data={users}
         keyExtractor={item => item.id}

@@ -14,6 +14,7 @@ export type RootStackParamList = {
     Chat: { otherUserId: string }; // ✅ Add this line
     Terms: undefined;
     Home: undefined;
+    BlockedUsers: undefined;
 
   };
 

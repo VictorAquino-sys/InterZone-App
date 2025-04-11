@@ -37,7 +37,7 @@
     "friendsTitle": "Amigos",
     "findPeople": "Buscar personas",
     "friendRequests": "Solicitudes de amistad",
-    "myFriends": "Mis amigos",
+    "myFriends": "Mis Amigos",
     "friends": "Amigos",
 
     "incomingRequests": "Solicitudes de amistad",
@@ -112,6 +112,10 @@
     "deleteErrorMessage": "Se produjo un error al eliminar la publicación: {error}",
     "noPosts": "Aún no hay publicaciones en tu ciudad. ¡Sé el primero en compartir algo!",
 
+    "friendshome": "Contactos",
+
+    "loadingPost": "Cargando publicaciones...",
+
     "report": {
         "title": "Reportar esta publicación",
         "cancel": "Cancelar",
@@ -128,6 +132,19 @@
           "hate": "Discurso de odio",
           "other": "Otro"
         }
+    },
+
+    "block": {
+        "blockUser": "Bloquear este Usuario",
+        "unblock": "Desbloquear",
+        "unblocked": "Desbloqueado",
+        "unblockedMessage": "Ahora puedes ver sus publicaciones nuevamente.",
+        "manage": "Usuarios bloqueados",
+        "none": "No has bloqueado a nadie aún.",
+        "error": "Error",
+        "errorMessage": "Algo salió mal.",
+        "success": "Usuario blockeado exitosamente!",
+        "successMessage": "Ahora estaras libre de sus publicaciones."
     }
 
 } 

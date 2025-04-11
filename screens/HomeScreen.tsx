@@ -15,7 +15,7 @@ import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
-import { deleteDoc, collection, doc, getDocs, getDoc, updateDoc, query, where, orderBy } from "firebase/firestore";
+import { deleteDoc, collection, doc, getDocs, getDoc, updateDoc, query, where, orderBy, arrayUnion } from "firebase/firestore";
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { categories, getCategoryByKey } from '../src/config/categoryData';
 import { checkLocation } from '../src/utils/locationUtils';
@@ -111,7 +111,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       };
   
       fetchLatestPosts();
-    }, [city])
+    }, [city, user?.blocked])
   );
 
   const fetchLocation = async () => {
@@ -231,6 +231,34 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
+  const handleBlockUser = async (userIdToBlock: string | null) => {
+    if (!userIdToBlock || !user?.uid) return;
+  
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        blocked: arrayUnion(userIdToBlock)
+      });
+
+      // ✅ Update local context right after
+      setUser(prev => {
+        if (!prev) return prev;
+        const updatedBlocked = prev.blocked ? [...prev.blocked, userIdToBlock] : [userIdToBlock];
+        return { ...prev, blocked: updatedBlocked };
+      });
+  
+      Alert.alert(i18n.t('block.success'), i18n.t('block.successMessage'));
+      if (!city) return;
+      await fetchPostsByCity(city); // make sure city is defined in your scope
+    } catch (error) {
+      console.error('Block error:', error);
+      Alert.alert(i18n.t('block.error'), i18n.t('block.errorMessage'));
+    } finally {
+      setReportModalVisible(false);
+    }
+  };
+  
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -293,8 +321,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         };
       }));
 
-      // console.log("Fetched posts:", JSON.stringify(postsData, null, 2)); // Log all posts including imageUrl
-      setPosts(postsData);
+      const blockedUserIds = user?.blocked ?? [];
+      const filteredPosts = postsData.filter(post => !blockedUserIds.includes(post.user.uid));
+      setPosts(filteredPosts);
       // console.log("Fetched posts:", postsData);
       // console.log("Fetched posts image URLs:", postsData.map(post => post.imageUrl));  // This will log all image URLs
     } catch (error) {
@@ -532,8 +561,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
               name={user?.name || ''}
               imageUri={profileImageUrl}
               size={36}
-                // source={{ uri: profileImageUrl || defaultUri }}
-                // style={[styles.profilePic, {opacity: imageOpacity}]} // Apply dynamic opacity
             />
           </TouchableOpacity>
           
@@ -566,7 +593,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading posts...</Text>
+            <Text style={styles.loadingText}>{i18n.t('loadingPost')}</Text>
             <ActivityIndicator size="large" color="#0000ff" />
           </View>
         ) : !user ? (
@@ -633,6 +660,13 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                   <Text>{i18n.t(`report.reasons.${key}`)}</Text>
                 </TouchableOpacity>
               ))}
+              <TouchableOpacity
+                onPress={() => handleBlockUser(selectedUserId)}
+                style={[styles.modalOption, { marginTop: 10 }]}
+              >
+                <Text style={{ color: 'red' }}>{i18n.t('block.blockUser')}</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={() => setReportModalVisible(false)}>
                 <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
               </TouchableOpacity>

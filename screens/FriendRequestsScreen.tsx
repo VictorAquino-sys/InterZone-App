@@ -91,7 +91,7 @@ const FriendRequestsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{i18n.t('incomingRequests')}</Text>
+      {/* <Text style={styles.title}>{i18n.t('incomingRequests')}</Text> */}
       <FlatList
         data={requests}
         keyExtractor={item => item.id}

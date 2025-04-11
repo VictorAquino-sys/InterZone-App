@@ -111,6 +111,9 @@
     "deleteErrorTitle": "Error Deleting Post",
     "deleteErrorMessage": "There was an error deleting the post: {error}",
     "noPosts": "No posts yet in your city. Be the first to share something!",
+    "loadingPost": "Loading posts...",
+    "friendshome": "Friends",
+    "peoplehome": "People",
 
     "report": {
       "title": "Report this post",
@@ -128,5 +131,16 @@
         "hate": "Hate Speech",
         "other": "Other"
       }
+    },
+
+    "block": {
+      "blockUser": "Block this user",
+      "unblock": "Unblock",
+      "unblocked": "Unblocked",
+      "unblockedMessage": "You can now see their posts again.",
+      "manage": "Manage Blocked Users",
+      "none": "You haven't blocked anyone yet.",
+      "error": "Error",
+      "errorMessage": "Something went wrong."
     }
 }  

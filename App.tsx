@@ -27,6 +27,7 @@ import FriendRequestsScreen from './screens/FriendRequestsScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
 import FriendsScreen from 'screens/FriendsScreen';
 import ChatScreen from 'screens/ChatScreen';
+import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 
 // Create the native stack navigator with type annotations
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -40,11 +41,23 @@ function HomeStack(){
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="CategoryScreen" component={CategoryScreen} options={({ route }) => ({ title: route.params.title })}/>
 
-      <Stack.Screen name="FriendsHome" component={FriendsHomeScreen} />
-      <Stack.Screen name="People" component={PeopleScreen} />
-      <Stack.Screen name="Requests" component={FriendRequestsScreen} />
+      <Stack.Screen name="FriendsHome" component={FriendsHomeScreen}   
+        options={{ 
+          title: i18n.t('friendshome'), 
+          headerShown: true  // ✅ ensure this is not false
+        }} />
+      <Stack.Screen name="People" component={PeopleScreen}
+        options={{ 
+          title: i18n.t('peopleNearby'), 
+          headerShown: true  // ✅ ensure this is not false
+        }} />
+      <Stack.Screen name="Requests" component={FriendRequestsScreen}
+        options={{ 
+          title: i18n.t('incomingRequests'), 
+          headerShown: true  // ✅ ensure this is not false
+        }} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
-      <Stack.Screen name="FriendsList" component={FriendsScreen} options={{ title: 'My Friends' }} />
+      <Stack.Screen name="FriendsList" component={FriendsScreen} options={{ title: i18n.t('myFriends') }} />
       <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
     </Stack.Navigator>
   )
@@ -135,6 +148,14 @@ function AuthenticatedApp() {
           <>
             <Stack.Screen name="NameInputScreen" component={NameInputScreen} />
             <Stack.Screen name="BottomTabs" component={BottomTabs} />
+            <Stack.Screen
+              name="BlockedUsers"
+              component={BlockedUsersScreen}
+              options={{ 
+                title: i18n.t('block.manage'), 
+                headerShown: true  // ✅ ensure this is not false
+              }}
+            />
           </>
       )}
   </Stack.Navigator>

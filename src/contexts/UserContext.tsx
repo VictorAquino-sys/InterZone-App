@@ -17,6 +17,7 @@ export interface User {
   country?: string;
   language?: string;
   description?: string;
+  blocked?: string[];
 }
 
 // Define a separate interface for the full Firestore user document
@@ -27,6 +28,7 @@ export interface UserData {
   avatar?: string;
   createdAt?: string;
   country?: string;
+  blocked?: string[];
 }
 
 // Define Typescript for context value.

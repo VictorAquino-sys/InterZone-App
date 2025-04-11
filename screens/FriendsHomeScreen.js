@@ -32,6 +32,14 @@ const FriendsHomeScreen = ({ navigation }) => {
           <Ionicons name="people-outline" size={28} color="#007bff" />
           <Text style={styles.cardText}>{i18n.t('myFriends')}</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.blockedUsersButton}
+          onPress={() => navigation.navigate('BlockedUsers')}
+        >
+          <Text style={styles.blockedUsersText}>{i18n.t('block.manage')}</Text>
+        </TouchableOpacity>
+
       </View>
     </View>
   );
@@ -74,6 +82,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#007bff',
   },
+  blockedUsersButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    marginTop: 20,
+    marginHorizontal: 16,
+    alignItems: 'center',
+  },
+  blockedUsersText: {
+    color: '#333',
+    fontWeight: '600',
+    fontSize: 16,
+  }
 });
 
 export default FriendsHomeScreen;
