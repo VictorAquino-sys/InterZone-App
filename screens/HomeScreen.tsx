@@ -5,6 +5,7 @@ import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, Te
 import { Image } from 'react-native';
 import friendsIcon from '../assets/addfriends_icon.png'
 import { Asset } from 'expo-asset';
+import { Ionicons } from '@expo/vector-icons';
 // import defaultProfileImg from '../assets/unknownuser.png';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,13 +22,17 @@ import { checkLocation } from '../src/utils/locationUtils';
 import i18n from '@/i18n'; 
 import { RootStackParamList } from '../src/navigationTypes';
 import { Accuracy } from 'expo-location';
-import { Timestamp, setDoc } from 'firebase/firestore';
+import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
 
 const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
   const { posts, setPosts } = usePosts();
   const { user, setUser } = useUser();
   const storage = getStorage();
@@ -181,6 +186,48 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       console.error("🚨 Error in fetchLocation:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleReportPress = (postId: string, postUserId: string) => {
+    setSelectedPostId(postId);
+    setSelectedUserId(postUserId);
+    setReportModalVisible(true);
+  };
+  
+  const handleSelectReason = async (reason: string) => {
+    if (!selectedPostId || !selectedUserId || !user?.uid) return;
+  
+    try {
+      const reportsRef = collection(db, 'reports');
+      const q = query(
+        reportsRef,
+        where('postId', '==', selectedPostId),
+        where('reportedBy', '==', user.uid)
+      );
+      const snapshot = await getDocs(q);
+  
+      if (!snapshot.empty) {
+        Alert.alert(i18n.t('report.alreadyReportedTitle'), i18n.t('report.alreadyReportedMessage'));
+        return;
+      }
+  
+      await addDoc(reportsRef, {
+        postId: selectedPostId,
+        reportedBy: user.uid,
+        reportedUserId: selectedUserId,
+        reason,
+        timestamp: serverTimestamp(),
+      });
+  
+      Alert.alert(i18n.t('report.thankYou'), i18n.t('report.submitted'));
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      Alert.alert(i18n.t('report.errorTitle'), i18n.t('report.errorMessage'));
+    } finally {
+      setReportModalVisible(false);
+      setSelectedPostId(null);
+      setSelectedUserId(null);
     }
   };
 
@@ -429,10 +476,20 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             </View>
 
           </View>
-          <Image source={category.icon} style={styles.categoryIcon} />
+
+          {/* ✅ Wrap these two in a right-aligned container */}
+          <View style={styles.topRightIcons}>
+            <Image source={category.icon} style={styles.categoryIcon} />
+            <TouchableOpacity onPress={() => handleReportPress(item.id, item.user.uid)}>
+              <Ionicons name="ellipsis-vertical" size={20} color="#888" style={styles.moreIconInline} />
+            </TouchableOpacity>
+          </View>
+
         </View>
 
         <Text style={styles.postText}>{item.content}</Text>
+
+
 
         {/* Display Image if Available */}
         {item.imageUrl && (
@@ -447,6 +504,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.likeButtonWrapper}>
           <LikeButton postId={item.id} userId={user.uid} />
         </View>
+
         {/* Allow users to delete their own posts */}
         {user?.uid == item.user?.uid && (
           <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
@@ -532,9 +590,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                           ))}
                       </ScrollView>
                   </View>
-
-                  {/* Display Funny Message (if exists) */}
-                  {/* {funnyMessage ? <Text style={styles.funnyMessage}>{funnyMessage}</Text> : null} */}
               </View>
             }
             data={posts}
@@ -554,6 +609,36 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} resizeMode='contain'/>
           </TouchableOpacity>
         </Modal>
+
+        <Modal animationType="slide" transparent visible={reportModalVisible}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPressOut={() => setReportModalVisible(false)}
+          >
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>{i18n.t('report.title')}</Text>
+              {[
+                { key: 'spam' },
+                { key: 'harassment' },
+                { key: 'inappropriate' },
+                { key: 'hate' },
+                { key: 'other' }
+              ].map(({ key }) => (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => handleSelectReason(i18n.t(`report.reasons.${key}`))}
+                  style={styles.modalOption}
+                >
+                  <Text>{i18n.t(`report.reasons.${key}`)}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity onPress={() => setReportModalVisible(false)}>
+                <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -570,6 +655,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  topRightIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  moreIconInline: {
+    padding: 2,
+    marginBottom: 35,
+  },
+  modalOverlay: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 20 },
+  modalBox: { backgroundColor: '#fff', borderRadius: 10, padding: 20 },
+  modalTitle: { fontWeight: 'bold', fontSize: 18, marginBottom: 10 },
+  modalOption: { paddingVertical: 10 },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -597,7 +695,7 @@ const styles = StyleSheet.create({
   categoryIcon: {
     width: 40,
     height: 40,
-    marginRight: 15,
+    marginRight: 20,
     marginBottom: 20,
   },
   noUserText: {

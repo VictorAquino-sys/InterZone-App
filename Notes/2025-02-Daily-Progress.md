@@ -1,7 +1,11 @@
 (Daily logs of what have been worked on)
 
+### 04-11
+    Install dependencies for react native papper:
+    npm i react-native-paper
+
 ### 04-10
-    TO use rss, install dependency:
+    To use rss, install dependency:
     npm install rss-parser (not used)
     npm i fast-xml-parser
     npm install dayjs --save

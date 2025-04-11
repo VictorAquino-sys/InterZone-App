@@ -8,7 +8,7 @@ import { Alert } from 'react-native';
 import { GoogleSignin, isSuccessResponse, GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { UserData } from '../../src/contexts/UserContext'; // Use useUser here
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import i18n from '../../src/i18n';
+import i18n from '@/i18n';
 import { NativeStackScreenProps } from '@react-navigation/native-stack'; 
 import { RootStackParamList } from '../../src/navigationTypes';
 import * as RNLocalize from 'react-native-localize';
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: 10,
+    // paddingTop: 10,
     width: '100%',
   },
   titleText: {

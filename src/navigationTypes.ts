@@ -12,6 +12,8 @@ export type RootStackParamList = {
     UserProfile: { userId: string };
     FriendsList: undefined;
     Chat: { otherUserId: string }; // ✅ Add this line
+    Terms: undefined;
+    Home: undefined;
 
   };
 

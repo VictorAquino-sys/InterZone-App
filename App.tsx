@@ -5,6 +5,7 @@ import i18n from '@/i18n';
 import { NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -77,6 +78,7 @@ function BottomTabs() {
 function AuthenticatedApp() {
   type AuthStatus = 'uninitialized' | 'authenticated' | 'unauthenticated';
   const [authStatus, setAuthStatus] = useState<AuthStatus>('uninitialized');
+  const [termsAccepted, setTermsAccepted] = useState<boolean | null>(null);
 
   const { user } = useUser();  // Now safely within UserProvider
 
@@ -98,6 +100,13 @@ function AuthenticatedApp() {
       }
     }, 5000); // Set timeout for 5 seconds
 
+    const checkTerms = async () => {
+      const accepted = await AsyncStorage.getItem('termsAccepted');
+      setTermsAccepted(accepted === 'true');
+    };
+
+    checkTerms();
+
     if (user) {
       setAuthStatus('authenticated');
     } else if (!user && authStatus !== 'uninitialized') {
@@ -114,14 +123,19 @@ function AuthenticatedApp() {
   }
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!user ? (
-        <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
-      ) : (
-        <>
-          <Stack.Screen name="NameInputScreen" component={NameInputScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="BottomTabs" component={BottomTabs} options={{ headerShown: false }} />
-        </>
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        ) : !termsAccepted ? (
+          <>
+          <Stack.Screen name="Terms" component={require('./screens/TermsScreen').default} />
+          <Stack.Screen name="BottomTabs" component={BottomTabs} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="NameInputScreen" component={NameInputScreen} />
+            <Stack.Screen name="BottomTabs" component={BottomTabs} />
+          </>
       )}
   </Stack.Navigator>
   );
