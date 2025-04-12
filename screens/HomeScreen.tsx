@@ -25,6 +25,7 @@ import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
+import PostCard from '@/components/PostCard';
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
 
@@ -373,9 +374,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     initializeScreen();
   }, [user?.uid]); // Depend explicitly on user.uid
 
-  const formatDate = (timestamp: Timestamp | undefined) => {
-    if (!timestamp) return 'Unknown date'; // Handle undefined or null timestamps
-    const date = new Date(timestamp.seconds * 1000); // Convert timestamp to Date object
+  const formatDate = (timestamp: Timestamp | null | undefined): string => {
+    if (!timestamp) return 'Unknown date';
+    const date = new Date(timestamp.seconds * 1000);
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   };
 
@@ -458,91 +459,18 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
-  // useEffect(() => {
-  //   console.log("Categories with Labels:", categories.map(cat => cat.label));
-  // }, []);
-
-  const renderItem = ({ item }: { item: Post }) =>  {
-    // console.log("Post user avatar:", item.user.avatar);
-
-    if (!user) {
-      // Optionally, return a placeholder or nothing if the user is null
-      return null;
-    }
-    
-    const category = categories.find(cat => cat.key === item.categoryKey) || categories[0];
-
-    return (
-      <View style={styles.postItem}>
-        <View style={styles.postHeader}>
-          {/* <Image source={category.icon} style={styles.categoryIcon} /> */}
-          <View style={styles.userContainer}>
-            <TouchableOpacity onPress={() => {
-              if (item.user?.avatar) {
-                openImageModal(item.user.avatar);
-              } else {
-                Alert.alert(i18n.t('NoPhoto')); // Optional: show message if no image
-              }
-            }}>
-              <Avatar
-                key={item.id} 
-                name={item.user?.name} 
-                imageUri={item.user?.avatar || undefined }
-              />
-            </TouchableOpacity>
-
-            <View style={styles.postDetails}>
-              <TouchableOpacity 
-                onPress={() => {
-                  if (item.user?.uid) {
-                    navigation.navigate('UserProfile', { userId: item.user.uid });
-                  }
-                }}>
-                <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
-              </TouchableOpacity>
-              <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-              <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
-            </View>
-
-          </View>
-
-          {/* ✅ Wrap these two in a right-aligned container */}
-          <View style={styles.topRightIcons}>
-            <Image source={category.icon} style={styles.categoryIcon} />
-            <TouchableOpacity onPress={() => handleReportPress(item.id, item.user.uid)}>
-              <Ionicons name="ellipsis-vertical" size={20} color="#888" style={styles.moreIconInline} />
-            </TouchableOpacity>
-          </View>
-
-        </View>
-
-        <Text style={styles.postText}>{item.content}</Text>
-
-
-
-        {/* Display Image if Available */}
-        {item.imageUrl && (
-          <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
-              <View style={styles.postImageWrapper}>
-                <Image source={{ uri: item.imageUrl }} style={styles.postImage} resizeMode='cover' />
-              </View>
-          </TouchableOpacity>
-        )}
-
-        {/* Like Button Component */}
-        <View style={styles.likeButtonWrapper}>
-          <LikeButton postId={item.id} userId={user.uid} />
-        </View>
-
-        {/* Allow users to delete their own posts */}
-        {user?.uid == item.user?.uid && (
-          <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
-            <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
+  const renderItem = ({ item }: { item: Post }) => (
+    <PostCard
+      item={item}
+      userId={user?.uid ?? ''} // fallback to empty string
+      onDelete={handleDeletePost}
+      onReport={handleReportPress}
+      onOpenImage={openImageModal}
+      onUserProfile={(userId) => navigation.navigate('UserProfile', { userId })}
+      formatDate={formatDate}
+    />
+  );
+  
 
   return (
     <SafeAreaView style={styles.safeArea}>
