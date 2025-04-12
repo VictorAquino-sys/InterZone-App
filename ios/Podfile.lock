@@ -952,6 +952,7 @@ PODS:
   - AppAuth/Core (1.7.6)
   - AppAuth/ExternalUserAgent (1.7.6):
     - AppAuth/Core
+  - BEMCheckBox (1.4.1)
   - boost (1.83.0)
   - BoringSSL-GRPC (0.0.32):
     - BoringSSL-GRPC/Implementation (= 0.0.32)
@@ -2636,6 +2637,9 @@ PODS:
   - RecaptchaInterop (100.0.0)
   - RNCAsyncStorage (1.24.0):
     - React-Core
+  - RNCCheckbox (0.5.17):
+    - BEMCheckBox (~> 1.4)
+    - React-Core
   - RNCPicker (2.7.5):
     - React-Core
   - RNFBApp (20.5.0):
@@ -2842,6 +2846,7 @@ DEPENDENCIES:
   - React-utils (from `../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCCheckbox (from `../node_modules/@react-native-community/checkbox`)"
   - "RNCPicker (from `../node_modules/@react-native-picker/picker`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBAuth (from `../node_modules/@react-native-firebase/auth`)"
@@ -2858,6 +2863,7 @@ SPEC REPOS:
   trunk:
     - abseil
     - AppAuth
+    - BEMCheckBox
     - BoringSSL-GRPC
     - Firebase
     - FirebaseAppCheckInterop
@@ -3055,6 +3061,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCCheckbox:
+    :path: "../node_modules/@react-native-community/checkbox"
   RNCPicker:
     :path: "../node_modules/@react-native-picker/picker"
   RNFBApp:
@@ -3081,6 +3089,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   abseil: d121da9ef7e2ff4cab7666e76c5a3e0915ae08c3
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
+  BEMCheckBox: 5ba6e37ade3d3657b36caecc35c8b75c6c2b1a4e
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
   BoringSSL-GRPC: 1e2348957acdbcad360b80a264a90799984b2ba6
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
@@ -3187,6 +3196,7 @@ SPEC CHECKSUMS:
   ReactCommon: cfb89afbdafafbf049c719db9cb61ac4d38af434
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   RNCAsyncStorage: b6410dead2732b5c72a7fdb1ecb5651bbcf4674b
+  RNCCheckbox: 450ce156f3e29e25efa0315c96cfbabe5a39ded1
   RNCPicker: 15ad063c72ecba748be9edea62a5bdce53090aa6
   RNFBApp: 0e66b9f844efdf2ac3fa2b30e64c9db41a263b3d
   RNFBAuth: a33d15faa7f061c350c0744ee9ee2897ee102cf3

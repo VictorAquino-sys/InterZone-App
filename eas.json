@@ -7,7 +7,8 @@
     "release": {
       "distribution": "store",
       "ios": {
-        "credentialsSource": "local"
+        "credentialsSource": "local",
+        "image": "macos-sonoma-14.6-xcode-16.1"
       },
       "env": {
         "APP_VARIANT": "production"
@@ -18,7 +19,8 @@
       "distribution": "internal",
       "ios": {
         "credentialsSource": "local",
-        "simulator": true
+        "simulator": true,
+        "image": "macos-sonoma-14.6-xcode-16.1"
       },
       "env": {
         "APP_VARIANT": "development"
@@ -51,7 +53,8 @@
       "environment": "production",
       "channel": "production",
       "ios": {
-        "credentialsSource": "remote"
+        "credentialsSource": "remote",
+        "image": "macos-sonoma-14.6-xcode-16.1"
       },
       "android": {
         "credentialsSource": "remote",
@@ -64,6 +67,9 @@
       "environment": "production",
       "env": {
         "APP_VARIANT": "my-profile"
+      },
+      "ios": {
+        "image": "macos-sonoma-14.6-xcode-16.1"
       }
     }
   },
