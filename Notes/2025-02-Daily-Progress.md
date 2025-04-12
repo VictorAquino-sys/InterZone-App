@@ -1,6 +1,9 @@
 (Daily logs of what have been worked on)
 
 ### 04-11
+    Guideline 5.1.1(v) - Data Collection and Storage
+    Guideline 2.5.4 - Performance - Software Requirements
+    Guideline 1.2 - Safety - User-Generated Content
     Install dependencies for react native papper:
     npm i react-native-paper
 

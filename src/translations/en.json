@@ -33,6 +33,9 @@
     "saving": "Saving...",
     "noNote": "No note added yet.",
     "descriptionPlaceholder": "Write something about yourself...",
+    "settings": {
+      "title": "Settings"
+    },
 
     "friendsTitle": "Friends",
     "findPeople": "Find People",
@@ -142,5 +145,19 @@
       "none": "You haven't blocked anyone yet.",
       "error": "Error",
       "errorMessage": "Something went wrong."
-    }
+    },
+
+    "deleteAccount": {
+      "title": "Delete My Account",
+      "button": "Delete My Account",
+      "warning": "This will permanently delete your account and all data. This action cannot be undone.",
+      "confirmTitle": "Are you sure?",
+      "confirmMessage": "This will permanently delete your account and all of your posts.",
+      "confirmButton": "Yes, Delete",
+      "success": "Your account has been deleted.",
+      "error": "Something went wrong while deleting your account."
+    },
+    "privacyPolicy": "Privacy Policy"
+    
+
 }  

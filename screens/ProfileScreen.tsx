@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useContext, FunctionComponent } from 'react';
-import { View, Text, StyleSheet, Button, ScrollView, Image, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Button, ScrollView, Image, Linking, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -35,6 +35,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [description, setDescription] = useState('');
     const [savingNote, setSavingNote] = useState(false);
     const [isEditingNote, setIsEditingNote] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
 
     useEffect(() => {
@@ -247,37 +248,40 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                 contentContainerStyle={styles.container}
                 keyboardShouldPersistTaps="handled"
             >
-                <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
-            
-                <TouchableOpacity onPress={pickImageProfile}>
-                    <Avatar key={profilePic} name={newName} imageUri={profilePic} size={100} />
-                </TouchableOpacity>
-                
-                {loading && <ActivityIndicator size="large" color="#0000ff" />} 
-                
-                <View style={styles.nameContainer}>
-                    {isEditing ? (
-                        <TextInput
-                            value={newName}
-                            onChangeText={setNewName}
-                            style={styles.input}
-                            autoFocus={true}
-                            onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
-                        />
-                    ) : (
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={styles.newName}>{newName}</Text>
-                            <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
-                                <Ionicons name="pencil" size={24} color="gray"/>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </View>
-                
-                {isEditing && (
-                    <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
-                )}
+                <View style={styles.topSection}>
 
+                    <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
+                
+                    <TouchableOpacity onPress={pickImageProfile}>
+                        <Avatar key={profilePic} name={newName} imageUri={profilePic} size={100} />
+                    </TouchableOpacity>
+                    
+                    {loading && <ActivityIndicator size="large" color="#0000ff" />} 
+                    
+                    <View style={styles.nameContainer}>
+                        {isEditing ? (
+                            <TextInput
+                                value={newName}
+                                onChangeText={setNewName}
+                                style={styles.input}
+                                autoFocus={true}
+                                onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
+                            />
+                        ) : (
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.newName}>{newName}</Text>
+                                <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
+                                    <Ionicons name="pencil" size={24} color="gray"/>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                    
+                    {isEditing && (
+                        <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
+                    )}
+
+                </View>
                 
                 {/* 📝 Description Editor Section */}
                 <View style={styles.descriptionWrapper}>
@@ -317,13 +321,45 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         </View>
                     )}
                     </View>
+                    <View style={styles.bottomSection}>
 
-                <TouchableOpacity
-                    style={[styles.buttonContainer, { marginTop: 20 }]} // Additional top margin for separation
-                    onPress={handleLogout}
-                >
-                    <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.buttonContainer} // Additional top margin for separation
+                        onPress={handleLogout}
+                    >
+                        <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 46, alignItems: 'center' }}>
+                        <Ionicons name="settings-outline" size={26} color="#555" />
+                    </TouchableOpacity>
+                    <Modal transparent visible={showSettings} animationType="slide">
+                        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
+                            <View style={styles.modalBox}>
+                                <Text style={styles.modalTitle}>{i18n.t('settings.title')}</Text>
+                                <TouchableOpacity style={styles.modalOption} onPress={() => {
+                                    setShowSettings(false);
+                                    navigation.navigate('DeleteAccount');
+                                }}>
+                                    <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>{i18n.t('deleteAccount.button')}</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}
+                                    style={[styles.modalOption, { marginTop: 20 }]}
+                                >
+                                <Text style={{ color: '#007aff', textAlign: 'center' }}>
+                                    {i18n.t('privacyPolicy')}
+                                </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity onPress={() => setShowSettings(false)}>
+                                    <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableOpacity>
+                    </Modal>
+                    </View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -337,7 +373,16 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: 'aliceblue'
+        backgroundColor: 'aliceblue',
+    },
+    topSection: {
+        alignItems: 'center',
+        marginTop: 40  // Push top section slightly down
+    },
+    bottomSection: {
+        alignItems: 'center',
+        marginTop: 40,  // Add spacing between sections
+        marginBottom: 40, // Push the bottom stuff down
     },
     profilePic: {
         width: 150,
@@ -350,10 +395,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 34,
         fontWeight: 'bold',
-        marginBottom: 30,   // Corrected from 'marginButtom'
+        marginBottom: 40,   // Corrected from 'marginButtom
     },
     nameContainer: {
         marginBottom: 20,
+        marginTop: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -387,6 +433,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 10,
+        marginBottom: 40,
         width: '60%',
     },
     buttonText: {
@@ -396,7 +443,8 @@ const styles = StyleSheet.create({
     },
     descriptionWrapper: {
         width: '100%',
-        marginTop: 20,
+        marginTop: 30,
+        marginBottom: 20,
     },
     noteRow: {
         flexDirection: 'row',
@@ -446,4 +494,28 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
     },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        padding: 30,
+      },
+      modalBox: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        elevation: 5,
+      },
+      modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 16,
+        textAlign: 'center',
+      },
+      modalOption: {
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+      },
+      
 });

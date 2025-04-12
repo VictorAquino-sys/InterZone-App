@@ -33,6 +33,9 @@
     "saving": "Guardando...",
     "noNote": "Aún no has añadido ninguna nota.",
     "descriptionPlaceholder": "Escribe algo sobre ti...",
+    "settings": {
+        "title": "Configuracion"
+    },
 
     "friendsTitle": "Amigos",
     "findPeople": "Buscar personas",
@@ -145,6 +148,18 @@
         "errorMessage": "Algo salió mal.",
         "success": "Usuario blockeado exitosamente!",
         "successMessage": "Ahora estaras libre de sus publicaciones."
-    }
+    },
+
+    "deleteAccount": {
+        "title": "Eliminar mi cuenta",
+        "button": "Eliminar mi cuenta",
+        "warning": "Esto eliminará permanentemente tu cuenta y todos tus datos. Esta acción no se puede deshacer.",
+        "confirmTitle": "¿Estás seguro?",
+        "confirmMessage": "Esto eliminará permanentemente tu cuenta y todas tus publicaciones.",
+        "confirmButton": "Sí, eliminar",
+        "success": "Tu cuenta ha sido eliminada.",
+        "error": "Ocurrió un error al eliminar tu cuenta."
+    },
+    "privacyPolicy": "Política de privacidad"     
 
 } 

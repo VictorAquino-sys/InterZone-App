@@ -594,7 +594,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         {loading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>{i18n.t('loadingPost')}</Text>
-            <ActivityIndicator size="large" color="#0000ff" />
+            <ActivityIndicator size="large" color="#26c6da" />
           </View>
         ) : !user ? (
           <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>

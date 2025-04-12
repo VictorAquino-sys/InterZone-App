@@ -24,8 +24,8 @@ export default {
       usesAppleSignIn: true,
       jsEngine: "hermes",
       infoPlist: {
-        NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone requires access to your location at all times to provide notifications about local events and updates relevant to your interests, even when the app is not in use.",
-        NSLocationWhenInUseUsageDescription: "InterZone needs access to your location to show you events and places near you when you are using the app.",
+        NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events, even when the app is not open. For example, you might get alerts about a concert or food truck gathering near you.",
+        NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you’ll see local meetups and concerts happening in your city.",
         ITSAppUsesNonExemptEncryption: false,
         EXUpdatesRuntimeVersion: "1.0.0",
         EXUpdatesURL: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6"
@@ -87,7 +87,7 @@ export default {
           locationAlwaysAndWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location at all times.",
           locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location.",
           isAndroidBackgroundLocationEnabled: true,
-          isIosBackgroundLocationEnabled: true
+          isIosBackgroundLocationEnabled: false
         }
       ],
       [

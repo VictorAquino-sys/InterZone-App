@@ -28,6 +28,7 @@ import UserProfileScreen from './screens/UserProfileScreen';
 import FriendsScreen from 'screens/FriendsScreen';
 import ChatScreen from 'screens/ChatScreen';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
+import DeleteAccountScreen from 'screens/DeleteAccountScreen';
 
 // Create the native stack navigator with type annotations
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -59,6 +60,12 @@ function HomeStack(){
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="FriendsList" component={FriendsScreen} options={{ title: i18n.t('myFriends') }} />
       <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+      <Stack.Screen
+        name="DeleteAccount"
+        component={DeleteAccountScreen}
+        options={{ title: i18n.t('deleteAccount.title') }}
+      />
+
     </Stack.Navigator>
   )
 }
