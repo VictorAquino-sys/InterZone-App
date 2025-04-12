@@ -35,6 +35,9 @@
     npx eas build --platform android --profile production
     IOS/Submit
     npx eas build --platform ios 
+    (OR)
+    eas build -p ios --profile production
+    Then:
     npx eas submit --platform ios 
 
 03-22
