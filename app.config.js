@@ -66,9 +66,11 @@ export default {
       [
         "expo-build-properties",
         {
-            "ios": {
-                "useFrameworks": "static"
-            }
+          ios: {
+              useFrameworks: "static",
+              deploymentTarget: "18.0",
+              configFile: "./ios/Podfile.config.xcconfig"
+          }
         }
       ],
       "@react-native-google-signin/google-signin",
