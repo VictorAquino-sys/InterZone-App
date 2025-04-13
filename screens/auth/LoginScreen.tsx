@@ -70,9 +70,10 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
       // Save user data in AsyncStorage
       await AsyncStorage.setItem('user', JSON.stringify(authUser));
+      await AsyncStorage.setItem('userId', authUser.uid);
       console.log("User signed up:", authUser.email, "| Country:", country);
 
-      navigation.navigate('NameInputScreen', {userId: authUser.uid});
+      navigation.replace('Terms');
     } catch (error :any) {
       console.log("Firebase Auth Error:"); // Debugging line
 

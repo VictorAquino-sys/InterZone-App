@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes' // adjust this import if needed
 import i18n from '@/i18n';
+import { useUser } from '@/contexts/UserContext';
 
 type TermsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Terms'>;
 
@@ -14,6 +15,7 @@ export default function TermsScreen() {
     const navigation = useNavigation<TermsScreenNavigationProp>();
     const [agreed, setAgreed] = useState(false);
     const scrollRef = useRef<ScrollView>(null);
+    const { user } = useUser();
 
     const handleContinue = async () => {
         if (!agreed) {
@@ -22,8 +24,12 @@ export default function TermsScreen() {
         }
 
         await AsyncStorage.setItem('termsAccepted', 'true');
-        navigation.navigate('BottomTabs');
 
+        if (user?.uid) {
+          navigation.replace('NameInputScreen', { userId: user.uid });
+        } else {
+          console.error("User ID missing");
+        }
     };
 
     return (
