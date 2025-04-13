@@ -138,7 +138,10 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
       // Only navigate to NameInputScreen if the name is missing
       if (!userData?.name) {
-        navigation.replace('NameInputScreen', { userId: authUser.uid });
+        await AsyncStorage.setItem('userId', authUser.uid); // save for TermsScreen
+        await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
+      
+        navigation.replace('Terms');
       } else {
           navigation.navigate('BottomTabs'); // Redirect to main app
       }

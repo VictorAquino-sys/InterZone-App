@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
-import { db } from '../../src/config/firebase';
+import { auth, db } from '../../src/config/firebase';
 import * as RNLocalize from 'react-native-localize';
 
 // Define Typescript interface for user data used in the app context
@@ -53,7 +53,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // Initialize loading as true
   // Get the Firebase authentication object.
-  const auth = getAuth();
+  // const auth = getAuth();
 
   // Effect hook to manage authentication state changes.
   useEffect(() => {

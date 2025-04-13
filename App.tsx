@@ -144,22 +144,20 @@ function AuthenticatedApp() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!user ? (
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
-      ) : (
-        <>
-          <Stack.Screen name="Terms" component={require('./screens/TermsScreen').default} />
-          <Stack.Screen name="NameInputScreen" component={NameInputScreen} />
-          <Stack.Screen name="BottomTabs" component={BottomTabs} />
-          <Stack.Screen
-            name="BlockedUsers"
-            component={BlockedUsersScreen}
-            options={{ title: i18n.t('block.manage'), headerShown: true }}
-          />
-        </>
-      )}
-  </Stack.Navigator>
-  );
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="Terms" component={require('./screens/TermsScreen').default} />
+      <Stack.Screen name="NameInputScreen" component={NameInputScreen} />
+      <Stack.Screen name="BottomTabs" component={BottomTabs} />
+      <Stack.Screen
+        name="BlockedUsers"
+        component={BlockedUsersScreen}
+        options={{
+          title: i18n.t('block.manage'),
+          headerShown: true,
+        }}
+      />
+    </Stack.Navigator>
+  );  
 }
 
 export default function App() {
