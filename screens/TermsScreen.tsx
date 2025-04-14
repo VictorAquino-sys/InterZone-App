@@ -67,6 +67,9 @@ export default function TermsScreen() {
                 status={agreed ? 'checked' : 'unchecked'}
                 onPress={() => setAgreed(!agreed)}
                 labelStyle={{ fontSize: 16 }}
+                color='#007AFF'
+                uncheckedColor='#ccc'
+                theme={{ colors: { primary: '#007AFF' } }}
               />
       
                 <Button title={i18n.t('terms.continue')} onPress={handleContinue} />

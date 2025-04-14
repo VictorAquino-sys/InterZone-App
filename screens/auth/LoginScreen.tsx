@@ -143,9 +143,6 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       if (!userData?.name) {
         await AsyncStorage.setItem('userId', authUser.uid); // save for TermsScreen
         await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
-      
-      } else {
-          navigation.navigate('BottomTabs'); // Redirect to main app
       }
     } catch (error: any) {
       console.log("Firebase Auth Error:", error.code, error.message); // Debugging line
