@@ -18,6 +18,7 @@ export interface User {
   language?: string;
   description?: string;
   blocked?: string[];
+  termsAccepted?: boolean;
 }
 
 // Define a separate interface for the full Firestore user document
@@ -29,13 +30,17 @@ export interface UserData {
   createdAt?: string;
   country?: string;
   blocked?: string[];
+  termsAccepted?: boolean;
 }
 
 // Define Typescript for context value.
 interface UserContextType {
   user: User | null;
   loading: boolean; // Add loading state
+  // termsAccepted: boolean;
+  refreshUser: () => Promise<void>;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  // setTermsAccepted: React.Dispatch<React.SetStateAction<boolean>>;
   updateUserProfile: (updates: Partial<User>) => void;
 }
 
@@ -52,6 +57,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
   // State hook to manage user data, with TypeScript types.
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // Initialize loading as true
+  // const [termsAccepted, setTermsAccepted] = useState(false);
   // Get the Firebase authentication object.
   // const auth = getAuth();
 
@@ -60,6 +66,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
     // Listen for changes in the authentication state.
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       setLoading(true); // Set loading true when auth state changes
+
       if (firebaseUser) {
         const userRef = doc(db, "users", firebaseUser.uid);
         const userSnap = await getDoc(userRef);
@@ -74,10 +81,12 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             name: userData.name || firebaseUser.displayName || "Default Name",
             avatar: userData.avatar || firebaseUser.photoURL || "",
             country: userData.country || "Unknown",
-            language: RNLocalize.getLocales()[0].languageCode
+            language: RNLocalize.getLocales()[0].languageCode,
+            termsAccepted: userData.termsAccepted || false, // 👈 Include termsAccepted
           };
           console.log("User logged in with updated data:", updatedUser);
           setUser(updatedUser);
+          // setTermsAccepted(userData.termsAccepted || false);
         } else {
           console.log("No user data available");
           setUser(null);
@@ -95,14 +104,48 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
 
   // Function to update user profile details, accepting partial user info.
   const updateUserProfile = (updates: Partial<User>) => {
-    setUser(prev => ({ ...prev!, ...updates }));
+    setUser(prev => {
+      const updated = { ...prev!, ...updates };
+  
+      // Reflect changes to termsAccepted if included
+      // if (typeof updates.termsAccepted === 'boolean') {
+      //   setTermsAccepted(updates.termsAccepted);
+      // }
+  
+      return updated;
+    });
+  };
+
+  const refreshUser = async () => {
+    const firebaseUser = auth.currentUser;
+  
+    if (firebaseUser) {
+      const userRef = doc(db, "users", firebaseUser.uid);
+      const userSnap = await getDoc(userRef);
+  
+      if (userSnap.exists()) {
+        const userData = userSnap.data() as UserData;
+  
+        const updatedUser: User = {
+          uid: firebaseUser.uid,
+          name: userData.name || firebaseUser.displayName || "Default Name",
+          avatar: userData.avatar || firebaseUser.photoURL || "",
+          country: userData.country || "Unknown",
+          language: RNLocalize.getLocales()[0].languageCode,
+          termsAccepted: userData.termsAccepted ?? false,
+        };
+  
+        console.log("🔄 User manually refreshed:", updatedUser);
+        setUser(updatedUser);
+      }
+    }
   };
 
   // Check for context existence and provide it to children.
   if (!UserContext) throw new Error('useUser must be used within a UserProvider');
   // Provide the user object and associated functions to children components.
   return (
-    <UserContext.Provider value={{ user, loading, setUser, updateUserProfile }}>
+    <UserContext.Provider value={{ user, loading, setUser, updateUserProfile, refreshUser}}>
       {children}
     </UserContext.Provider>
   );

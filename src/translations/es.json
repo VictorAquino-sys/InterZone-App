@@ -12,6 +12,8 @@
     "appTitle": "InterZone",
     "tagline": "Conecta con tu comunidad!",
     "saveButton": "Guardar",
+    "Email": "Ingrese correo electronico",
+    "Password": "Contraseña",
     "registerButton": "Registrate",
     "loginError": "Error de inicio de sesión",
     "SignUpError": "Error de registro",
@@ -151,6 +153,11 @@
     },
 
     "deleteAccount": {
+        "errorDelete": "Ocurrio una falla al eliminar su cuenta",
+        "invalidPassword": "La contraseña que ingreso es incorrecta. intentelo de nuevo.",
+        "userMismatch": "Sus credenciales no coinciden.",
+        "reauthTitle": "Ingresa tu contraseña",
+        "reauthPrompt": "Porfavor confirma tu contraseña para continuar.",
         "title": "Eliminar mi cuenta",
         "button": "Eliminar mi cuenta",
         "warning": "Esto eliminará permanentemente tu cuenta y todos tus datos. Esta acción no se puede deshacer.",
@@ -160,6 +167,7 @@
         "success": "Tu cuenta ha sido eliminada.",
         "error": "Ocurrió un error al eliminar tu cuenta."
     },
+    "enterPassword": "Confirme su contraseña",
     "privacyPolicy": "Política de privacidad"     
 
 } 

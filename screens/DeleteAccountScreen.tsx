@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { deleteDoc, doc, collection, getDocs, query, where } from 'firebase/firestore';
-import { deleteUser, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { getAuth, deleteUser, GoogleAuthProvider, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { db } from '../src/config/firebase';
-import { auth } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import i18n from '@/i18n';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigationTypes';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 type DeleteAccountNav = NativeStackNavigationProp<RootStackParamList, 'DeleteAccount'>;
 
@@ -16,53 +16,95 @@ export default function DeleteAccountScreen() {
   const [loading, setLoading] = useState(false);
   const { user, setUser } = useUser();
   const navigation = useNavigation<DeleteAccountNav>();
+  const [showModal, setShowModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const auth = getAuth();
+  const providerId = auth.currentUser?.providerData[0]?.providerId;
+  const isGoogleUser = providerId === 'google.com';
 
   const confirmDelete = () => {
     Alert.alert(
       i18n.t('deleteAccount.confirmTitle'),
       i18n.t('deleteAccount.confirmMessage'),
       [
-        {
-          text: i18n.t('cancel'),
-          style: 'cancel'
-        },
-        {
-          text: i18n.t('deleteAccount.confirmButton'),
-          onPress: handleDeleteAccount,
-          style: 'destructive'
-        }
+        { text: i18n.t('cancel'), style: 'cancel' },
+        { text: i18n.t('deleteAccount.confirmButton'), 
+          onPress: () => {
+            if (isGoogleUser) {
+              handleDeleteConfirmed();
+            } else {
+                setShowModal(true);
+            }
+            console.log("🧾 Auth Provider:", providerId);
+          }
+        }  
       ]
     );
   };
 
-  const handleDeleteAccount = async () => {
+  const reauthenticateGoogleUser = async () => {
+    const googleUser = await GoogleSignin.signIn();
+    const { idToken } = await GoogleSignin.getTokens();
+    const googleCredential = GoogleAuthProvider.credential(idToken);
+    await reauthenticateWithCredential(auth.currentUser!, googleCredential);
+  };
+
+  const reauthenticateEmailUser = async () => {
+    const credential = EmailAuthProvider.credential(auth.currentUser!.email!, password.trim());
+    await reauthenticateWithCredential(auth.currentUser!, credential);
+  };
+
+  const handleDeleteConfirmed = async () => {
     if (!user?.uid || !auth.currentUser) return;
     setLoading(true);
 
     try {
-      // 1. Delete user data from Firestore
-      await deleteDoc(doc(db, 'users', user.uid));
+      const providerId = auth.currentUser.providerData[0]?.providerId;
 
-      // 2. Delete all their posts (optional)
-      const postsRef = collection(db, 'posts');
-      const q = query(postsRef, where('user.uid', '==', user.uid));
-      const snapshot = await getDocs(q);
-      await Promise.all(snapshot.docs.map(doc => deleteDoc(doc.ref)));
+      if (providerId === 'google.com') {
+        await reauthenticateGoogleUser();
+      } else {
+        if (!password.trim()) {
+          Alert.alert(i18n.t('error'), i18n.t('enterPassword'));
+          return;
+        }
+        await reauthenticateEmailUser();
+      }
 
-      // 3. Delete Firebase Auth account
-      await deleteUser(auth.currentUser);
+        // Delete Firestore user data
+        await deleteDoc(doc(db, 'users', user.uid));
 
-      // 4. Clear app state and redirect
-      setUser(null);
-      Alert.alert(i18n.t('deleteAccount.success'));  
-      navigation.reset({ index: 0, routes: [{ name: 'LoginScreen' }] });
+        // Delete all user posts
+        const postsRef = collection(db, 'posts');
+        const q = query(postsRef, where('user.uid', '==', user.uid));
+        const snapshot = await getDocs(q);
+        await Promise.all(snapshot.docs.map(doc => deleteDoc(doc.ref)));
 
-    } catch (error) {
-      console.error('Account deletion failed:', error);
-      Alert.alert(
-        i18n.t('deleteAccount.error'),
-        error instanceof Error ? error.message : i18n.t('unknownError')
-      );
+        // Delete Auth account
+        await deleteUser(auth.currentUser);
+
+        // Reset app state
+        setUser(null);
+        setShowModal(false);
+        setPassword('');
+        Alert.alert(i18n.t('deleteAccount.success'));
+        navigation.reset({ index: 0, routes: [{ name: 'LoginScreen' }] });
+
+    } catch (error: any) {
+      console.error('❌ Deletion failed:', error);
+
+      let message = i18n.t('unknownError');
+    
+      if (error.code === 'auth/invalid-credential') {
+        message = i18n.t('deleteAccount.invalidPassword'); // You can add this to your translations
+      } else if (error.code === 'auth/user-mismatch') {
+        message = i18n.t('deleteAccount.userMismatch');
+      } else if (error.code === 'auth/network-request-failed') {
+        message = i18n.t('networkError');
+      }
+    
+      Alert.alert(i18n.t('deleteAccount.errorDelete'), message);
+
     } finally {
       setLoading(false);
     }
@@ -82,6 +124,31 @@ export default function DeleteAccountScreen() {
           <Text style={styles.deleteText}>{i18n.t('deleteAccount.button')}</Text>
         )}
       </TouchableOpacity>
+
+      {/* 🔐 Modal for password re-auth */}
+      <Modal transparent animationType="slide" visible={showModal}>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>{i18n.t('deleteAccount.reauthTitle')}</Text>
+            <Text style={styles.modalText}>{i18n.t('deleteAccount.reauthPrompt')}</Text>
+            <TextInput
+              placeholder={i18n.t('enterPassword')}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={styles.input}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => setShowModal(false)}>
+                <Text style={styles.cancel}>{i18n.t('cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDeleteConfirmed}>
+                <Text style={styles.confirm}>{i18n.t('deleteAccount.confirmButton')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -109,5 +176,49 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: 'white',
+    padding: 25,
+    borderRadius: 12,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  modalText: {
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 10,
+    height: 45,
+    marginTop: 10,
+    marginBottom: 20,
+    borderRadius: 5,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  cancel: {
+    fontSize: 16,
+    color: 'gray'
+  },
+  confirm: {
+    fontSize: 16,
+    color: 'red',
+    fontWeight: 'bold'
   }
 });

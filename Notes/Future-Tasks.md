@@ -2,6 +2,9 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+### 4-14
+    Let users add location for their business for easy access.
+
 ### 4-10
     ★ eas-cli@16.3.0 is now available.
     To upgrade, run:

@@ -11,6 +11,8 @@
     "appTitle": "InterZone",
     "tagline": "Chat with Your Hommies!",
     "saveButton": "Save",
+    "Email": "Email",
+    "Password": "Password",
     "registerButton": "Sign Up",
     "loginError": "Login Error",
     "SignUpError": "Sign up Error",
@@ -148,6 +150,11 @@
     },
 
     "deleteAccount": {
+      "errorDelete": "Account Deletion Failed",
+      "invalidPassword": "The password you entered is incorrect. Please try again.",
+      "userMismatch": "User credentials do not match.",
+      "reauthTitle": "Re-enter Password",
+      "reauthPrompt": "Please confirm your password to continue.",
       "title": "Delete My Account",
       "button": "Delete My Account",
       "warning": "This will permanently delete your account and all data. This action cannot be undone.",
@@ -156,7 +163,12 @@
       "confirmButton": "Yes, Delete",
       "success": "Your account has been deleted.",
       "error": "Something went wrong while deleting your account."
+
     },
+    "enterPassword": "Re-enter Password",
+    "networkError": "Network error. Please check your connection and try again.",
+    "unknownError": "Something went wrong. Please try again later.",
+
     "privacyPolicy": "Privacy Policy"
     
 

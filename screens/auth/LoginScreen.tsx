@@ -12,6 +12,7 @@ import i18n from '@/i18n';
 import { NativeStackScreenProps } from '@react-navigation/native-stack'; 
 import { RootStackParamList } from '../../src/navigationTypes';
 import * as RNLocalize from 'react-native-localize';
+import { useUser } from '../../src/contexts/UserContext';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -19,6 +20,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>(''); 
   const [show, setShow] = useState<boolean>(true);
+  const { refreshUser } = useUser(); // ⬅️ grab from context
 
   useEffect(() => {
     let alreadyNavigated = false;
@@ -71,9 +73,10 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       // Save user data in AsyncStorage
       await AsyncStorage.setItem('user', JSON.stringify(authUser));
       await AsyncStorage.setItem('userId', authUser.uid);
+      await AsyncStorage.setItem('termsAccepted', 'false'); // let App.tsx handle navigation
+
       console.log("User signed up:", authUser.email, "| Country:", country);
 
-      navigation.replace('Terms');
     } catch (error :any) {
       console.log("Firebase Auth Error:"); // Debugging line
 
@@ -141,7 +144,6 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         await AsyncStorage.setItem('userId', authUser.uid); // save for TermsScreen
         await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
       
-        navigation.replace('Terms');
       } else {
           navigation.navigate('BottomTabs'); // Redirect to main app
       }
@@ -176,10 +178,12 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       
       const googleCredential = GoogleAuthProvider.credential(userInfo.idToken);
       const userCredential = await signInWithCredential(auth, googleCredential);
-      console.log('User signed in with Google:', userCredential.user.email);
+      const authUser = userCredential.user;
+
+      console.log('User signed in with Google:', authUser.email);
     
       // await checkAndCreateFirestoreDocument(userCredential.user); 
-      const userRef = doc(db, "users", userCredential.user.uid);
+      const userRef = doc(db, "users", authUser.uid);
       const docSnap = await getDoc(userRef);
     
       if (!docSnap.exists()) {
@@ -187,10 +191,10 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         const language = RNLocalize.getLocales()[0].languageCode;
 
         await setDoc(userRef, {
-          uid: userCredential.user.uid,
-          email: userCredential.user.email,
-          name: userCredential.user.displayName || '',
-          avatar: userCredential.user.photoURL || '',
+          uid: authUser.uid,
+          email: authUser.email,
+          name: authUser.displayName || '',
+          avatar: authUser.photoURL || '',
           country, // ✅ Store country at account creation
           language, // ✅ added
           createdAt: new Date().toISOString(),
@@ -198,9 +202,15 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
         console.log("📦 Created Firestore document for Google user with country:", country);
       } else {
-        console.log("✅ Firestore user already exists for:", userCredential.user.email);
+        console.log("✅ Firestore user already exists for:", authUser.email);
       }
-      navigation.navigate('BottomTabs'); // Navigate or update UI
+
+      // Save user data in AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(authUser));
+      await AsyncStorage.setItem('userId', authUser.uid);
+      await AsyncStorage.setItem('termsAccepted', 'false'); // let App.tsx handle navigation
+      await refreshUser(); // ⬅️ trigger re-fetch after user creation
+
     } catch (error: any) {
       console.error('Error during sign-in process:', error);
       Alert.alert('Login Failed', error.message || 'Failed to sign in with Google');
@@ -258,13 +268,13 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={i18n.t('Email')}
               value={email}
               onChangeText={text => setEmail(text)}
             />
             <TextInput
               style={styles.input}
-              placeholder="Password"
+              placeholder={i18n.t('Password')}
               value={password}
               onChangeText={text => setPassword(text)}
               secureTextEntry
@@ -306,7 +316,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     // marginTop: '1%',
-    marginBottom: 20,
+    marginBottom: 45,
   },
   safeArea:{
     flex: 1,
@@ -316,7 +326,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    // paddingTop: 10,
+    paddingTop: 10,
     width: '100%',
   },
   titleText: {

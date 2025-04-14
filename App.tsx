@@ -11,6 +11,7 @@ import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PostScreen from './screens/posts/PostScreen';
+import TermsScreen from 'screens/TermsScreen';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import NameInputScreen from './screens/NameInputScreen';
 import { PostsProvider } from './src/contexts/PostsContext';
@@ -96,68 +97,43 @@ function BottomTabs() {
 }
 
 function AuthenticatedApp() {
-  type AuthStatus = 'uninitialized' | 'authenticated' | 'unauthenticated';
-  const [authStatus, setAuthStatus] = useState<AuthStatus>('uninitialized');
-  const [termsAccepted, setTermsAccepted] = useState<boolean | null>(null);
-
-  const { user } = useUser();  // Now safely within UserProvider
+  const { user, loading } = useUser();
 
   useEffect(() => {
-    // Set up Google Sign-In
     GoogleSignin.configure({
-      webClientId: '239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com', // Use the correct client ID
-      offlineAccess: true // True if you need to call Google APIs on behalf of the user when they are offline
+      webClientId: '239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com',
+      offlineAccess: true,
     });
 
     (i18n as any).locale = getLocales()[0].languageCode;
-    console.log("User state:", user);  // Log the user state on each effect execution
 
-    // Set a timeout to handle cases where authentication status remains unresolved.
-    const timeoutId = setTimeout(() => {
-      if (authStatus === 'uninitialized') {
-        console.log("Authentication timeout reached, setting as unauthenticated.");
-        setAuthStatus('unauthenticated'); // Set status to unauthenticated after timeout
-      }
-    }, 5000); // Set timeout for 5 seconds
+  }, []);
 
-    const checkTerms = async () => {
-      const accepted = await AsyncStorage.getItem('termsAccepted');
-      setTermsAccepted(accepted === 'true');
-    };
-
-    checkTerms();
-
-    if (user) {
-      setAuthStatus('authenticated');
-    } else if (!user && authStatus !== 'uninitialized') {
-      setAuthStatus('unauthenticated');
-    }
-
-    // Cleanup timeout on component unmount or when authStatus changes
-    return () => clearTimeout(timeoutId);
-  }, [user, authStatus]);
-
-  if (authStatus === 'uninitialized') { // Show loading screen while auth status is uninitialized
-    console.log("initializing App..");
+  if (loading) {
+    console.log("🔄 Waiting for Firebase and User data...");
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="LoginScreen" component={LoginScreen} />
-      <Stack.Screen name="Terms" component={require('./screens/TermsScreen').default} />
-      <Stack.Screen name="NameInputScreen" component={NameInputScreen} />
-      <Stack.Screen name="BottomTabs" component={BottomTabs} />
-      <Stack.Screen
-        name="BlockedUsers"
-        component={BlockedUsersScreen}
-        options={{
-          title: i18n.t('block.manage'),
-          headerShown: true,
-        }}
-      />
+      {!user ? (
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      ) : !user?.termsAccepted ? (
+        <Stack.Screen name="Terms" component={TermsScreen} />
+      ) : user.name === '' || user.name === 'Default Name' ? (
+        <Stack.Screen name="NameInputScreen" component={NameInputScreen} />
+      ) : (
+        <>
+          <Stack.Screen name="BottomTabs" component={BottomTabs} />
+          <Stack.Screen
+            name="BlockedUsers"
+            component={BlockedUsersScreen}
+            options={{ title: i18n.t('block.manage'), headerShown: true }}
+          />
+        </>
+      )}
     </Stack.Navigator>
-  );  
+  );
 }
 
 export default function App() {

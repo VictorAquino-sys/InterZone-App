@@ -2,19 +2,24 @@ import React, { useState, useContext, useEffect, FunctionComponent } from 'react
 import { View, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from "firebase/auth";
-import i18n from '../src/i18n'; 
+import i18n from '@/i18n'; 
 import { db } from '../src/config/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { RootStackParamList } from '../src/navigationTypes';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useUser } from '@/contexts/UserContext';
+import { CommonActions } from '@react-navigation/native';
 
 type NameInputScreenProps = NativeStackScreenProps<RootStackParamList, 'NameInputScreen'>;
 
 const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }) => {
     const [name, setName] = useState<string>('');
     const [checking, setChecking] = useState<boolean>(true); // Prevent double redirects
+
     const auth = getAuth();
     const userId = auth.currentUser?.uid;
+    const { user, updateUserProfile } = useUser();
+
 
     console.log("Verify userId: ", userId);
 
@@ -29,10 +34,11 @@ const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }
                 const userSnap = await getDoc(userRef);
                 // Check AsyncStorage
                 const storedName = await AsyncStorage.getItem('userName' + userId);
+
                 if (userSnap.exists() && userSnap.data().name || storedName) {
                     console.log("Name already set, redirecting...");
-                    navigation.replace('BottomTabs'); 
-                    return;
+                    // navigation.navigate('BottomTabs');
+
                 }
             } catch (error) {
                 console.error("Error checking name:", error);
@@ -42,7 +48,7 @@ const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }
         };
 
         fetchData();
-    }, [userId, navigation]); // Only run when `userId` changes
+    }, [userId]); // Only run when `userId` changes
 
     const handleSaveName = async () => {
         if (!name.trim()) {
@@ -50,24 +56,31 @@ const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }
             return;
         }
 
-        try {
-            if (!userId) {
-                console.error("Error: No user ID available");
-                return;
-            }
+        if (!userId) {
+            Alert.alert('Missing user information.');
+            return;
+        }
 
+        try {
             // Save name in Firestore
             const userRef = doc(db, "users", userId);
             await setDoc(userRef, { name: name }, { merge: true });
 
+            updateUserProfile({ name });
             // Save name in AsyncStorage
             await AsyncStorage.setItem('userName' +  userId!, name); // Simplify this for demo purposes
 
             console.log("Saved name:", name); // Debug: Check if the name is logged correctly
-            navigation.replace('BottomTabs');  // Navigate to Home after saving / prevent going back to NameInputScreen
+            navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'BottomTabs' }],
+                })
+              );            
         } catch (error) {
             // Alert.alert(i18n.t('error'), i18n.t('saveError'));
             console.error('Failed to save name', error);
+            Alert.alert("Failed to save name. Please try again.");
         }
     };
 

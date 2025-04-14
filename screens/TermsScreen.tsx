@@ -8,28 +8,43 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes' // adjust this import if needed
 import i18n from '@/i18n';
 import { useUser } from '@/contexts/UserContext';
+import { db } from '../src/config/firebase'; // Import Firestore
+import { doc, updateDoc } from 'firebase/firestore';
 
-type TermsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Terms'>;
+// type TermsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Terms'>;
 
 export default function TermsScreen() {
-    const navigation = useNavigation<TermsScreenNavigationProp>();
+    // const navigation = useNavigation<TermsScreenNavigationProp>();
     const [agreed, setAgreed] = useState(false);
     const scrollRef = useRef<ScrollView>(null);
-    const { user } = useUser();
+    const { user, updateUserProfile } = useUser();
 
     const handleContinue = async () => {
-        if (!agreed) {
-            Alert.alert('Please agree to the terms to continue.');
-            return;
-        }
-
-        await AsyncStorage.setItem('termsAccepted', 'true');
-
-        if (user?.uid) {
-          navigation.replace('NameInputScreen', { userId: user.uid });
-        } else {
-          console.error("User ID missing");
-        }
+      if (!agreed) {
+        Alert.alert('Please agree to the terms to continue.');
+        return;
+      }
+    
+      if (!user?.uid) {
+        Alert.alert("User data missing. Please try again.");
+        return;
+      }
+    
+      try {
+        // Save the agreement to Firestore
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          termsAccepted: true
+        });
+    
+        // Update in context (for immediate effect)
+        updateUserProfile({ termsAccepted: true });
+    
+        console.log('✅ Terms accepted and saved in Firestore.');
+      } catch (error) {
+        console.error("❌ Failed to save terms acceptance in Firestore:", error);
+        Alert.alert("Failed to proceed", "There was a problem accepting the terms.");
+      }
     };
 
     return (
