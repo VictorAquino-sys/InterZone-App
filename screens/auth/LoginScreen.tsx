@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
-import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
+import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider } from "firebase/auth";
+import { ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
@@ -14,6 +14,7 @@ import { RootStackParamList } from '../../src/navigationTypes';
 import * as RNLocalize from 'react-native-localize';
 import { useUser } from '../../src/contexts/UserContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { generateNonce, sha256 } from '@/utils/cryptoUtils';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -26,8 +27,11 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     // let alreadyNavigated = false;
-    AppleAuthentication.isAvailableAsync().then(setIsAppleAvailable);
-
+    AppleAuthentication.isAvailableAsync().then(available => {
+      console.log("🍎 Apple Sign-In available:", available);
+      setIsAppleAvailable(available);
+    });
+    
     const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => setShow(false));
     const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => setShow(true));
 
@@ -39,27 +43,41 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
   const handleAppleSignIn = async () => {
     try {
+      const rawNonce = generateNonce();
+      const hashedNonce = await sha256(rawNonce);
+  
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
+        nonce: hashedNonce,
       });
   
-          // Optional: helpful log for debugging
-      console.log('Apple credential:', credential);
+      const { identityToken, fullName, user } = credential;
   
-      const { email, fullName, user } = credential;
+      if (!identityToken) {
+        throw new Error("Apple Sign-In failed: No identity token returned.");
+      }
   
-      const appleName = fullName?.givenName ?? 'User';
-      const appleEmail = email || `${user}@privaterelay.appleid.com`;
+      const provider = new OAuthProvider('apple.com');
+      const firebaseCredential = provider.credential({
+        idToken: identityToken,
+        rawNonce,
+      });
   
-      const userRef = doc(db, 'users', user);
+      const result = await signInWithCredential(auth, firebaseCredential);
+      const authUser = result.user;
+  
+      const userRef = doc(db, 'users', authUser.uid);
       const userSnap = await getDoc(userRef);
   
       if (!userSnap.exists()) {
+        const appleName = fullName?.givenName ?? 'User';
+        const appleEmail = authUser.email ?? `${authUser.uid}@privaterelay.appleid.com`;
+  
         await setDoc(userRef, {
-          uid: user,
+          uid: authUser.uid,
           name: appleName,
           email: appleEmail,
           avatar: '',
@@ -67,11 +85,11 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         });
       }
   
-      await AsyncStorage.setItem('user', JSON.stringify({ uid: user }));
-      await AsyncStorage.setItem('userId', user);
+      await AsyncStorage.setItem('user', JSON.stringify(authUser));
+      await AsyncStorage.setItem('userId', authUser.uid);
       await AsyncStorage.setItem('termsAccepted', 'false');
   
-      await refreshUser(); // from UserContext
+      await refreshUser();
   
     } catch (e: any) {
       if (e.code === 'ERR_REQUEST_CANCELED') {
@@ -284,73 +302,75 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
     <ImageBackground source={image} resizeMode="cover" style={styles.rootContainer}
     >
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.headerContainer}>
-          {show && (
-            <>
-              <Text style={styles.titleText}>{i18n.t('appTitle')}</Text>
-              <Text style={styles.phraseText}>{i18n.t('tagline')}</Text>
-            </>
-          )}
-        </View>
-
-        <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
-          <View style={styles.authButtonsContainer}>
-            <GoogleSigninButton
-                style={styles.googleButton}
-                size={GoogleSigninButton.Size.Wide}
-                color={GoogleSigninButton.Color.Dark}
-                onPress={signIn}
-            />
-
-            {Platform.OS === 'ios' && isAppleAvailable && (
-              <AppleAuthentication.AppleAuthenticationButton
-                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                cornerRadius={5}
-                style={styles.authButton}
-                onPress={handleAppleSignIn}
-              />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator= {false}
+        >
+          <View style={styles.headerContainer}>
+            {show && (
+              <>
+                <Text style={styles.titleText}>{i18n.t('appTitle')}</Text>
+                <Text style={styles.phraseText}>{i18n.t('tagline')}</Text>
+              </>
             )}
           </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder={i18n.t('Email')}
-              value={email}
-              onChangeText={text => setEmail(text)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder={i18n.t('Password')}
-              value={password}
-              onChangeText={text => setPassword(text)}
-              secureTextEntry
-            />
-          </View>
-          
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              onPress={handleLogin}
-              style={styles.button} 
-            >
-              <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSignUp}
-              style={[styles.button, styles.buttonOutline]} 
-            >
-              <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handlePasswordReset}
-              style={[styles.button, styles.buttonForgotPass]}
-            >
-              <Text style={styles.buttonForgotPassText}>{i18n.t('forgotPasswordButton')}</Text>
-            </TouchableOpacity>
-          </View>
+          <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
+            <View style={styles.authButtonsContainer}>
+              <GoogleSigninButton
+                style={styles.googleButton}
+                size={GoogleSigninButton.Size.Wide}
+                color={GoogleSigninButton.Color.Light}
+                onPress={signIn}
+              />
 
-        </KeyboardAvoidingView>
+              {Platform.OS === 'ios' && isAppleAvailable && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={5}
+                  style={styles.appleButton}
+                  onPress={handleAppleSignIn}
+                />
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder={i18n.t('Email')}
+                value={email}
+                onChangeText={text => setEmail(text)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder={i18n.t('Password')}
+                value={password}
+                onChangeText={text => setPassword(text)}
+                secureTextEntry
+              />
+            </View>
+            
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity onPress={handleLogin} style={styles.button}>
+                <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
+                <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.forgotPasswordContainer}>
+              <TouchableOpacity onPress={handlePasswordReset} style={styles.buttonForgotPass}>
+                <Text style={styles.buttonForgotPassText}>{i18n.t('forgotPasswordButton')}</Text>
+              </TouchableOpacity>
+            </View>
+
+
+          </KeyboardAvoidingView>
+        </ScrollView>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -360,23 +380,35 @@ export default LoginScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 0,
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 45,
+    marginBottom: 20,
+    width: "100%",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   authButtonsContainer: {
-    marginBottom: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12, // ⬅️ add spacing between buttons
+    marginBottom: 6,
+    // gap: 12, // ✅ Works in React Native 0.71+, otherwise use marginBottom on each button
   },
-  authButton: { 
-    width: '70%', 
-    height: 44,   
-    marginBottom: 10, // 👈 fallback spacing
-},
+  googleButton: {
+    width: 170, // Slightly wider for full text
+    height: 44, // ✅ Must be at least 44–48 for full button content
+    borderRadius: 18,
+    marginBottom: 10,
+  },
+  appleButton: {
+    width: 160,
+    height: 40,
+    borderRadius: 18,
+  },
   safeArea:{
     flex: 1,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
@@ -385,7 +417,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: 10,
+    // marginBottom: 10,
     width: '100%',
   },
   titleText: {
@@ -406,7 +438,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    width:'70%',
+    width:'60%',
     justifyContent: 'center',
   },
   input: {
@@ -415,18 +447,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 10,
-    marginTop: 15,
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2.5,
+    elevation: 3,
   },
   buttonContainer: {
     width:'60%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: '5%',
+    marginTop: '3%',
   },
   button: {
     backgroundColor: '#0782F9',
-    width: '100%',
-    padding: 15,
+    width: '80%',
+    padding: 12,
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -440,15 +477,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     marginTop: 8,
     borderColor: '#00897b',
+    // justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
-    width: "80%",
-  },
-  googleButton: {
-    width: '70%',
-    height: 50,
+    width: "60%",
+    padding: 10,
     borderRadius: 10,
-    marginBottom: 10, // 👈 fallback spacing
-    marginTop: 1 // Or adjust according to your layout
   },
   buttonText:{
     color: 'white',
@@ -465,6 +499,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,  
   },
+  forgotPasswordContainer: {
+    // marginTop: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '80%',
+  },  
   rootContainer: {
     flex: 1,
   },

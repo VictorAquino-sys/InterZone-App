@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 04-17
+    Import & Use expo-random and expo-crypto to generate and hash for Apple sign-in
+    npx expo install expo-crypto
+
 ### 04-16
     Option to sign in with apple to meet apple's requirements.
     Install expo dependencies:
