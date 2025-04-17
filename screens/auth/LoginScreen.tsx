@@ -301,6 +301,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
                 color={GoogleSigninButton.Color.Dark}
                 onPress={signIn}
             />
+
             {Platform.OS === 'ios' && isAppleAvailable && (
               <AppleAuthentication.AppleAuthenticationButton
                 buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
@@ -327,6 +328,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
               secureTextEntry
             />
           </View>
+          
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               onPress={handleLogin}
@@ -366,9 +368,15 @@ const styles = StyleSheet.create({
   },
   authButtonsContainer: {
     marginBottom: 20,
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12, // ⬅️ add spacing between buttons
   },
-  authButton: { width: '70%', height: 44, marginVertical: 6 },
+  authButton: { 
+    width: '70%', 
+    height: 44,   
+    marginBottom: 10, // 👈 fallback spacing
+},
   safeArea:{
     flex: 1,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
@@ -439,6 +447,7 @@ const styles = StyleSheet.create({
     width: '70%',
     height: 50,
     borderRadius: 10,
+    marginBottom: 10, // 👈 fallback spacing
     marginTop: 1 // Or adjust according to your layout
   },
   buttonText:{
