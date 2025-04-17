@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
 import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider } from "firebase/auth";
-import { ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
+import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
@@ -318,12 +318,16 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
           <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
             <View style={styles.authButtonsContainer}>
-              <GoogleSigninButton
-                style={styles.googleButton}
-                size={GoogleSigninButton.Size.Wide}
-                color={GoogleSigninButton.Color.Light}
-                onPress={signIn}
-              />
+              <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
+                <View style={styles.googleContent}>
+                  <Image
+                    source={require('../../assets/google_icon.png')} // use the actual G icon you have
+                    style={styles.googleIcon}
+                  />
+                  <Text style={styles.googleText}>Sign in with Google</Text>
+                </View>
+              </TouchableOpacity>
+
 
               {Platform.OS === 'ios' && isAppleAvailable && (
                 <AppleAuthentication.AppleAuthenticationButton
@@ -398,15 +402,40 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     // gap: 12, // ✅ Works in React Native 0.71+, otherwise use marginBottom on each button
   },
-  googleButton: {
-    width: 170, // Slightly wider for full text
-    height: 44, // ✅ Must be at least 44–48 for full button content
-    borderRadius: 18,
+  customGoogleButton: {
+    width: 170,
+    height: 44,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  googleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  googleIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 2,
+  },
+  
+  googleText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000',
   },
   appleButton: {
-    width: 160,
-    height: 40,
+    width: 170,
+    height: 44,
     borderRadius: 18,
   },
   safeArea:{
