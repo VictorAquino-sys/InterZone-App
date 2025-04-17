@@ -13,6 +13,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../src/navigationTypes';
 import * as RNLocalize from 'react-native-localize';
 import { useUser } from '../../src/contexts/UserContext';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -21,28 +22,66 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const [password, setPassword] = useState<string>(''); 
   const [show, setShow] = useState<boolean>(true);
   const { refreshUser } = useUser(); // ⬅️ grab from context
+  const [isAppleAvailable, setIsAppleAvailable] = useState(false);
 
   useEffect(() => {
-    let alreadyNavigated = false;
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setShow(false);
-      }
-    );
+    // let alreadyNavigated = false;
+    AppleAuthentication.isAvailableAsync().then(setIsAppleAvailable);
 
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setShow(true);
-      }
-    );
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => setShow(false));
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => setShow(true));
 
     return () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
   }, []);
+
+  const handleAppleSignIn = async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+  
+          // Optional: helpful log for debugging
+      console.log('Apple credential:', credential);
+  
+      const { email, fullName, user } = credential;
+  
+      const appleName = fullName?.givenName ?? 'User';
+      const appleEmail = email || `${user}@privaterelay.appleid.com`;
+  
+      const userRef = doc(db, 'users', user);
+      const userSnap = await getDoc(userRef);
+  
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user,
+          name: appleName,
+          email: appleEmail,
+          avatar: '',
+          createdAt: new Date().toISOString(),
+        });
+      }
+  
+      await AsyncStorage.setItem('user', JSON.stringify({ uid: user }));
+      await AsyncStorage.setItem('userId', user);
+      await AsyncStorage.setItem('termsAccepted', 'false');
+  
+      await refreshUser(); // from UserContext
+  
+    } catch (e: any) {
+      if (e.code === 'ERR_REQUEST_CANCELED') {
+        console.log('Apple Sign-In cancelled');
+      } else {
+        console.error('Apple Sign-In error', e);
+        Alert.alert('Apple Sign-In Failed', e.message);
+      }
+    }
+  };
 
   // Save new user details in Firestore after signup
   const handleSignUp = async () => {
@@ -114,8 +153,8 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         console.error('Password Reset Error:', error);
         Alert.alert('Password Reset Failed', error.message || 'Failed to send password reset email.');
     }
-};
-
+  };
+  
   // Handle user login and ensure Firestore data is locked
   const handleLogin = async () => {
     try {
@@ -254,14 +293,25 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
           )}
         </View>
 
-        <KeyboardAvoidingView behavior= "padding"  style= {styles.container}
-        >
-          <GoogleSigninButton
-              style={styles.googleButton}
-              size={GoogleSigninButton.Size.Wide}
-              color={GoogleSigninButton.Color.Dark}
-              onPress={signIn}
-          />
+        <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
+          <View style={styles.authButtonsContainer}>
+            <GoogleSigninButton
+                style={styles.googleButton}
+                size={GoogleSigninButton.Size.Wide}
+                color={GoogleSigninButton.Color.Dark}
+                onPress={signIn}
+            />
+            {Platform.OS === 'ios' && isAppleAvailable && (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={5}
+                style={styles.authButton}
+                onPress={handleAppleSignIn}
+              />
+            )}
+          </View>
+
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
@@ -312,9 +362,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    // marginTop: '1%',
     marginBottom: 45,
   },
+  authButtonsContainer: {
+    marginBottom: 20,
+    alignItems: 'center'
+  },
+  authButton: { width: '70%', height: 44, marginVertical: 6 },
   safeArea:{
     flex: 1,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,

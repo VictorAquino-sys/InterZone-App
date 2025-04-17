@@ -1,5 +1,10 @@
 (Daily logs of what have been worked on)
 
+### 04-16
+    Option to sign in with apple to meet apple's requirements.
+    Install expo dependencies:
+    npx expo install expo-apple-authentication
+
 ### 04-11
     Guideline 5.1.1(v) - Data Collection and Storage
     Guideline 2.5.4 - Performance - Software Requirements

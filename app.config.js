@@ -77,6 +77,11 @@ export default {
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "expo-localization",
+      {
+        "expo": {
+          "plugins": ["expo-apple-authentication"]
+        }
+      },      
       [
         "expo-image-picker",
         {
