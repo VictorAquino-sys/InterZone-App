@@ -3,6 +3,7 @@ import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPasswor
 import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
+import GoogleIcon from '../../assets/google_icon.png'; // TypeScript-compatible
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
 import { Alert } from 'react-native';
 import { GoogleSignin, isSuccessResponse, GoogleSigninButton } from '@react-native-google-signin/google-signin';
@@ -321,7 +322,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
               <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
                 <View style={styles.googleContent}>
                   <Image
-                    source={require('../../assets/google_icon.png')} // use the actual G icon you have
+                    source={GoogleIcon} // use the actual G icon you have
                     style={styles.googleIcon}
                   />
                   <Text style={styles.googleText}>Sign in with Google</Text>
