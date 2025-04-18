@@ -1,5 +1,8 @@
 (Daily logs of what have been worked on)
 
+### 04-18
+    for Setting notifications, need to install the following dependencies:
+    npm i expo-server-sdk
 
 ### 04-17
     1- Import & Use expo-random and expo-crypto to generate and hash for Apple sign-in
