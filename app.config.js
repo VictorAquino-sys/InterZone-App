@@ -21,6 +21,9 @@ export default {
       deploymentTarget: "18.0",
       buildNumber: "1.0.16",
       bundleIdentifier: IS_DEV ? "com.interzone.app" : "com.interzone.app",
+      entitlements: {
+        "com.apple.developer.applesignin": ["Default"]
+      },
       runtimeVersion: "sdkVersion",
       usesAppleSignIn: true,
       jsEngine: "hermes",
