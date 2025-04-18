@@ -46,7 +46,13 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
     try {
       const rawNonce = generateNonce();
       const hashedNonce = await sha256(rawNonce);
+
+      console.log("🔐 Nonce generated:", rawNonce);
+      console.log("🔐 Hashed nonce:", hashedNonce);
   
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      console.log("🍏 isAvailableAsync:", isAvailable);
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -55,6 +61,8 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         nonce: hashedNonce,
       });
   
+      console.log("📥 Apple credential received:", JSON.stringify(credential, null, 2));
+
       const { identityToken, fullName, user } = credential;
   
       if (!identityToken) {
@@ -69,6 +77,8 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   
       const result = await signInWithCredential(auth, firebaseCredential);
       const authUser = result.user;
+
+      console.log("✅ Firebase sign-in success:", authUser.uid);
   
       const userRef = doc(db, 'users', authUser.uid);
       const userSnap = await getDoc(userRef);
