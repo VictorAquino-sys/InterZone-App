@@ -3,9 +3,10 @@ Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
 ### 4-17
-    Fix the following:
+    - Fix the following:
      LOG  VirtualizedList: You have a large list that is slow to update - make sure your renderItem function renders components that follow React performance best practices like 
 PureComponent, shouldComponentUpdate, etc. {"contentLength": 8744.380859375, "dt": 3247, "prevDt": 4605}
+    - Add three dots under each comment for blocking, spam, report.
 
 
 ### 4-14
