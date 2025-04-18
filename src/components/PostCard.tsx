@@ -167,7 +167,7 @@ const PostCard: React.FC<PostCardProps> = ({
           {commentCount > 3 && (
             <TouchableOpacity onPress={() => setModalVisible(true)}>
               <Text style={styles.viewAllCommentsText}>
-                View all {commentCount} comments
+                {i18n.t("postCard.viewAll", { count: commentCount })}
               </Text>
             </TouchableOpacity>
           )}
@@ -177,9 +177,16 @@ const PostCard: React.FC<PostCardProps> = ({
             onClose={async () => {
               setModalVisible(false);
               await refreshCommentCount();
+            
               if (showComments) {
-                handleToggleComments();      // re-fetch inline comments
-                setShowComments(true);       // reopen the view
+                const q = query(
+                  collection(db, 'posts', item.id, 'comments'),
+                  orderBy('timestamp', 'desc'),
+                  limit(3)
+                );
+                const snapshot = await getDocs(q);
+                const recent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setComments(recent.reverse());
               }
             }}
             postId={item.id}
@@ -190,8 +197,8 @@ const PostCard: React.FC<PostCardProps> = ({
           <TextInput
             placeholder={
               commentCount >= MAX_COMMENTS
-                ? "Max 10 comments reached"
-                : "Write a comment..."
+              ? i18n.t("postCard.maxReached")
+              : i18n.t("postCard.writePlaceholder")
             }
             value={newComment}
             onChangeText={text => setNewComment(text.slice(0, MAX_COMMENT_LENGTH))}
@@ -203,7 +210,7 @@ const PostCard: React.FC<PostCardProps> = ({
           </Text>
 
           <Button
-            title={isSubmitting ? "Commenting..." : "Comment"}
+            title={isSubmitting ? i18n.t("postCard.commenting") : i18n.t("postCard.comment")}
             onPress={handleAddComment}
             disabled={
               isSubmitting ||

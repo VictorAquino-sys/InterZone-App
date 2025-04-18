@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, Button, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { collection, getDocs, query, orderBy, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, limit, increment } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import i18n from '@/i18n';
 
 type Comment = {
   id: string;
@@ -116,7 +117,7 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
             keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
             <View style={styles.container}>
-                <Text style={styles.header}>Comments</Text>
+                <Text style={styles.header}>{i18n.t('comments.title')}</Text>
 
                 <FlatList
                 data={comments}
@@ -147,7 +148,7 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                             </Text>
                             <View style={styles.editActions}>
                                 <Button
-                                    title={isSubmitting ? "Updating..." : "Update"}
+                                    title={isSubmitting ? i18n.t("comments.updating") : i18n.t("comments.update")}
                                     onPress={handleUpdate}
                                     disabled={isSubmitting}
                                 />
@@ -175,10 +176,10 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                             setEditingId(item.id);
                             setEditedText(item.content);
                             }}>
-                            <Text style={styles.editText}>Edit</Text>
+                            <Text style={styles.editText}>{i18n.t('comments.edit')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                            <Text style={styles.deleteText}>Delete</Text>
+                            <Text style={styles.deleteText}>{i18n.t('comments.delete')}</Text>
                             </TouchableOpacity>
                         </View>
                         )}
@@ -191,8 +192,8 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                 <TextInput
                     placeholder={
                         localCommentCount >= MAX_COMMENTS
-                        ? "Max 10 comments reached"
-                        : "Write a comment..."
+                        ? i18n.t('comments.maxReached')
+                        : i18n.t('comments.writePlaceholder')
                     }            
                     value={newComment}
                     onChangeText={text => setNewComment(text.slice(0, MAX_COMMENT_LENGTH))}
@@ -203,7 +204,7 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                         {newComment.length} / {MAX_COMMENT_LENGTH}
                     </Text>
                     <Button
-                    title={isSubmitting ? "Posting..." : "Post"}
+                    title={isSubmitting ? i18n.t("comments.posting") : i18n.t("comments.post")}
                     onPress={handleAddComment}
                     disabled={
                         isSubmitting ||
@@ -214,7 +215,7 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                 </View>
 
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={{ color: '#007aff' }}>Close</Text>
+                <Text style={{ color: '#007aff' }}>{i18n.t('comments.close')}</Text>
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>

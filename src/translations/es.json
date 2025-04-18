@@ -168,6 +168,32 @@
         "error": "Ocurrió un error al eliminar tu cuenta."
     },
     "enterPassword": "Confirme su contraseña",
-    "privacyPolicy": "Política de privacidad"     
+    "privacyPolicy": "Política de privacidad",
+    
+    "comments": {
+        "title": "Comentarios",
+        "writePlaceholder": "Escribe un comentario...",
+        "maxReached": "Se alcanzó el máximo de 10 comentarios",
+        "posting": "Publicando...",
+        "post": "Publicar",
+        "update": "Actualizar",
+        "updating": "Actualizando...",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "charCount": "{{count}} / {{max}}"
+      },
 
+      "postCard": {
+        "writePlaceholder": "Escribe un comentario...",
+        "maxReached": "Se alcanzó el máximo de 10 comentarios",
+        "commenting": "Comentando...",
+        "comment": "Comentar",
+        "viewAll": "Ver los {{count}} comentarios",
+        "deletePost": "Eliminar publicación",
+        "anonymous": "Anónimo",
+        "unknown": "Ciudad desconocida",
+        "noPhoto": "No hay foto disponible"
+    }
 } 

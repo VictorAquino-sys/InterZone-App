@@ -169,7 +169,32 @@
     "networkError": "Network error. Please check your connection and try again.",
     "unknownError": "Something went wrong. Please try again later.",
 
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
     
+    "comments": {
+      "title": "Comments",
+      "writePlaceholder": "Write a comment...",
+      "maxReached": "Max 10 comments reached",
+      "posting": "Posting...",
+      "post": "Post",
+      "update": "Update",
+      "updating": "Updating...",
+      "cancel": "Cancel",
+      "close": "Close",
+      "edit": "Edit",
+      "delete": "Delete",
+      "charCount": "{{count}} / {{max}}"
+    },
 
+    "postCard": {
+      "writePlaceholder": "Write a comment...",
+      "maxReached": "Max 10 comments reached",
+      "commenting": "Commenting...",
+      "comment": "Comment",
+      "viewAll": "View all {{count}} comments",
+      "deletePost": "Delete post",
+      "anonymous": "Anonymous",
+      "unknown": "Unknown city",
+      "noPhoto": "No photo available"
+    }
 }  
