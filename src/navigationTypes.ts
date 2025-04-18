@@ -16,6 +16,7 @@ export type RootStackParamList = {
     Home: undefined;
     BlockedUsers: undefined;
     DeleteAccount: undefined;
+    PostDetail: { postId: string};
 
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FunctionComponent } from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from '../config/firebase';
@@ -31,7 +31,7 @@ const LikeButton: FunctionComponent<LikeButtonProps> = ({ postId, userId, likedC
     const toggleLike = async () => {
         const postRef = doc(db, "posts", postId);
         try {
-            const newLiked: boolean = !liked;
+            const newLiked = !liked;
             setLiked(newLiked);
             await updateDoc(postRef, {
                 likedBy: newLiked ? arrayUnion(userId) : arrayRemove(userId)
@@ -39,16 +39,32 @@ const LikeButton: FunctionComponent<LikeButtonProps> = ({ postId, userId, likedC
             setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
         } catch (error) {
             console.error("Error toggling like:", error);
-            setLiked(liked => !liked); // Revert optimistic update on error
+            // setLiked(liked => !liked); // Revert optimistic update on error
+            setLiked(prev => !prev); //Revert on error
         }
     };
 
     return (
-        <TouchableOpacity onPress={toggleLike} style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <FontAwesome name={liked ? 'heart' : 'heart-o'} size={24} color={liked ? 'red' : 'grey'} />
-            {likeCount > 0 && <Text>{likeCount}</Text>}
-        </TouchableOpacity>
+        <TouchableOpacity onPress={toggleLike} style={styles.button}>
+            <FontAwesome name={liked ? 'heart' : 'heart-o'} size={21} color={liked ? 'red' : 'grey'} />
+            <Text style={styles.count}>{likeCount}</Text>
+      </TouchableOpacity>
     );
 };
 
 export default LikeButton;
+
+const styles = StyleSheet.create({
+    button: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+    },
+    count: {
+      fontSize: 13,
+      color: '#666',
+      marginLeft: 6,
+      paddingTop: 1, // minor alignment tweak
+    },
+  });

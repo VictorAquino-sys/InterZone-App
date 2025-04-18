@@ -15,6 +15,7 @@ export interface Post {
     };
     likedBy?: string[];
     categoryKey: string;
+    commentCount?: number;
 }
 
 // Define the type for the posts and the context structure

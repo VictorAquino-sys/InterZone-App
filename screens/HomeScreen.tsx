@@ -318,15 +318,15 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             name: data.user.name,
             avatar: avatarUrl || "", // fallback to empty string
           },
-          categoryKey: data.categoryKey
+          categoryKey: data.categoryKey,
+          commentCount: data.commentCount ?? 0
         };
       }));
 
       const blockedUserIds = user?.blocked ?? [];
       const filteredPosts = postsData.filter(post => !blockedUserIds.includes(post.user.uid));
       setPosts(filteredPosts);
-      // console.log("Fetched posts:", postsData);
-      // console.log("Fetched posts image URLs:", postsData.map(post => post.imageUrl));  // This will log all image URLs
+      
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
@@ -463,6 +463,11 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     <PostCard
       item={item}
       userId={user?.uid ?? ''} // fallback to empty string
+      user={{
+        uid: user?.uid ?? '',
+        name: user?.name ?? '',
+        avatar: user?.avatar ?? '',
+      }}
       onDelete={handleDeletePost}
       onReport={handleReportPress}
       onOpenImage={openImageModal}

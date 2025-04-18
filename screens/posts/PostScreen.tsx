@@ -299,7 +299,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           name: latestUserData.name || "Anonymous", // Use updated name
           avatar: latestUserData.avatar || "", 
         },
-        categoryKey: selectedCategory
+        categoryKey: selectedCategory,
+        commentCount: 0
       };
 
       // Add post to Firestore
