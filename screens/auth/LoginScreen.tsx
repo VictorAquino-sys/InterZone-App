@@ -17,6 +17,7 @@ import { useUser } from '../../src/contexts/UserContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { generateNonce, sha256 } from '@/utils/cryptoUtils';
 
+
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
 const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {

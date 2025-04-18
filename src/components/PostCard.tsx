@@ -5,7 +5,7 @@ import Avatar from './Avatar';
 import LikeButton from './LikeButton';
 import i18n from '@/i18n';
 import { Post } from '../contexts/PostsContext';
-import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, addDoc, serverTimestamp, collection, updateDoc, doc, increment } from 'firebase/firestore';
+import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, deleteDoc, addDoc, serverTimestamp, collection, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { getCategoryByKey } from '@/config/categoryData';
 import CommentsModal from './commentsModal';
@@ -45,6 +45,9 @@ const PostCard: React.FC<PostCardProps> = ({
   const MAX_COMMENTS = 10;
   const MAX_COMMENT_LENGTH = 200;
   const [commentCount, setCommentCount] = useState(item.commentCount ?? 0);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editedComment, setEditedComment] = useState('');
+
 
   // Fetch comment count on mount
   useEffect(() => {
@@ -160,7 +163,85 @@ const PostCard: React.FC<PostCardProps> = ({
           {comments.map(comment => (
             <View key={comment.id} style={styles.commentItem}>
               <Text style={styles.commentAuthor}>{comment.userName}</Text>
-              <Text>{comment.content}</Text>
+
+              {editingCommentId === comment.id ? (
+                <>
+                  <TextInput
+                    value={editedComment}
+                    onChangeText={text => setEditedComment(text.slice(0, MAX_COMMENT_LENGTH))}
+                    style={styles.commentInput}
+                  />
+                  <Text style={styles.charCount}>
+                    {editedComment.length} / {MAX_COMMENT_LENGTH}
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+                    <Button
+                      title={isSubmitting ? i18n.t("postCard.updating") : i18n.t("postCard.update")}
+                      onPress={async () => {
+                        if (!editedComment.trim()) return;
+                        setIsSubmitting(true);
+                        try {
+                          await updateDoc(doc(db, 'posts', item.id, 'comments', comment.id), {
+                            content: editedComment.trim()
+                          });
+                          setEditingCommentId(null);
+                          setEditedComment('');
+                          const q = query(
+                            collection(db, 'posts', item.id, 'comments'),
+                            orderBy('timestamp', 'desc'),
+                            limit(3)
+                          );
+                          const snapshot = await getDocs(q);
+                          const recent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                          setComments(recent.reverse());
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }}
+                      disabled={isSubmitting}
+                    />
+                    <Button
+                      title={i18n.t("postCard.cancel")}
+                      color="gray"
+                      onPress={() => {
+                        setEditingCommentId(null);
+                        setEditedComment('');
+                      }}
+                      disabled={isSubmitting}
+                    />
+                  </View>
+                </>
+              ) : (
+                <Text>{comment.content}</Text>
+              )}
+
+              {comment.userId === user.uid && editingCommentId !== comment.id && (
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+                  <TouchableOpacity onPress={() => {
+                    setEditingCommentId(comment.id);
+                    setEditedComment(comment.content);
+                  }}>
+                    <Text style={styles.editText}>{i18n.t("postCard.edit")}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={async () => {
+                    await deleteDoc(doc(db, 'posts', item.id, 'comments', comment.id));
+                    await updateDoc(doc(db, 'posts', item.id), {
+                      commentCount: increment(-1)
+                    });
+                    const q = query(
+                      collection(db, 'posts', item.id, 'comments'),
+                      orderBy('timestamp', 'desc'),
+                      limit(3)
+                    );
+                    const snapshot = await getDocs(q);
+                    const recent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setComments(recent.reverse());
+                    setCommentCount(prev => Math.max(prev - 1, 0));
+                  }}>
+                    <Text style={styles.deleteText}>{i18n.t("postCard.delete")}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           ))}
 
@@ -369,5 +450,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 6,
     textAlign: 'center',
-  }  
+  },
+  editText: {
+    fontSize: 13,
+    color: '#007aff',
+  },
 });

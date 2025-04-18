@@ -3,6 +3,7 @@ import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, B
 import { collection, getDocs, query, orderBy, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, limit, increment } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import i18n from '@/i18n';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Comment = {
   id: string;
@@ -116,8 +117,8 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
-            <View style={styles.container}>
-                <Text style={styles.header}>{i18n.t('comments.title')}</Text>
+          <SafeAreaView style={styles.container}>
+            <Text style={styles.header}>{i18n.t('comments.title')}</Text>
 
                 <FlatList
                 data={comments}
@@ -217,7 +218,7 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <Text style={{ color: '#007aff' }}>{i18n.t('comments.close')}</Text>
                 </TouchableOpacity>
-            </View>
+          </SafeAreaView>
         </KeyboardAvoidingView>
     </Modal>
   );
@@ -228,7 +229,7 @@ export default CommentsModal;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 15,
+    paddingTop: 0, // SafeAreaView handles this now
     paddingHorizontal: 16
   },
   header: {
