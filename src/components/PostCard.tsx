@@ -9,6 +9,7 @@ import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, deleteDo
 import { db } from '@/config/firebase';
 import { getCategoryByKey } from '@/config/categoryData';
 import CommentsModal from './commentsModal';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
@@ -275,30 +276,39 @@ const PostCard: React.FC<PostCardProps> = ({
             setCommentCount={setCommentCount}
           />
 
-          <TextInput
-            placeholder={
-              commentCount >= MAX_COMMENTS
-              ? i18n.t("postCard.maxReached")
-              : i18n.t("postCard.writePlaceholder")
-            }
-            value={newComment}
-            onChangeText={text => setNewComment(text.slice(0, MAX_COMMENT_LENGTH))}
-            style={styles.commentInput}
-            editable={commentCount < MAX_COMMENTS && !isSubmitting}
-          />
-          <Text style={styles.charCount}>
-            {newComment.length} / {MAX_COMMENT_LENGTH}
-          </Text>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={100}
+          >
+            <View style={{ paddingBottom: 12 }}>
+              <TextInput
+                placeholder={
+                  commentCount >= MAX_COMMENTS
+                    ? i18n.t("postCard.maxReached")
+                    : i18n.t("postCard.writePlaceholder")
+                }
+                value={newComment}
+                onChangeText={text => setNewComment(text.slice(0, MAX_COMMENT_LENGTH))}
+                style={styles.commentInput}
+                editable={commentCount < MAX_COMMENTS && !isSubmitting}
+              />
+              <Text style={styles.charCount}>
+                {newComment.length} / {MAX_COMMENT_LENGTH}
+              </Text>
 
-          <Button
-            title={isSubmitting ? i18n.t("postCard.commenting") : i18n.t("postCard.comment")}
-            onPress={handleAddComment}
-            disabled={
-              isSubmitting ||
-              !newComment.trim() ||
-              commentCount >= MAX_COMMENTS
-            }
-          />
+              <Button
+                title={isSubmitting ? i18n.t("postCard.commenting") : i18n.t("postCard.comment")}
+                onPress={handleAddComment}
+                disabled={
+                  isSubmitting ||
+                  !newComment.trim() ||
+                  commentCount >= MAX_COMMENTS
+                }
+              />
+            </View>
+          </KeyboardAvoidingView>
+
+
         </View>
       )}
 

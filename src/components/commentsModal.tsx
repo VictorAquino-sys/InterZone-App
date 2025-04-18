@@ -229,7 +229,7 @@ export default CommentsModal;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 0, // SafeAreaView handles this now
+    paddingTop: Platform.OS === 'android' ? 0 : 10,
     paddingHorizontal: 16
   },
   header: {
