@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 04-19
+    Set up notification for android:
+    npx expo install expo-apple-authentication
+
 ### 04-18
     for Setting notifications, need to install the following dependencies:
     npm i expo-server-sdk

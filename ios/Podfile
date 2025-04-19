@@ -50,6 +50,14 @@ target 'InterZone' do
   )
 
   post_install do |installer|
+
+    # 💥 Fix for unsupported '-G' build flag on iOS
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['OTHER_CFLAGS'] = '$(inherited)'
+      end
+    end
+
     react_native_post_install(
       installer,
       config[:reactNativePath],
