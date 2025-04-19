@@ -30,15 +30,15 @@ export const locationMapping = [
     region: "Lima",
     bounds: {
         latitude: { min: -12.038565306524266, max: -11.937226989067794 },
-        longitude: { min: -77.12745679212587, max: -77.04380759740644 }
-    }
+        longitude: { min: -77.0950, max: -77.04380759740644 } // adjusted western boundary
+      }
   },
   {
     city: "Callao",
     region: "Callao",
     bounds: { 
       latitude: { min: -12.05291, max: -11.981055470497372 },
-      longitude: { min: -77.17018082063697, max: -77.0821185337119 }
+      longitude: { min: -77.17018082063697, max: -77.0950 } // adjusted eastern boundary
     }
   },
   {
@@ -175,6 +175,14 @@ export const locationMapping = [
     bounds: {
       latitude: { min: -12.230289751137503, max: -12.154826534050303 },
       longitude: { min: -77.03967273584827, max: -76.97362072518618 }
+    }
+  },
+  {
+    city: "San Juan de Lurigancho",
+    region: "Provincia de Lima",
+    bounds: {
+      latitude: { min: -12.034669604486496, max: -11.91712201307889 },
+      longitude: { min: -77.02839829487948, max: -76.95518471696566 }
     }
   }
 ];
