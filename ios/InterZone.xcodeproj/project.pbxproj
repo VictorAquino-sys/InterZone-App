@@ -3,20 +3,20 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0DBA17FD87BD47A582E2181C /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 973B515D9D5F43D3822C71E9 /* GoogleService-Info.plist */; };
-		102FBA66F0F11D00F75506B3 /* Pods_InterZone.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5D814517A64DE449A4F80E79 /* Pods_InterZone.framework */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		1E59679F046B86A4BA38D67D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C9BA0F7412D4386906D227C0 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		9278C7AD57A7617B30806063 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 85A6CDFCA4F759D6C70C282A /* PrivacyInfo.xcprivacy */; };
+		489400CB46254C75B771BD4A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 765F4A13F0854E5C879094E7 /* GoogleService-Info.plist */; };
+		62D7B0ADD7583101E7D02137 /* Pods_InterZone.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FFA422793291585ADE70A4CA /* Pods_InterZone.framework */; };
+		68408BBBA45846EFB75C5BE3 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D45A5376E6D4ED4849B3D10 /* noop-file.swift */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		F8A8080FFAB6410588D8EF8E /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B11B3FB41ED4D6CBC6ECDAF /* noop-file.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,17 +26,17 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = InterZone/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = InterZone/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = InterZone/main.m; sourceTree = "<group>"; };
-		1B11B3FB41ED4D6CBC6ECDAF /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "InterZone/noop-file.swift"; sourceTree = "<group>"; };
-		3537BF0109A65E7D1AFB18F1 /* Pods-InterZone.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InterZone.debug.xcconfig"; path = "Target Support Files/Pods-InterZone/Pods-InterZone.debug.xcconfig"; sourceTree = "<group>"; };
-		573494FB444D4509A88E868F /* InterZone-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "InterZone-Bridging-Header.h"; path = "InterZone/InterZone-Bridging-Header.h"; sourceTree = "<group>"; };
-		5D814517A64DE449A4F80E79 /* Pods_InterZone.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_InterZone.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		85A6CDFCA4F759D6C70C282A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = InterZone/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		97397677A1A33B0826D2158B /* Pods-InterZone.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InterZone.release.xcconfig"; path = "Target Support Files/Pods-InterZone/Pods-InterZone.release.xcconfig"; sourceTree = "<group>"; };
-		973B515D9D5F43D3822C71E9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "InterZone/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		1D45A5376E6D4ED4849B3D10 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "InterZone/noop-file.swift"; sourceTree = "<group>"; };
+		6C2E3173556A471DD304B334 /* Pods-InterZone.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InterZone.debug.xcconfig"; path = "Target Support Files/Pods-InterZone/Pods-InterZone.debug.xcconfig"; sourceTree = "<group>"; };
+		71F47F6EA9C441B59C185C0B /* InterZone-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "InterZone-Bridging-Header.h"; path = "InterZone/InterZone-Bridging-Header.h"; sourceTree = "<group>"; };
+		765F4A13F0854E5C879094E7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "InterZone/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		7A4D352CD337FB3A3BF06240 /* Pods-InterZone.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InterZone.release.xcconfig"; path = "Target Support Files/Pods-InterZone/Pods-InterZone.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = InterZone/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		C9BA0F7412D4386906D227C0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = InterZone/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-InterZone/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		FFA422793291585ADE70A4CA /* Pods_InterZone.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_InterZone.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				102FBA66F0F11D00F75506B3 /* Pods_InterZone.framework in Frameworks */,
+				62D7B0ADD7583101E7D02137 /* Pods_InterZone.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,28 +61,29 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				973B515D9D5F43D3822C71E9 /* GoogleService-Info.plist */,
-				1B11B3FB41ED4D6CBC6ECDAF /* noop-file.swift */,
-				573494FB444D4509A88E868F /* InterZone-Bridging-Header.h */,
-				85A6CDFCA4F759D6C70C282A /* PrivacyInfo.xcprivacy */,
+				765F4A13F0854E5C879094E7 /* GoogleService-Info.plist */,
+				1D45A5376E6D4ED4849B3D10 /* noop-file.swift */,
+				71F47F6EA9C441B59C185C0B /* InterZone-Bridging-Header.h */,
+				C9BA0F7412D4386906D227C0 /* PrivacyInfo.xcprivacy */,
 			);
 			name = InterZone;
-			sourceTree = "<group>";
-		};
-		2A56D90D965448518663CE51 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Resources;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5D814517A64DE449A4F80E79 /* Pods_InterZone.framework */,
+				FFA422793291585ADE70A4CA /* Pods_InterZone.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		68E9EF0B143649B68DDD8DA4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			path = "";
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -101,7 +102,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				D65327D7A22EEC0BE12398D9 /* Pods */,
 				D7E4C46ADA2E9064B798F356 /* ExpoModulesProviders */,
-				2A56D90D965448518663CE51 /* Resources */,
+				68E9EF0B143649B68DDD8DA4 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -136,8 +137,8 @@
 		D65327D7A22EEC0BE12398D9 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				3537BF0109A65E7D1AFB18F1 /* Pods-InterZone.debug.xcconfig */,
-				97397677A1A33B0826D2158B /* Pods-InterZone.release.xcconfig */,
+				6C2E3173556A471DD304B334 /* Pods-InterZone.debug.xcconfig */,
+				7A4D352CD337FB3A3BF06240 /* Pods-InterZone.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -157,15 +158,15 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "InterZone" */;
 			buildPhases = (
-				A652297CD8AAC8DAC3D5CD43 /* [CP] Check Pods Manifest.lock */,
-				54CCB5B155632411745112E2 /* [Expo] Configure project */,
+				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
+				34A881B1598847A52A5F01C0 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				0E7426210D02B22347E2A6B4 /* [CP] Embed Pods Frameworks */,
-				362AF565FA74E143FB7F0086 /* [CP] Copy Pods Resources */,
-				D4CB0350505F99A96699993F /* [CP-User] [RNFB] Core Configuration */,
+				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
+				89D18316A07EE58F5D3BB89D /* [CP] Embed Pods Frameworks */,
+				FD0ABA5ADA09CBD92EA823E8 /* [CP-User] [RNFB] Core Configuration */,
 			);
 			buildRules = (
 			);
@@ -215,8 +216,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				0DBA17FD87BD47A582E2181C /* GoogleService-Info.plist in Resources */,
-				9278C7AD57A7617B30806063 /* PrivacyInfo.xcprivacy in Resources */,
+				489400CB46254C75B771BD4A /* GoogleService-Info.plist in Resources */,
+				1E59679F046B86A4BA38D67D /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,25 +239,48 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		0E7426210D02B22347E2A6B4 /* [CP] Embed Pods Frameworks */ = {
+		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-InterZone/Pods-InterZone-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			inputFileListPaths = (
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+				"$(DERIVED_FILE_DIR)/Pods-InterZone-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-InterZone/Pods-InterZone-frameworks.sh\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		362AF565FA74E143FB7F0086 /* [CP] Copy Pods Resources */ = {
+		34A881B1598847A52A5F01C0 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-InterZone/expo-configure-project.sh\"\n";
+		};
+		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -368,48 +392,25 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-InterZone/Pods-InterZone-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		54CCB5B155632411745112E2 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-InterZone/expo-configure-project.sh\"\n";
-		};
-		A652297CD8AAC8DAC3D5CD43 /* [CP] Check Pods Manifest.lock */ = {
+		89D18316A07EE58F5D3BB89D /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
+				"${PODS_ROOT}/Target Support Files/Pods-InterZone/Pods-InterZone-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-InterZone-checkManifestLockResult.txt",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-InterZone/Pods-InterZone-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D4CB0350505F99A96699993F /* [CP-User] [RNFB] Core Configuration */ = {
+		FD0ABA5ADA09CBD92EA823E8 /* [CP-User] [RNFB] Core Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -432,7 +433,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				F8A8080FFAB6410588D8EF8E /* noop-file.swift in Sources */,
+				68408BBBA45846EFB75C5BE3 /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -441,13 +442,12 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3537BF0109A65E7D1AFB18F1 /* Pods-InterZone.debug.xcconfig */;
+			baseConfigurationReference = 6C2E3173556A471DD304B334 /* Pods-InterZone.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = InterZone/InterZone.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 75X4QDGTZZ;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -455,10 +455,7 @@
 				);
 				INFOPLIST_FILE = InterZone/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -478,19 +475,15 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 97397677A1A33B0826D2158B /* Pods-InterZone.release.xcconfig */;
+			baseConfigurationReference = 7A4D352CD337FB3A3BF06240 /* Pods-InterZone.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = InterZone/InterZone.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 75X4QDGTZZ;
 				INFOPLIST_FILE = InterZone/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -570,10 +563,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD = "";
 				LDPLUSPLUS = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					/usr/lib/swift,
-					"$(inherited)",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "/usr/lib/swift $(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -643,10 +633,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD = "";
 				LDPLUSPLUS = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					/usr/lib/swift,
-					"$(inherited)",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "/usr/lib/swift $(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
