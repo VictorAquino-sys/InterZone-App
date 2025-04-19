@@ -15,7 +15,7 @@ import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
 import LikeButton from '../src/components/LikeButton';
-import { deleteDoc, collection, doc, getDocs, getDoc, updateDoc, query, where, orderBy, arrayUnion } from "firebase/firestore";
+import { deleteDoc, collection, onSnapshot, limit, doc, getDocs, getDoc, updateDoc, query, where, orderBy, arrayUnion } from "firebase/firestore";
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { categories, getCategoryByKey } from '../src/config/categoryData';
 import { checkLocation } from '../src/utils/locationUtils';
@@ -26,6 +26,19 @@ import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
 import PostCard from '@/components/PostCard';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  Extrapolation,
+  withTiming,
+  interpolate,
+  useAnimatedScrollHandler,
+  withSequence,
+  withSpring,
+  useDerivedValue,
+  runOnJS,
+} from 'react-native-reanimated';
+
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
 
@@ -54,6 +67,11 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   const [city, setCity] = useState<string | null>(null); // To store the city name
   const [loading, setLoading] = useState<boolean>(true); // Loading state for better UX
   const prevCityRef = useRef<string | null>(null);
+
+  const scrollY = useSharedValue(0);
+  const bounceValue = useSharedValue(0);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const prevHasUnread = useRef(false);
 
   console.log("HomeScreen");
 
@@ -99,6 +117,47 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   
     handleCityOrUserChange();
   }, [user?.uid, city]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+  
+    const q = query(
+      collection(db, 'conversations'),
+      where('users', 'array-contains', user.uid)
+    );
+  
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      let foundUnread = false;
+  
+      for (const docSnap of snapshot.docs) {
+        const convoId = docSnap.id;
+        const messagesRef = collection(db, 'conversations', convoId, 'messages');
+        const msgQuery = query(messagesRef, orderBy('timestamp', 'desc'), limit(1));
+        const msgSnap = await getDocs(msgQuery);
+  
+        const latestMsg = msgSnap.docs[0]?.data();
+        if (latestMsg && latestMsg.senderId !== user.uid && latestMsg.read !== true) {
+          foundUnread = true;
+          break;
+        }
+      }
+  
+      setHasUnreadMessages(foundUnread);
+    });
+  
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (hasUnreadMessages && !prevHasUnread.current) {
+      bounceValue.value = withSequence(
+        withSpring(-6, { stiffness: 300 }),
+        withSpring(0, { stiffness: 300 })
+      );
+    }
+    prevHasUnread.current = hasUnreadMessages;
+  }, [hasUnreadMessages]);
+
 
   useFocusEffect(
     React.useCallback(() => {
@@ -446,6 +505,10 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     setModalVisible(false);
   };
 
+  const bounceStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: bounceValue.value }],
+  }));
+
   // Filter categories based on search input
   const filteredCategories = categories.filter(category =>
     category.label.toLowerCase().includes(searchText.toLowerCase())
@@ -458,6 +521,26 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       navigation.navigate('CategoryScreen', { categoryKey: category.key, title: category.label});
     }
   };
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+  
+  const fadeStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, 60],
+      [1, 0],
+      {
+        extrapolateLeft: Extrapolation.CLAMP,
+        extrapolateRight: Extrapolation.CLAMP,
+      }
+    );
+    return { opacity };
+  });
+  
 
   const renderItem = ({ item }: { item: Post }) => (
     <PostCard
@@ -537,7 +620,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           </View>
         ) : (
           /* Scrollable Content (Categories + Funny Message + Posts) */
-          <FlatList
+          <Animated.FlatList
+            onScroll={scrollHandler}
+            scrollEventThrottle={16}
             ListHeaderComponent={
               <View>
                   {/* Categories (Now Scrollable) */}
@@ -606,6 +691,14 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             </View>
           </TouchableOpacity>
         </Modal>
+
+        <Animated.View style={[styles.chatButton, fadeStyle, bounceStyle]}>
+          <TouchableOpacity onPress={() => navigation.navigate('MessagesScreen')}>
+            <Ionicons name="chatbubbles-outline" size={30} color="#007AFF" />
+            {hasUnreadMessages && <View style={styles.unreadDot} />}
+          </TouchableOpacity>
+        </Animated.View>
+
       </View>
     </SafeAreaView>
   );
@@ -845,5 +938,40 @@ const styles = StyleSheet.create({
     width: '90%',
     height: '90%',
     // resizeMode: 'contain'
-  }
+  },
+  chatButton: {
+    position: 'absolute',
+    bottom: 15, // Push it up a bit above the tab bar
+    right: 30,
+    backgroundColor: '#eeeeee',
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 999,
+  },
+  chatButtonText: {
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: 'bold',
+  } ,
+  unreadDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 12,
+    height: 12,
+    backgroundColor: 'red',
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: 'white',
+    zIndex: 999,
+  }  
 });

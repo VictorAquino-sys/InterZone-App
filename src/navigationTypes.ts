@@ -11,12 +11,14 @@ export type RootStackParamList = {
     Requests: undefined;
     UserProfile: { userId: string };
     FriendsList: undefined;
-    Chat: { otherUserId: string }; // ✅ Add this line
+    // Chat: { otherUserId: string }; // ✅ Add this line
     Terms: undefined;
     Home: undefined;
     BlockedUsers: undefined;
     DeleteAccount: undefined;
     PostDetail: { postId: string};
+    ChatScreen: { friendId: string; friendName: string };
+    MessagesScreen: undefined;
 
   };
 

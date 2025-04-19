@@ -11,40 +11,53 @@ import {
   serverTimestamp,
   Timestamp,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 
+/**
+ * Get or create a conversation between two users.
+ * Ensures `users` field is used (not `participants`) for Firestore rules.
+ */
 export const getOrCreateConversation = async (user1Id: string, user2Id: string) => {
   const conversationsRef = collection(db, 'conversations');
 
+  // Sort to ensure consistent key order
+  const sortedUsers = [user1Id, user2Id].sort();
+
+  // Find existing convo
   const q = query(
     conversationsRef,
-    where('participants', 'array-contains', user1Id)
+    where('users', 'array-contains', user1Id)
   );
 
   const snapshot = await getDocs(q);
 
-  for (let docSnap of snapshot.docs) {
+  for (const docSnap of snapshot.docs) {
     const data = docSnap.data();
-    if (data.participants.includes(user2Id)) {
+    if (Array.isArray(data.users) && data.users.length === 2 && data.users.includes(user2Id)) {
       return { id: docSnap.id, ...data };
     }
   }
 
   // If no conversation exists, create one
   const newDocRef = await addDoc(conversationsRef, {
-    participants: [user1Id, user2Id],
+    users: sortedUsers,
+    updatedAt: serverTimestamp(),
     lastMessage: '',
-    lastTimestamp: serverTimestamp(),
   });
 
   return {
     id: newDocRef.id,
-    participants: [user1Id, user2Id],
+    users: sortedUsers,
+    updatedAt: Timestamp.now(),
     lastMessage: '',
-    lastTimestamp: Timestamp.now(),
   };
 };
 
+/**
+ * Send a message to a conversation.
+ * Also updates conversation metadata (lastMessage, updatedAt).
+ */
 export const sendMessage = async (
   conversationId: string,
   senderId: string,
@@ -52,22 +65,24 @@ export const sendMessage = async (
 ) => {
   const messagesRef = collection(db, `conversations/${conversationId}/messages`);
 
+  // Add the message to the subcollection
   await addDoc(messagesRef, {
     senderId,
     text,
     timestamp: serverTimestamp(),
   });
 
-  await setDoc(
-    doc(db, 'conversations', conversationId),
-    {
-      lastMessage: text,
-      lastTimestamp: serverTimestamp(),
-    },
-    { merge: true }
-  );
+  // Update the conversation metadata
+  const convoRef = doc(db, 'conversations', conversationId);
+  await updateDoc(convoRef, {
+    lastMessage: text,
+    updatedAt: serverTimestamp(),
+  });
 };
 
+/**
+ * Fetch messages in ascending order.
+ */
 export const fetchMessages = async (conversationId: string) => {
   const messagesRef = collection(db, `conversations/${conversationId}/messages`);
   const q = query(messagesRef, orderBy('timestamp', 'asc'));

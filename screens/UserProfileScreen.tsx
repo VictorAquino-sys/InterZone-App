@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes'; // update path if needed
 import i18n from '@/i18n';
+import { getOrCreateConversation } from 'services/chatService';
 
 type RouteParams = {
   userId: string;
@@ -126,7 +127,19 @@ const UserProfileScreen = () => {
             <>
               <Button
                 title="Message"
-                onPress={() => navigation.navigate('Chat', { otherUserId: profile.id })}
+                onPress={async () => {
+                  if (!user?.uid) return;
+                  try {
+                    const convo = await getOrCreateConversation(user.uid, profile.id);
+                    navigation.navigate('ChatScreen', {
+                      friendId: profile.id,
+                      friendName: profile.name || '',
+                    });
+                  } catch (error) {
+                    console.error('Failed to get or create conversation:', error);
+                    Alert.alert('Error', 'Unable to open chat at the moment.');
+                  }
+                }}
               />
               <View style={{ marginTop: 10 }}>
                 <Button

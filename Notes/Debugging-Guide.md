@@ -30,6 +30,9 @@
     to open xcode project:
     open ios/InterZone.xcworkspace
 
+    Configure for iOS
+    Run npx pod-install after installing the npm package.
+
 * For production:
     Android
     npx eas build --platform android --profile production

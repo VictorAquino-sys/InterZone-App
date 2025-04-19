@@ -117,13 +117,16 @@ const FriendsScreen = () => {
         renderItem={({ item }) => (
           <View style={styles.friendItem}>
             <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: item.uid })}>
+            <View style={styles.rowBetween0}>
               <Image
                 source={item.avatar ? { uri: item.avatar } : require('../assets/unknownuser.png')}
                 style={styles.avatar}
               />
+                <Text style={styles.name}>{item.name}</Text>
+              </View>
             </TouchableOpacity>
             <View style={styles.rowBetween}>
-                <Text style={styles.name}>{item.name}</Text>
+                {/* <Text style={styles.name}>{item.name}</Text> */}
                 <TouchableOpacity style={styles.unfriendButton} onPress={() => confirmUnfriend(item.uid)}>
                     <Text style={styles.unfriendText}>{i18n.t('unfriend')}</Text>
                 </TouchableOpacity>
@@ -178,10 +181,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
-  rowBetween: {
+  rowBetween0: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     flex: 1,
-  }
+  },
+  rowBetween: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flex: 1,
+  },
+
 });

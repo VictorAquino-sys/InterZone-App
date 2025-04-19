@@ -118,8 +118,12 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
             keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
           <SafeAreaView style={styles.container}>
+          <View style={styles.headerContainer}>
             <Text style={styles.header}>{i18n.t('comments.title')}</Text>
-
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>{i18n.t('comments.close')}</Text>
+            </TouchableOpacity>
+          </View>
                 <FlatList
                 data={comments}
                 keyExtractor={(item) => item.id}
@@ -236,6 +240,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 20 : 10, // Ensures space from notch
+    paddingBottom: 10,
+  },
+  closeButtonText: {
+    color: '#007aff',
+    fontSize: 16,
+    fontWeight: '500',
   },
   commentItemRow: {
     flexDirection: 'row',

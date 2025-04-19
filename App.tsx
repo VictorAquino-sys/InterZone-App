@@ -28,6 +28,7 @@ import FriendRequestsScreen from './screens/FriendRequestsScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
 import FriendsScreen from 'screens/FriendsScreen';
 import ChatScreen from 'screens/ChatScreen';
+import MessagesScreen from 'screens/MessagesScreen';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 import DeleteAccountScreen from 'screens/DeleteAccountScreen';
 // import PostDetailScreen from 'screens/posts/PostDetailScreen';
@@ -61,7 +62,7 @@ function HomeStack(){
         }} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="FriendsList" component={FriendsScreen} options={{ title: i18n.t('myFriends') }} />
-      <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+
       <Stack.Screen
         name="DeleteAccount"
         component={DeleteAccountScreen}
@@ -117,16 +118,25 @@ function AuthenticatedApp() {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator>
       {!user ? (
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
       ) : !user?.termsAccepted ? (
-        <Stack.Screen name="Terms" component={TermsScreen} />
+        <Stack.Screen name="Terms" component={TermsScreen} options={{ headerShown: false }} />
       ) : user.name === '' || user.name === 'Default Name' ? (
-        <Stack.Screen name="NameInputScreen" component={NameInputScreen} />
+        <Stack.Screen name="NameInputScreen" component={NameInputScreen} options={{ headerShown: false }} />
       ) : (
         <>
-          <Stack.Screen name="BottomTabs" component={BottomTabs} />
+          <Stack.Screen name="BottomTabs" component={BottomTabs} options={{ headerShown: false }} />
+          <Stack.Screen
+            name="ChatScreen"
+            component={ChatScreen}
+            options={({ route }) => ({
+              title: (route.params as any)?.friendName || 'Chat',
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
           <Stack.Screen
             name="BlockedUsers"
             component={BlockedUsersScreen}

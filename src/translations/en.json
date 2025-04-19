@@ -195,6 +195,14 @@
       "deletePost": "Delete post",
       "anonymous": "Anonymous",
       "unknown": "Unknown city",
-      "noPhoto": "No photo available"
-    }
+      "noPhoto": "No photo available",
+      "edit": "edit",
+      "delete": "delete"
+    },
+
+    "messages": {
+      "noConversations": "💬 You don’t have any conversations yet.",
+      "findFriends": "Find Friends",
+      "startChatting": "Start chatting..."
+  }
 }  

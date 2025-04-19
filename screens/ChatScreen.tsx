@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet, SafeAreaView } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useUser } from '../src/contexts/UserContext';
 import { fetchMessages, sendMessage, getOrCreateConversation } from '../services/chatService';
 import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { db } from '../src/config/firebase';
 import i18n from '@/i18n';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Message = {
   id: string;
@@ -15,13 +16,27 @@ type Message = {
 };
 
 type RouteParams = {
-  otherUserId: string;
+  friendId: string;
+  friendName: string;
 };
+
 
 const ChatScreen = () => {
   const { user } = useUser();
   const route = useRoute();
-  const { otherUserId } = route.params as RouteParams;
+  const params = route.params as RouteParams;
+  
+  if (!params?.friendId) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <Text style={{ textAlign: 'center', marginTop: 20 }}>🚫 No chat information provided.</Text>
+      </SafeAreaView>
+    );
+  }
+  
+  const { friendId, friendName } = params;
+  
+  const insets = useSafeAreaInsets(); // 👈 grab safe area insets
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -32,9 +47,9 @@ const ChatScreen = () => {
     let unsubscribe: (() => void) | null = null;
   
     const init = async () => {
-      if (!user?.uid || !otherUserId) return;
+      if (!user?.uid || !friendId) return;
   
-      const convo = await getOrCreateConversation(user.uid, otherUserId);
+      const convo = await getOrCreateConversation(user.uid, friendId);
       setConversationId(convo.id);
   
       const msgRef = collection(db, `conversations/${convo.id}/messages`);
@@ -58,7 +73,7 @@ const ChatScreen = () => {
         unsubscribe(); // ✅ Safely unsubscribe when unmounting or logging out
       }
     };
-  }, [user?.uid, otherUserId]);
+  }, [user?.uid, friendId]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || !conversationId) return;
@@ -78,33 +93,39 @@ const ChatScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ padding: 12 }}
-      />
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholder={i18n.t('typeMessage')}
-          style={styles.input}
+    <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: 12 }}
         />
-        <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>{i18n.t('send')}</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            value={newMessage}
+            onChangeText={setNewMessage}
+            placeholder={i18n.t('typeMessage')}
+            style={styles.input}
+          />
+          <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+            <Text style={{ color: 'white', fontWeight: 'bold' }}>{i18n.t('send')}</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 export default ChatScreen;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },  
   container: { flex: 1, backgroundColor: '#fff' },
   messageBubble: {
     padding: 10,

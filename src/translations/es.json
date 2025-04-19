@@ -194,6 +194,16 @@
         "deletePost": "Eliminar publicación",
         "anonymous": "Anónimo",
         "unknown": "Ciudad desconocida",
-        "noPhoto": "No hay foto disponible"
-    }
+        "noPhoto": "No hay foto disponible",
+        "edit": "editar",
+        "delete": "eliminar"
+    },
+    
+    "messages": {
+        "noConversations": "💬 Aún no tienes conversaciones.",
+        "findFriends": "Buscar amigos",
+        "startChatting": "Comienza a chatear..."
+      }
+      
+      
 } 
