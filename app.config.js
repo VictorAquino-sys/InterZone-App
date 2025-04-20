@@ -55,6 +55,8 @@ export default {
         "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.READ_EXTERNAL_STORAGE", 
         "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM"
       ],
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       runtimeVersion: {
@@ -74,6 +76,15 @@ export default {
               deploymentTarget: "18.0",
               configFile: "./ios/Podfile.config.xcconfig"
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification_icon.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "sounds": ["./assets/notification_sound.wav"]
         }
       ],
       "@react-native-google-signin/google-signin",

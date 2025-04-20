@@ -31,7 +31,10 @@ import ChatScreen from 'screens/ChatScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 import DeleteAccountScreen from 'screens/DeleteAccountScreen';
-// import PostDetailScreen from 'screens/posts/PostDetailScreen';
+import { registerForPushNotificationsAsync, setupNotificationChannelAsync } from './services/notifications';
+import * as Notifications from 'expo-notifications';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase'; // adjust path if needed
 
 // Create the native stack navigator with type annotations
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -109,6 +112,33 @@ function AuthenticatedApp() {
     });
 
     (i18n as any).locale = getLocales()[0].languageCode;
+
+    const setupNotifications = async () => {
+      await setupNotificationChannelAsync();
+      const token = await registerForPushNotificationsAsync();
+    
+      if (token && user?.uid) {
+        console.log('📲 Expo Push Token:', token);
+    
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, {
+            expoPushToken: token,
+          });
+          console.log('✅ Push token saved to Firestore');
+        } catch (error) {
+          console.error('❌ Failed to save push token:', error);
+        }
+      }
+    };
+  
+    setupNotifications();
+  
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+    });
+  
+    return () => subscription.remove();
 
   }, []);
 
