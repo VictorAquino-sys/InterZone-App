@@ -20,6 +20,9 @@
     npx eas build --platform android --profile development
     to test on IOS
     npx eas build --platform ios --profile ios-simulator
+    To test on android device:
+    npx expo start --dev-client --host lan
+
 * To prebuild folders run:
     for android/ios
     npx expo rebuild

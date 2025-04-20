@@ -1,5 +1,8 @@
 (Daily logs of what have been worked on)
 
+### 04-20
+    Smart Suppression of notifications: Don't show a push notification if the user is already in the chat with the sender.
+
 ### 04-19
     Set up notification for android:
     npx expo install expo-apple-authentication

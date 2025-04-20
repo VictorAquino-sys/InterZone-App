@@ -21,7 +21,6 @@ import { RootStackParamList } from '@/navigationTypes';
 import { TabParamList } from '@/navigationTypes';
 import CategoryScreen from './screens/CategoryScreen';
 import { HistoryTriviaProvider } from '@/contexts/HistoryTriviaContext';
-
 import FriendsHomeScreen from './screens/FriendsHomeScreen';
 import PeopleScreen from './screens/PeopleScreen';
 import FriendRequestsScreen from './screens/FriendRequestsScreen';
@@ -36,6 +35,7 @@ import * as Notifications from 'expo-notifications';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase'; // adjust path if needed
 import * as Linking from 'expo-linking';
+import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 
 const linking = {
   prefixes: ['interzone://'],
@@ -138,6 +138,7 @@ function BottomTabs() {
 
 function AuthenticatedApp() {
   const { user, loading } = useUser();
+  const { activeConversationId } = useChatContext();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -169,12 +170,21 @@ function AuthenticatedApp() {
     setupNotifications();
   
     const subscription = Notifications.addNotificationReceivedListener(notification => {
+      const { type, conversationId } = notification.request.content.data;
+
+      // Suppress notification if already in that chat
+      if (type === 'message' && conversationId && activeConversationId === conversationId) {
+        console.log('🔕 Suppressing chat notification: already viewing this conversation.');
+        return;
+      }
+
+      // Otherwise, display it
       console.log('Notification received:', notification);
     });
   
     return () => subscription.remove();
 
-  }, []);
+  }, [user?.uid, activeConversationId]); // Depend on activeConversationId
 
   if (loading) {
     console.log("🔄 Waiting for Firebase and User data...");
@@ -218,9 +228,11 @@ export default function App() {
       <PostsProvider>
         <TriviaProvider>
           <HistoryTriviaProvider>
-            <NavigationContainer linking={linking}>
-              <AuthenticatedApp />
-            </NavigationContainer>
+            <ChatProvider>
+              <NavigationContainer linking={linking}>
+                <AuthenticatedApp />
+              </NavigationContainer>
+            </ChatProvider>
           </HistoryTriviaProvider>
         </TriviaProvider>
       </PostsProvider>

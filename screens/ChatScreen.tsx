@@ -7,6 +7,7 @@ import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { db } from '../src/config/firebase';
 import i18n from '@/i18n';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useChatContext } from '@/contexts/chatContext';
 
 type Message = {
   id: string;
@@ -27,6 +28,7 @@ const ChatScreen = () => {
   const { user } = useUser();
   const route = useRoute();
   const { friendId, friendName, conversationId: convoIdFromParams } = route.params as RouteParams;
+  const { setActiveConversationId } = useChatContext();
   
   if (!friendId && !convoIdFromParams) {
     return (
@@ -59,10 +61,14 @@ const ChatScreen = () => {
       }      
       
       setConversationId(convoId ?? null);
+      setActiveConversationId(convoIdFromParams || null);
   
       const msgRef = collection(db, `conversations/${convoId}/messages`);
       const q = query(msgRef, orderBy('timestamp', 'asc'));
   
+      console.log("👤 Current user:", user?.uid);
+      console.log("💬 Trying to open convo:", convoId);
+
       unsubscribe = onSnapshot(q, (snapshot) => {
         const loaded = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
         setMessages(loaded);
@@ -80,7 +86,10 @@ const ChatScreen = () => {
       if (unsubscribe) {
         unsubscribe(); // ✅ Safely unsubscribe when unmounting or logging out
       }
+      setActiveConversationId(null); // reset on unmount
     };
+
+
   }, [user?.uid, friendId]);
 
   const handleSend = async () => {
