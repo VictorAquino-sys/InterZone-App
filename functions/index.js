@@ -26,10 +26,11 @@ exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (even
     to: receiver.expoPushToken,
     sound: "default",
     title: "💬 New Message",
-    body: `New message from ${senderName}`,
+    body: message.text || `New message from ${senderName}`,
     data: {
       type: "message",
-      conversationId: message.conversationId
+      conversationId: message.conversationId,
+      url: `interzone://chat/${message.conversationId}`
     }
   };
 
@@ -82,7 +83,8 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
         body: `${posterName} just posted in ${city}`,
         data: {
           type: "post",
-          postId: event.params.postId
+          postId: event.params.postId,
+          url: `interzone://post/${event.params.postId}`
         }
       });
     }

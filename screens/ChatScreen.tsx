@@ -16,17 +16,19 @@ type Message = {
 };
 
 type RouteParams = {
-  friendId: string;
-  friendName: string;
+  friendId?: string;
+  friendName?: string;
+  conversationId?: string;
+
 };
 
 
 const ChatScreen = () => {
   const { user } = useUser();
   const route = useRoute();
-  const params = route.params as RouteParams;
+  const { friendId, friendName, conversationId: convoIdFromParams } = route.params as RouteParams;
   
-  if (!params?.friendId) {
+  if (!friendId && !convoIdFromParams) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <Text style={{ textAlign: 'center', marginTop: 20 }}>🚫 No chat information provided.</Text>
@@ -34,7 +36,7 @@ const ChatScreen = () => {
     );
   }
   
-  const { friendId, friendName } = params;
+  // const { friendId, friendName } = params;
   
   const insets = useSafeAreaInsets(); // 👈 grab safe area insets
 
@@ -47,12 +49,18 @@ const ChatScreen = () => {
     let unsubscribe: (() => void) | null = null;
   
     const init = async () => {
-      if (!user?.uid || !friendId) return;
+      if (!user?.uid || (!friendId && !convoIdFromParams)) return;
   
-      const convo = await getOrCreateConversation(user.uid, friendId);
-      setConversationId(convo.id);
+      let convoId = convoIdFromParams;
+
+      if (!convoId && friendId) {
+        const convo = await getOrCreateConversation(user.uid, friendId);
+        convoId = convo.id;
+      }      
+      
+      setConversationId(convoId ?? null);
   
-      const msgRef = collection(db, `conversations/${convo.id}/messages`);
+      const msgRef = collection(db, `conversations/${convoId}/messages`);
       const q = query(msgRef, orderBy('timestamp', 'asc'));
   
       unsubscribe = onSnapshot(q, (snapshot) => {

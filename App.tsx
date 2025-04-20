@@ -35,6 +35,40 @@ import { registerForPushNotificationsAsync, setupNotificationChannelAsync } from
 import * as Notifications from 'expo-notifications';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase'; // adjust path if needed
+import * as Linking from 'expo-linking';
+
+const linking = {
+  prefixes: ['interzone://'],
+  config: {
+    screens: {
+      ChatScreen: 'chat/:conversationId',
+      PostDetail: 'post/:postId',
+    },
+  },
+  async getInitialURL() {
+    const url = await Linking.getInitialURL();
+    if (url) return url;
+
+    const response = await Notifications.getLastNotificationResponseAsync();
+    return response?.notification.request.content.data.url;
+  },
+  subscribe(listener: (url: string) => void) {
+    const onReceiveURL = ({ url }: { url: string }) => listener(url);
+
+    const linkingSubscription = Linking.addEventListener('url', onReceiveURL);
+
+    const notificationSubscription =
+      Notifications.addNotificationResponseReceivedListener(response => {
+        const url = response.notification.request.content.data.url;
+        if (url) listener(url);
+      });
+
+    return () => {
+      linkingSubscription.remove();
+      notificationSubscription.remove();
+    };
+  },
+};
 
 // Create the native stack navigator with type annotations
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -184,7 +218,7 @@ export default function App() {
       <PostsProvider>
         <TriviaProvider>
           <HistoryTriviaProvider>
-            <NavigationContainer>
+            <NavigationContainer linking={linking}>
               <AuthenticatedApp />
             </NavigationContainer>
           </HistoryTriviaProvider>

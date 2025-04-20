@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
+    
   if (!Device.isDevice) {
     alert('Must use a physical device for Push Notifications');
     return null;

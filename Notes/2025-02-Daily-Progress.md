@@ -5,6 +5,7 @@
     npx expo install expo-apple-authentication
     npx expo install expo-notifications
     npx expo install expo-device
+    npx expo install expo-linking
 
 ### 04-18
     for Setting notifications, need to install the following dependencies:
