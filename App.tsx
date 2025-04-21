@@ -36,6 +36,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase'; // adjust path if needed
 import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
+import PostDetailScreen from 'screens/posts/PostDetailScreen';
 
 const linking = {
   prefixes: ['interzone://'],
@@ -105,7 +106,6 @@ function HomeStack(){
         component={DeleteAccountScreen}
         options={{ title: i18n.t('deleteAccount.title') }}
       />
-      {/* <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post' }} /> */}
 
     </Stack.Navigator>
   )
@@ -170,12 +170,16 @@ function AuthenticatedApp() {
     setupNotifications();
   
     const subscription = Notifications.addNotificationReceivedListener(notification => {
-      const { type, conversationId } = notification.request.content.data;
+      const { type, conversationId, postId } = notification.request.content.data;
 
       // Suppress notification if already in that chat
       if (type === 'message' && conversationId && activeConversationId === conversationId) {
         console.log('🔕 Suppressing chat notification: already viewing this conversation.');
         return;
+      }
+
+      if (type === 'post') {
+        console.log(`📰 New post notification for post ID: ${postId}`);
       }
 
       // Otherwise, display it
@@ -216,6 +220,7 @@ function AuthenticatedApp() {
             component={BlockedUsersScreen}
             options={{ title: i18n.t('block.manage'), headerShown: true }}
           />
+          <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post' }} />
         </>
       )}
     </Stack.Navigator>

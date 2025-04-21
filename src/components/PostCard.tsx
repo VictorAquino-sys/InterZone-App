@@ -82,6 +82,13 @@ const PostCard: React.FC<PostCardProps> = ({
   const handleAddComment = async () => {
     if(!newComment.trim()) return;
 
+    if (!user?.uid) {
+      console.warn("⚠️ No authenticated user. Cannot comment.");
+      return;
+    }
+
+    console.log("Submitting comment as user:", user.uid);
+
     await addDoc(collection(db, 'posts', item.id, 'comments'), {
       userId: user.uid,
       userName: user.name,

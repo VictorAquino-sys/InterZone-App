@@ -15,6 +15,12 @@
     git push
  
 3-28
+* Redeploy the function
+    From your project root where your functions/ folder lives, run:
+    bash
+    cd functions
+    npx firebase deploy --only functions
+
 * to test the app in dev, run:
     android
     npx eas build --platform android --profile development
@@ -22,6 +28,8 @@
     npx eas build --platform ios --profile ios-simulator
     To test on android device:
     npx expo start --dev-client --host lan
+    connect through:
+    http://10.0.0.101:8081
 
 * To prebuild folders run:
     for android/ios

@@ -197,7 +197,9 @@
       "unknown": "Unknown city",
       "noPhoto": "No photo available",
       "edit": "edit",
-      "delete": "delete"
+      "delete": "delete",
+      "update": "update",
+      "cancel": "Cancel"
     },
 
     "messages": {

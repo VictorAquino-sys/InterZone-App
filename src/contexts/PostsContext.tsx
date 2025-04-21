@@ -22,6 +22,8 @@ export interface Post {
 interface PostContextType {
     posts: Post[]; // Assuming posts are identified by strings;
     setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+    activePostId: string | null;
+    setActivePostId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export const PostsContext = createContext<PostContextType | undefined>(undefined);
@@ -34,11 +36,12 @@ interface PostsProviderProps {
 export const PostsProvider = ({ children }: PostsProviderProps) => {
     // State hook to manage the list of posts.
     const [posts, setPosts] = useState<Post[]>([]);
+    const [activePostId, setActivePostId] = useState<string | null>(null);
 
     // Provide the posts array and the function to modify it to children components.
     return (
-        <PostsContext.Provider value={{ posts, setPosts }}>
-            {children}
+        <PostsContext.Provider value={{ posts, setPosts, activePostId, setActivePostId }}>
+        {children}
         </PostsContext.Provider>
     );
 };

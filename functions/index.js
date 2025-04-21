@@ -7,6 +7,26 @@ initializeApp();
 const db = getFirestore();
 const expo = new Expo();
 
+const i18n = {
+  en: {
+    notification: {
+      newMessageTitle: "💬 New Message",
+      newMessageBody: "New message from",
+      newPostTitle: "🆕 New Post in Your City",
+      newPostBody: "just posted in",
+    },
+  },
+
+  es: {
+    notification: {
+      newMessageTitle: "💬 Nuevo mensaje",
+      newMessageBody: "Nuevo mensaje de",
+      newPostTitle: "🆕 Nueva publicación en tu ciudad",
+      newPostBody: "acaba de publicar en",
+    },
+  }
+};
+
 exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (event) => {
   const message = event.data.data();
   const receiverId = message.receiverId;
@@ -22,11 +42,13 @@ exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (even
     return;
   }
 
+  const lang = receiver.language || 'en';
+
   const pushMessage = {
     to: receiver.expoPushToken,
     sound: "default",
-    title: "💬 New Message",
-    body: message.text || `New message from ${senderName}`,
+    title: i18n[lang].notification.newMessageTitle,
+    body: message.text || `${i18n[lang].notification.newMessageBody} ${senderName}`,
     data: {
       type: "message",
       conversationId: message.conversationId,
@@ -69,26 +91,39 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
   const city = post.city;
   const posterUid = post.user.uid;
   const posterName = post.user.name;
+  const postId = event.params.postId;
+
+  console.log(`📬 New post created in city: ${city} by ${posterName} (uid: ${posterUid})`);
 
   const usersSnap = await db.collection("users").where("city", "==", city).get();
+
+  console.log(`👥 Users in same city: ${usersSnap.size}`);
+
   const messages = [];
 
   usersSnap.forEach(doc => {
     const user = doc.data();
-    if (user.uid !== posterUid && Expo.isExpoPushToken(user.expoPushToken)) {
+    const { uid, expoPushToken, language = 'en' } = user;
+
+    if (uid !== posterUid && Expo.isExpoPushToken(expoPushToken)) {
       messages.push({
-        to: user.expoPushToken,
+        to: expoPushToken,
         sound: "default",
-        title: "🆕 New Post in Your City",
-        body: `${posterName} just posted in ${city}`,
+        title: i18n[language].notification.newPostTitle,
+        body: `${posterName} ${i18n[language].notification.newPostBody} ${city}`,
         data: {
           type: "post",
-          postId: event.params.postId,
-          url: `interzone://post/${event.params.postId}`
+          postId: postId,
+          url: `interzone://post/${postId}`, // Deep link to PostDetail
         }
       });
     }
   });
+
+  if (messages.length === 0) {
+    console.log("❗ No valid users to notify.");
+    return;
+  }
 
   const chunks = expo.chunkPushNotifications(messages);
   const tickets = [];
