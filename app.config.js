@@ -85,7 +85,8 @@ export default {
           "icon": "./assets/notification_icon.png",
           "color": "#ffffff",
           "defaultChannel": "default",
-          "sounds": ["./assets/notification_sound.wav"]
+          "sounds": ["./assets/notification_sound.wav"],
+          "enableBackgroundRemoteNotifications": false
         }
       ],
       "@react-native-google-signin/google-signin",
