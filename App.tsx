@@ -38,6 +38,14 @@ import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,      // <- ✅ necessary for iOS
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
 const linking = {
   prefixes: ['interzone://'],
   config: {
