@@ -86,7 +86,8 @@
         "trivia": "Smart Sparks",
         "ruteros": "Ruteros",
         "hotels": "Hoteles",
-        "business": "Emprendimientos"
+        "business": "Emprendimientos",
+        "tutors": "Tutores"
     },
     "testYourKnowledge": "Cuanto sabes sobre musica?",
     "Villareal": "Villareal - Historia Universal",
@@ -123,6 +124,8 @@
 
     "report": {
         "title": "Reportar esta publicación",
+        "menu": "Opciones",
+        "report": "Reportar",
         "cancel": "Cancelar",
         "thankYou": "Gracias",
         "submitted": "Tu reporte ha sido enviado.",
@@ -173,6 +176,10 @@
     "comments": {
         "title": "Comentarios",
         "writePlaceholder": "Escribe un comentario...",
+        "menu": "Opciones",
+        "report": "Reportar",
+        "reported": "Comentario reportado",
+        "thankYouReport": "Gracias por tu reporte",
         "maxReached": "Se alcanzó el máximo de 10 comentarios",
         "posting": "Publicando...",
         "post": "Publicar",

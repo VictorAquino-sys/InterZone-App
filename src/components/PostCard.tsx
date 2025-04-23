@@ -1,5 +1,5 @@
 import React, { useEffect, useState} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TextInput, Button } from 'react-native';
+import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Avatar from './Avatar';
 import LikeButton from './LikeButton';
@@ -70,6 +70,82 @@ const PostCard: React.FC<PostCardProps> = ({
       const snapshot = await getDocs(q);
       const recent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setComments(recent.reverse()); //oldest to newest
+    }
+  };
+
+  const handleCommentMenu = (comment: any) => {
+    const isCommentAuthor = comment.userId === user.uid;
+    const isPostOwner = user.uid === item.user?.uid;
+  
+    const options = [i18n.t('comments.report')];
+    if (isPostOwner || isCommentAuthor) options.push(i18n.t('comments.delete'));
+    if (isCommentAuthor) options.push(i18n.t('comments.edit'));
+    options.push(i18n.t('comments.cancel'));
+  
+    const cancelIndex = options.length - 1;
+    const destructiveIndex = options.indexOf(i18n.t('comments.delete'));
+  
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: cancelIndex,
+          destructiveButtonIndex: destructiveIndex,
+        },
+        async (buttonIndex) => {
+          const selected = options[buttonIndex];
+          await handleCommentAction(selected, comment);
+        }
+      );
+    } else {
+      Alert.alert(
+        i18n.t('comments.menu'), // Title
+        undefined,                // No body message
+        [
+          ...options.slice(0, -1).map((opt) => ({
+            text: opt,
+            onPress: () => handleCommentAction(opt, comment),
+            style: (opt === i18n.t('comments.delete')
+              ? 'destructive'
+              : 'default') as 'default' | 'cancel' | 'destructive'
+          })),
+          {
+            text: i18n.t('comments.cancel'),
+            style: 'cancel' as const,
+            onPress: () => {} // Do nothing
+          }
+        ]
+      );
+    }
+  };
+  
+  const handleCommentAction = async (selected: string, comment: any) => {
+    if (selected === i18n.t('comments.report')) {
+      await addDoc(collection(db, 'reports'), {
+        type: 'comment',
+        commentId: comment.id,
+        postId: item.id,
+        reportedBy: user.uid,
+        timestamp: serverTimestamp()
+      });
+      Alert.alert(i18n.t('comments.reported'), i18n.t('comments.thankYouReport'));
+    } else if (selected === i18n.t('comments.delete')) {
+      await deleteDoc(doc(db, 'posts', item.id, 'comments', comment.id));
+      await updateDoc(doc(db, 'posts', item.id), {
+        commentCount: increment(-1)
+      });
+      const q = query(
+        collection(db, 'posts', item.id, 'comments'),
+        orderBy('timestamp', 'desc'),
+        limit(3)
+      );
+      const snapshot = await getDocs(q);
+      const recent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setComments(recent.reverse());
+      setCommentCount(prev => Math.max(prev - 1, 0));
+    } else if (selected === i18n.t('comments.edit')) {
+      setEditingCommentId(comment.id);
+      setEditedComment(comment.content);
     }
   };
 
@@ -170,7 +246,12 @@ const PostCard: React.FC<PostCardProps> = ({
         <View style={styles.commentsSection}>
           {comments.map(comment => (
             <View key={comment.id} style={styles.commentItem}>
-              <Text style={styles.commentAuthor}>{comment.userName}</Text>
+              <View style={styles.commentHeader}>
+                <Text style={styles.commentAuthor}>{comment.userName}</Text>
+                <TouchableOpacity onPress={() => handleCommentMenu(comment)}>
+                  <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
+                </TouchableOpacity>
+              </View>
 
               {editingCommentId === comment.id ? (
                 <>
@@ -346,6 +427,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },  
   postHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

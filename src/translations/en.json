@@ -88,7 +88,8 @@
       "trivia": "Mind Gym",
       "ruteros": "RoadWatch",
       "hotels": "Hotels",
-      "business": "Local Business"
+      "business": "Local Business",
+      "tutors": "Tutors"
     },
     "testYourKnowledge": "Test Your Knowledge",
 
@@ -173,12 +174,16 @@
     
     "comments": {
       "title": "Comments",
+      "menu": "Options",
+      "report": "Report",
       "writePlaceholder": "Write a comment...",
       "maxReached": "Max 10 comments reached",
       "posting": "Posting...",
       "post": "Post",
       "update": "Update",
       "updating": "Updating...",
+      "reported": "Comment reported",
+      "thankYouReport": "Thank you for reporting",
       "cancel": "Cancel",
       "close": "Close",
       "edit": "Edit",

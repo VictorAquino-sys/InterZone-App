@@ -30,6 +30,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [charCount, setCharCount] = useState<number>(0); 
   const [city, setCity] = useState<string | null>(null); // To store the city name
   const [location, setLocation] = useState<string | null>(null);
+  const [imagePath, setImagePath] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
   const [manualCoords, setManualCoords] = useState<string>(''); // for user input
@@ -82,6 +83,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         console.log("Starting upload for image:", imageName, "with MIME type", mimeType);
 
         await uploadBytes(imageRef, blob, { contentType: mimeType });
+        setImagePath(imageRef.fullPath); // ✅ Store full path for cleanup
 
         const downloadUrl = await getDownloadURL(imageRef);
         console.log("Image uploaded successfully:", downloadUrl);
@@ -294,6 +296,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         content: postText,
         timestamp: Timestamp.fromDate(new Date()),
         imageUrl: imageUrl || "", // Attach uploaded image URL
+        imagePath: imagePath || "",
         user: {
           uid: authUser.uid,
           name: latestUserData.name || "Anonymous", // Use updated name

@@ -223,3 +223,51 @@ exports.deleteConversationOnUnfriend = onDocumentDeleted("users/{userId}/friends
     console.error("❌ Failed to delete conversation on unfriend:", error);
   }
 });
+
+exports.cleanUpReportsOnCommentDelete = onDocumentDeleted("posts/{postId}/comments/{commentId}", async (event) => {
+  const { commentId } = event.params;
+  const reportsRef = db.collection("reports");
+
+  try {
+    const snapshot = await reportsRef.where("commentId", "==", commentId).get();
+
+    if (snapshot.empty) {
+      console.log(`📭 No reports found for deleted comment ${commentId}`);
+      return;
+    }
+
+    const batch = db.batch();
+    snapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    console.log(`🧹 Cleaned up ${snapshot.size} report(s) for deleted comment ${commentId}`);
+  } catch (error) {
+    console.error(`❌ Failed to clean reports for comment ${commentId}:`, error);
+  }
+});
+
+
+// Clean up Storage image when post is deleted
+exports.cleanUpPostImageOnDelete = onDocumentDeleted("posts/{postId}", async (event) => {
+  const post = event.data?.data();
+  const postId = event.params.postId;
+
+  if (!post?.imagePath) {
+    console.log(`🫼 Post ${postId} deleted without image — nothing to clean.`);
+    return;
+  }
+
+  const bucket = storage.bucket();
+  const file = bucket.file(post.imagePath);
+
+  try {
+    await file.delete();
+    console.log(`🗑️ Deleted image: ${post.imagePath} for post ${postId}`);
+  } catch (error) {
+    if (error.code === 404) {
+      console.warn(`⚠️ Image not found: ${post.imagePath}`);
+    } else {
+      console.error(`❌ Failed to delete image ${post.imagePath}:`, error);
+    }
+  }
+});
