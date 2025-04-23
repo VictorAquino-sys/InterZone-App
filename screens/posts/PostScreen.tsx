@@ -137,7 +137,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri); // Store selected image URI
-      handleImageUpload(result.assets[0].uri); // Pass URI to function, ensuring it's a string
+      // handleImageUpload(result.assets[0].uri); // Pass URI to function, ensuring it's a string
     } else {
       console.log('Image picker was canceled or no image was selected');
     }
@@ -318,6 +318,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       setPostText(''); // Clear the input field
       setLocation(null);
       setImageUri(null);
+      setImagePath(null);      // ✅ Clear stored image path
+      setSelectedCategory(''); // ✅ Reset selected category
     } catch (error: any) {
       console.error("Error adding post: ", error);
       Alert.alert("Upload Error", (error as Error).message || "Unknow error occurred");
