@@ -1,5 +1,20 @@
 (Daily logs of what have been worked on)
 
+### 04-22
+    Enable Code Shrinking & Obfuscation
+    Install Firebase Analytics with React Native Firebase
+    dependencies:
+    expo install expo-firebase-analytics
+    Firebase Crashlytics setup (Expo + EAS Build)
+    dependencies needed:
+    npm install @react-native-firebase/app@21.14.0 \
+                @react-native-firebase/auth@21.14.0 \
+                @react-native-firebase/firestore@21.14.0
+    npm i @react-native-firebase/analytics
+    remove expo-firebase-analytics
+    npm uninstall expo-firebase-analytics
+    We updated to Firebasev22+ (There is nothing to do for now)
+
 ### 04-20
     Smart Suppression of notifications: Don't show a push notification if the user is already in the chat with the sender.
     npm install date-fns --save

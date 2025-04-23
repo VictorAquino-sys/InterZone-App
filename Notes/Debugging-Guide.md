@@ -25,6 +25,9 @@
     android
     npx eas build --platform android --profile development
     to test on IOS
+    First update pods by:
+    npx pod-install
+    Then:
     npx eas build --platform ios --profile ios-simulator
     To test on android device:
     npx expo start --dev-client --host lan

@@ -41,6 +41,8 @@ export default {
       package: IS_DEV ? "com.zhd.interzone" : "com.zhd.interzone",
       versionCode: 22,
       jsEngine: "hermes",
+      enableProguardInReleaseBuilds: true,
+      enableShrinkResourcesInReleaseBuilds: true,
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -76,6 +78,9 @@ export default {
               useFrameworks: "static",
               deploymentTarget: "18.0",
               configFile: "./ios/Podfile.config.xcconfig"
+          },
+          android: {
+            extraProguardRules: "./proguard-rules.pro"
           }
         }
       ],
@@ -92,6 +97,7 @@ export default {
       "@react-native-google-signin/google-signin",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      "@react-native-firebase/crashlytics",
       "expo-localization",
       "expo-apple-authentication",
       [

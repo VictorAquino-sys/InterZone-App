@@ -25,7 +25,9 @@ import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
+import { logScreen } from '@/utils/analytics';
 import PostCard from '@/components/PostCard';
+import { forceCrash } from '@/utils/crashlytics';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -76,6 +78,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   console.log("HomeScreen");
 
   useEffect(() => {
+
     async function handleCityOrUserChange() {
       if (!user?.uid || !city) {
         setLoading(false);
@@ -114,7 +117,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         setLoading(false); // Always called explicitly here
       }
     }
-  
+    
     handleCityOrUserChange();
   }, [user?.uid, city]);
 
@@ -161,7 +164,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
   useFocusEffect(
     React.useCallback(() => {
-      const fetchLatestPosts = async () => {
+      const onFocus = async () => {
+        await logScreen('HomeScreen');
+  
         if (city) {
           setLoading(true);
           console.log("🔄 Fetching latest posts on screen focus for city:", city);
@@ -170,7 +175,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         }
       };
   
-      fetchLatestPosts();
+      onFocus();
     }, [city, user?.blocked])
   );
 
@@ -562,7 +567,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-
       <View style={styles.container}>
       {/* Top Bar with Profile Icon and Search Bar */}
         <View style={styles.topBar}>
