@@ -14,6 +14,8 @@
     remove expo-firebase-analytics
     npm uninstall expo-firebase-analytics
     We updated to Firebasev22+ (There is nothing to do for now)
+    Implement In-App Update (Play Store):
+    npm i expo-updates
 
 ### 04-20
     Smart Suppression of notifications: Don't show a push notification if the user is already in the chat with the sender.

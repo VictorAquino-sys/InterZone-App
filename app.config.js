@@ -29,6 +29,7 @@ export default {
       usesAppleSignIn: true,
       jsEngine: "hermes",
       infoPlist: {
+        LSApplicationQueriesSchemes: ['itms-apps'],
         NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events, even when the app is not open. For example, you might get alerts about a concert or food truck gathering near you.",
         NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you’ll see local meetups and concerts happening in your city.",
         ITSAppUsesNonExemptEncryption: false,

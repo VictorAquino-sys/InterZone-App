@@ -25,9 +25,10 @@ import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
+import { NativeUpdateChecker } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import PostCard from '@/components/PostCard';
-import { forceCrash } from '@/utils/crashlytics';
+// import { forceCrash } from '@/utils/crashlytics';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -40,7 +41,6 @@ import Animated, {
   useDerivedValue,
   runOnJS,
 } from 'react-native-reanimated';
-
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
 
@@ -75,7 +75,26 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const prevHasUnread = useRef(false);
 
+  const [fallbackUpdate, setFallbackUpdate] = useState(false);
+
   console.log("HomeScreen");
+
+  // Check native update first
+  useEffect(() => {
+    const checkNativeUpdate = async () => {
+      try {
+        const NativeModule = await NativeUpdateChecker();
+        if (NativeModule === false) {
+          setFallbackUpdate(true);
+        }
+      } catch (e) {
+        console.warn('Native update check failed, showing fallback.');
+        setFallbackUpdate(true);
+      }
+    };
+
+    checkNativeUpdate();
+  }, []);
 
   useEffect(() => {
 
@@ -609,7 +628,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         </View>
 
         {/* 🔔 Version update checker */}
-        <UpdateChecker />
+        {fallbackUpdate && <UpdateChecker />}
 
         {loading ? (
           <View style={styles.loadingContainer}>
