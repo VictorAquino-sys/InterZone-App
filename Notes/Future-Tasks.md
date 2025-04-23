@@ -4,6 +4,7 @@ Implement a dashboard for tracking user activity
 
 ### 4-22
     A Firebase dashboard query to rank posts by view count
+    let the user zoom when click on photos.
 
 ### 4-17
     - Fix the following:

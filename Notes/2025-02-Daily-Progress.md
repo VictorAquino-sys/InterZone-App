@@ -16,6 +16,8 @@
     We updated to Firebasev22+ (There is nothing to do for now)
     Implement In-App Update (Play Store):
     npm i expo-updates
+    sp-react-native-in-app-updates:
+    npm install sp-react-native-in-app-updates --save
 
 ### 04-20
     Smart Suppression of notifications: Don't show a push notification if the user is already in the chat with the sender.
