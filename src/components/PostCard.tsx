@@ -281,6 +281,7 @@ const PostCard: React.FC<PostCardProps> = ({
             postId={item.id}
             currentUser={user}
             setCommentCount={setCommentCount}
+            postOwnerId={item.user?.uid}
           />
 
           <KeyboardAvoidingView

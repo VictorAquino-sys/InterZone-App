@@ -1,5 +1,10 @@
 (Daily logs of what have been worked on)
 
+### 04-23
+    menu for each comment
+    actionsheetIOS for contextual options
+    Logic for report, delete, and edit with role checks
+
 ### 04-22
     Enable Code Shrinking & Obfuscation
     Install Firebase Analytics with React Native Firebase
