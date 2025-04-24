@@ -27,6 +27,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
 import { NativeUpdateChecker } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
+import { updateUserLocation } from '@/utils/locationService';
 import PostCard from '@/components/PostCard';
 // import { forceCrash } from '@/utils/crashlytics';
 import Animated, {
@@ -217,50 +218,18 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         return;
       }
   
-      const location = await Location.getCurrentPositionAsync({ accuracy: Accuracy.Balanced });
-      console.log("✅ Location obtained:", location.coords);
-  
-      const matchedLocation = checkLocation(location.coords);
-      console.log("Matched Location:", matchedLocation);
-  
-      let locationDisplay = matchedLocation;
-      let country: string | null = null;
-
-      const reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
-      console.log("Reverse Geocode:", reverseGeocode[0]);
-
-      if (reverseGeocode?.length > 0) {
-        const { city, region, isoCountryCode, country: countryName } = reverseGeocode[0];
-        country = countryName || null;
-
-        if (!matchedLocation) {
-          if (isoCountryCode === 'US' && region) {
-            const regionCode = region.toUpperCase().slice(0, 2);
-            locationDisplay = city ? `${city}, ${regionCode}` : null;
-          } else {
-            locationDisplay = city && region ? `${city}, ${region}` : null;
-          }
+      if (user?.uid) {
+        const updated = await updateUserLocation(user.uid);
+      
+        if (updated?.label) {
+          console.log("✅ Setting city to:", updated.label);
+          setCity(updated.label);
         }
-      }
-  
-      if (locationDisplay) {
-        console.log("✅ Setting city to:", locationDisplay);
-        setCity(locationDisplay);
-      } else {
-        console.warn("⚠️ No valid city from location");
-      }
-
-      // 🔥 Update Firestore and User Context here
-      if (user?.uid && (city || country)) {
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, { country });
-
-        setUser(prev => prev ? {
-          ...prev,
-          ...(country ? { country } : {})
-        } : prev);
-
-        console.log("📝 Updated user country in Firestore:", country);
+      
+        if (updated?.country) {
+          setUser(prev => prev ? { ...prev, country: updated.country ?? undefined } : prev);
+          console.log("📝 Updated user country in Firestore:", updated.country);
+        }
       } else {
         console.warn("⚠️ No valid city from location");
         setLoading(false);

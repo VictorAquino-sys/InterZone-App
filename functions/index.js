@@ -88,16 +88,14 @@ exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (even
 
 exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
   const post = event.data.data();
-  const city = post.city;
+  const cityLabel = post.city; // This should match `lastKnownLocation.label`
   const posterUid = post.user.uid;
   const posterName = post.user.name;
   const postId = event.params.postId;
 
-  console.log(`📬 New post created in city: ${city} by ${posterName} (uid: ${posterUid})`);
+  console.log(`📬 New post created in city: ${cityLabel} by ${posterName} (uid: ${posterUid})`);
 
-  const usersSnap = await db.collection("users").where("city", "==", city).get();
-
-  console.log(`👥 Users in same city: ${usersSnap.size}`);
+  const usersSnap = await db.collection("users").get();
 
   const messages = [];
 
@@ -105,16 +103,24 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
     const user = doc.data();
     const { uid, expoPushToken, language = 'en' } = user;
 
-    if (uid !== posterUid && Expo.isExpoPushToken(expoPushToken)) {
+    const userLocationLabel = user.lastKnownLocation?.label;
+    const tokenValid = expoPushToken && Expo.isExpoPushToken(expoPushToken);
+
+    if (
+      uid !== posterUid &&
+      userLocationLabel &&
+      tokenValid &&
+      userLocationLabel.toLowerCase() === cityLabel.toLowerCase()
+    ) {
       messages.push({
         to: expoPushToken,
         sound: "default",
         title: i18n[language].notification.newPostTitle,
-        body: `${posterName} ${i18n[language].notification.newPostBody} ${city}`,
+        body: `${posterName} ${i18n[language].notification.newPostBody} ${cityLabel}`,
         data: {
           type: "post",
           postId: postId,
-          url: `interzone://post/${postId}`, // Deep link to PostDetail
+          url: `interzone://post/${postId}`
         }
       });
     }
@@ -138,7 +144,6 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
     }
   }
 
-  // 🔁 Add receipt handling after sending
   const receiptIds = tickets
     .filter(ticket => ticket.status === 'ok' && ticket.id)
     .map(ticket => ticket.id);
@@ -152,7 +157,6 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
         const { status, message, details } = receipts[receiptId];
         if (status === 'error') {
           console.error(`❌ Receipt error for ${receiptId}: ${message}`, details);
-          // Optional: disable or clean up invalid Expo push tokens in Firestore
         }
       }
     } catch (err) {
