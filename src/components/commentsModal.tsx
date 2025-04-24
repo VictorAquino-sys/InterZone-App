@@ -192,9 +192,18 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                         <View style={styles.commentHeader}>
                           <Text style={styles.commentAuthor}>{item.userName}</Text>
 
-                          <TouchableOpacity onPress={() => handleCommentMenu(item)}>
-                            <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
-                          </TouchableOpacity>
+                          {(() => {
+                            const isCommentAuthor = item.userId === currentUser.uid;
+                            const isPostOwner = currentUser.uid === postOwnerId;
+                            const shouldShowEllipsis = !isCommentAuthor || (isPostOwner && !isCommentAuthor);
+
+                            return shouldShowEllipsis ? (
+                              <TouchableOpacity onPress={() => handleCommentMenu(item)}>
+                                <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
+                              </TouchableOpacity>
+                            ) : null;
+                          })()}
+
                         </View>
                 
                         {editingId === item.id ? (
@@ -274,10 +283,6 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                     }
                     />        
                 </View>
-
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={{ color: '#007aff' }}>{i18n.t('comments.close')}</Text>
-                </TouchableOpacity>
           </SafeAreaView>
         </KeyboardAvoidingView>
     </Modal>

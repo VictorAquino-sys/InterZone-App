@@ -248,9 +248,17 @@ const PostCard: React.FC<PostCardProps> = ({
             <View key={comment.id} style={styles.commentItem}>
               <View style={styles.commentHeader}>
                 <Text style={styles.commentAuthor}>{comment.userName}</Text>
-                <TouchableOpacity onPress={() => handleCommentMenu(comment)}>
-                  <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
-                </TouchableOpacity>
+                {(() => {
+                  const isCommentAuthor = comment.userId === user.uid;
+                  const isPostOwner = user.uid === item.user?.uid;
+                  const shouldShowEllipsis = !isCommentAuthor || (isPostOwner && !isCommentAuthor);
+                  
+                  return shouldShowEllipsis ? (
+                    <TouchableOpacity onPress={() => handleCommentMenu(comment)}>
+                      <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
+                    </TouchableOpacity>
+                  ) : null;
+                })()}
               </View>
 
               {editingCommentId === comment.id ? (

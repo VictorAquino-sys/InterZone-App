@@ -2,6 +2,15 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+### 4-24
+    Build a debug screen that shows the user's lastKnownLocation and city-based feed
+
+    💡 Let users set a "Home City" for fallback alerts if GPS isn’t available
+
+    📊 Track most active cities using Firestore analytics or a charting dashboard
+
+    🗺️ Add support for international city names and localized labels (e.g. "Lima, PE" vs "Lima, Ohio")
+
 ### 4-22
     A Firebase dashboard query to rank posts by view count
     let the user zoom when click on photos.
