@@ -50,14 +50,6 @@ target 'InterZone' do
   )
 
   post_install do |installer|
-
-    # 💥 Fix for unsupported '-G' build flag on iOS
-    installer.pods_project.targets.each do |target|
-      target.build_configurations.each do |config|
-        config.build_settings['OTHER_CFLAGS'] = '$(inherited)'
-      end
-    end
-
     react_native_post_install(
       installer,
       config[:reactNativePath],
@@ -72,29 +64,6 @@ target 'InterZone' do
       target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
         resource_bundle_target.build_configurations.each do |config|
           config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-        end
-      end
-    end
-
-      # ✅ Patch: Remove unsupported `-G` and warnings from BoringSSL-GRPC
-    installer.pods_project.targets.each do |target|
-      target.build_configurations.each do |config|
-        config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '18.0'
-
-        # Optional: Ensure bundles don’t trigger signing issues
-        if target.respond_to?(:product_type) && target.product_type == "com.apple.product-type.bundle"
-          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-        end
-      end
-
-      if target.name == 'BoringSSL-GRPC'
-        target.source_build_phase.files.each do |file|
-          if file.settings && file.settings['COMPILER_FLAGS']
-            flags = file.settings['COMPILER_FLAGS'].split
-            flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' || flag == '-G' }
-            file.settings['COMPILER_FLAGS'] = flags.join(' ')
-          end
         end
       end
     end

@@ -29,6 +29,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>interzone</string>
           <string>com.interzone.app</string>
         </array>
       </dict>
