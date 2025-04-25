@@ -25,6 +25,8 @@ import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
+import { logScreen } from '@/utils/analytics';
+import { forceCrash } from '@/utils/crashlytics';
 import PostCard from '@/components/PostCard';
 import Animated, {
   useAnimatedStyle,
@@ -76,6 +78,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   console.log("HomeScreen");
 
   useEffect(() => {
+
     async function handleCityOrUserChange() {
       if (!user?.uid || !city) {
         setLoading(false);
@@ -161,7 +164,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
   useFocusEffect(
     React.useCallback(() => {
-      const fetchLatestPosts = async () => {
+      const onFocus = async () => {
+        await logScreen('HomeScreen');
+        
         if (city) {
           setLoading(true);
           console.log("🔄 Fetching latest posts on screen focus for city:", city);
@@ -170,7 +175,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         }
       };
   
-      fetchLatestPosts();
+      onFocus();
     }, [city, user?.blocked])
   );
 

@@ -16,6 +16,7 @@ import HistoryTrivia from '@/components/HistoryTrivia';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTrivia } from '../src/contexts/TriviaContext'; // Make sure this is imported
 import NewsFeedContent from '@/components/NewsFeedContent';
+import { logEvent } from '@/utils/analytics';
 
 type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
@@ -36,20 +37,27 @@ const CategoryScreen = () => {
 
     useFocusEffect(
         React.useCallback(() => {
-          const checkUserCountry = async () => {
-            if (user?.uid) {
-              const userRef = doc(db, "users", user.uid);
-              const userSnap = await getDoc(userRef);
-              if (userSnap.exists()) {
-                const userData = userSnap.data();
-                console.log("Fetched user data on focus:", userData);
-                setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
-            }
-            }
-          };
-      
-          checkUserCountry();
-        }, [user?.uid])
+            const checkUserCountry = async () => {
+                if (user?.uid) {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        console.log("Fetched user data on focus:", userData);
+                        setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
+                    }
+                }
+
+                if (user?.uid && categoryKey) {
+                    await logEvent('category_viewed', {
+                        category: categoryKey,
+                        user_id: user.uid,
+                    });
+                }
+            };
+         
+            checkUserCountry();
+        }, [user?.uid, categoryKey])
     );
 
     // Assuming each post has a 'timestamp' field that's a Date or a number

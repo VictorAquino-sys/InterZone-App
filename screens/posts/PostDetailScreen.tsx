@@ -4,6 +4,7 @@ import { useRoute } from '@react-navigation/native';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { formatDistanceToNow } from 'date-fns';
+import { logEvent } from '@/utils/analytics';
 
 const PostDetailScreen = () => {
   const route = useRoute();
@@ -19,7 +20,17 @@ const PostDetailScreen = () => {
         const snapshot = await getDoc(docRef);
 
         if (snapshot.exists()) {
+          const postData = snapshot.data();
           setPost(snapshot.data());
+
+          // Log post view
+          if (postData) {
+            await logEvent('post_viewed', {
+              post_id: postId,
+              category: postData.categoryKey,
+              city: postData.city,
+            });
+          }
         } else {
           console.warn('⚠️ Post not found');
         }

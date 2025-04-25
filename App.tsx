@@ -2,7 +2,7 @@ import React, { createContext, useEffect, useState } from 'react';
 import { StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { getLocales } from 'expo-localization';
 import i18n from '@/i18n';
-import { NavigationContainer} from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -37,6 +37,7 @@ import { db } from '@/config/firebase'; // adjust path if needed
 import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
+import { logScreen } from '@/utils/analytics';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -236,13 +237,27 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
+  const navigationRef = useNavigationContainerRef();
+
+
   return (
     <UserProvider> 
       <PostsProvider>
         <TriviaProvider>
           <HistoryTriviaProvider>
             <ChatProvider>
-              <NavigationContainer linking={linking}>
+              <NavigationContainer 
+                ref={navigationRef}
+                linking={linking}
+                onReady={() => {
+                  const route = navigationRef.getCurrentRoute();
+                  if (route) logScreen(route.name);
+                }}
+                onStateChange={() => {
+                  const route = navigationRef.getCurrentRoute();
+                  if (route) logScreen(route.name);
+                }}
+              >  
                 <AuthenticatedApp />
               </NavigationContainer>
             </ChatProvider>

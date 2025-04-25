@@ -24,6 +24,7 @@
 * to test the app in dev, run:
     android
     npx eas build --platform android --profile development
+    
     to test on IOS
     npx eas build --platform ios --profile ios-simulator
     To test on android device:
@@ -36,13 +37,17 @@
     npx expo rebuild
     Android
     npx expo prebuild --clean
+
     IOS
-    npx eas build:configure
+    npx expo prebuild --platform ios
     to open xcode project:
     open ios/InterZone.xcworkspace
 
     Configure for iOS
+    Delete Podfile.lock and ios/Pods folder
+    rm -rf ios/Pods ios/Podfile.lock
     Run npx pod-install after installing the npm package.
+    npx pod-install
 
 * For production:
     Android

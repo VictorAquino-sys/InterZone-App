@@ -16,7 +16,8 @@ import * as RNLocalize from 'react-native-localize';
 import { useUser } from '../../src/contexts/UserContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { generateNonce, sha256 } from '@/utils/cryptoUtils';
-
+import { logScreen } from '@/utils/analytics';
+import { recordHandledError } from '@/utils/crashlytics';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -26,6 +27,13 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const [show, setShow] = useState<boolean>(true);
   const { refreshUser } = useUser(); // ⬅️ grab from context
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    const logLoginScreen = async () => {
+      await logScreen('LoginScreen'); // 🔥 This tracks it
+    };
+    logLoginScreen();
+  }, []);
 
   useEffect(() => {
     // let alreadyNavigated = false;
@@ -107,7 +115,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       if (e.code === 'ERR_REQUEST_CANCELED') {
         console.log('Apple Sign-In cancelled');
       } else {
-        console.error('Apple Sign-In error', e);
+        await recordHandledError(e);
         Alert.alert('Apple Sign-In Failed', e.message);
       }
     }
@@ -147,7 +155,8 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       console.log("User signed up:", authUser.email, "| Country:", country);
 
     } catch (error :any) {
-      console.log("Firebase Auth Error:"); // Debugging line
+
+      await recordHandledError(error);
 
       let errorMessage = i18n.t('genericError'); // Default error message
 
@@ -180,8 +189,8 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         await sendPasswordResetEmail(auth, email);
         Alert.alert('Check your email', 'A link to reset your password has been sent to your email address.');
     } catch (error: any) {
-        console.error('Password Reset Error:', error);
-        Alert.alert('Password Reset Failed', error.message || 'Failed to send password reset email.');
+      await recordHandledError(error);
+      Alert.alert('Password Reset Failed', error.message || 'Failed to send password reset email.');
     }
   };
   
@@ -214,7 +223,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
       }
     } catch (error: any) {
-      console.log("Firebase Auth Error:", error.code, error.message); // Debugging line
+      await recordHandledError(error);
 
       let errorMessage = i18n.t('genericError'); // Default error message
 
@@ -278,7 +287,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       await refreshUser(); // ⬅️ trigger re-fetch after user creation
 
     } catch (error: any) {
-      console.error('Error during sign-in process:', error);
+      await recordHandledError(error);
       Alert.alert('Login Failed', error.message || 'Failed to sign in with Google');
     }
   };

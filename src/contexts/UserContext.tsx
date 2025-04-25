@@ -8,6 +8,8 @@ import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
 import { auth, db } from '../../src/config/firebase';
 import * as RNLocalize from 'react-native-localize';
+import { setUserProps } from '@/utils/analytics';
+import { recordHandledError } from '@/utils/crashlytics';
 
 // Define Typescript interface for user data used in the app context
 export interface User {
@@ -68,28 +70,37 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
       setLoading(true); // Set loading true when auth state changes
 
       if (firebaseUser) {
-        const userRef = doc(db, "users", firebaseUser.uid);
-        const userSnap = await getDoc(userRef);
-        const locale = RNLocalize.getLocales()[0].languageCode;
-        console.log("Locale from RNLocalize:", locale); // Check what RNLocalize returns
+        try {
+          const userRef = doc(db, "users", firebaseUser.uid);
+          const userSnap = await getDoc(userRef);
+          const locale = RNLocalize.getLocales()[0].languageCode;
+          console.log("Locale from RNLocalize:", locale); // Check what RNLocalize returns
 
-        if(userSnap.exists()) {
-          const userData = userSnap.data() as UserData;
-          // If a user is authenticated, format and set user data in state.
-          const updatedUser: User = {
-            uid: firebaseUser.uid,
-            name: userData.name || firebaseUser.displayName || "Default Name",
-            avatar: userData.avatar || firebaseUser.photoURL || "",
-            country: userData.country || "Unknown",
-            language: RNLocalize.getLocales()[0].languageCode,
-            termsAccepted: userData.termsAccepted || false, // 👈 Include termsAccepted
-          };
-          console.log("User logged in with updated data:", updatedUser);
-          setUser(updatedUser);
-          // setTermsAccepted(userData.termsAccepted || false);
-        } else {
-          console.log("No user data available");
-          setUser(null);
+          if(userSnap.exists()) {
+            const userData = userSnap.data() as UserData;
+            // If a user is authenticated, format and set user data in state.
+            const updatedUser: User = {
+              uid: firebaseUser.uid,
+              name: userData.name || firebaseUser.displayName || "Default Name",
+              avatar: userData.avatar || firebaseUser.photoURL || "",
+              country: userData.country || "Unknown",
+              language: RNLocalize.getLocales()[0].languageCode,
+              termsAccepted: userData.termsAccepted || false, // 👈 Include termsAccepted
+            };
+            console.log("User logged in with updated data:", updatedUser);
+            setUser(updatedUser);
+            // ✅ Set analytics user context
+            await setUserProps(updatedUser.uid, {
+              language: updatedUser.language || 'en',
+              country: updatedUser.country || 'unknown',
+            });
+          } else {
+            console.log("No user data available");
+            setUser(null);
+          }
+        } catch (error: any) {
+          console.warn("❌ Error fetching user data in auth state:", error);
+          await recordHandledError(error);
         }
       } else {
         console.log("User logged out");
@@ -106,12 +117,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
   const updateUserProfile = (updates: Partial<User>) => {
     setUser(prev => {
       const updated = { ...prev!, ...updates };
-  
-      // Reflect changes to termsAccepted if included
-      // if (typeof updates.termsAccepted === 'boolean') {
-      //   setTermsAccepted(updates.termsAccepted);
-      // }
-  
+    
       return updated;
     });
   };
@@ -120,23 +126,29 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
     const firebaseUser = auth.currentUser;
   
     if (firebaseUser) {
-      const userRef = doc(db, "users", firebaseUser.uid);
-      const userSnap = await getDoc(userRef);
-  
-      if (userSnap.exists()) {
-        const userData = userSnap.data() as UserData;
-  
-        const updatedUser: User = {
-          uid: firebaseUser.uid,
-          name: userData.name || firebaseUser.displayName || "Default Name",
-          avatar: userData.avatar || firebaseUser.photoURL || "",
-          country: userData.country || "Unknown",
-          language: RNLocalize.getLocales()[0].languageCode,
-          termsAccepted: userData.termsAccepted ?? false,
-        };
-  
-        console.log("🔄 User manually refreshed:", updatedUser);
-        setUser(updatedUser);
+      try {
+        const userRef = doc(db, "users", firebaseUser.uid);
+        const userSnap = await getDoc(userRef);
+    
+        if (userSnap.exists()) {
+          const userData = userSnap.data() as UserData;
+    
+          const updatedUser: User = {
+            uid: firebaseUser.uid,
+            name: userData.name || firebaseUser.displayName || "Default Name",
+            avatar: userData.avatar || firebaseUser.photoURL || "",
+            country: userData.country || "Unknown",
+            language: RNLocalize.getLocales()[0].languageCode,
+            termsAccepted: userData.termsAccepted ?? false,
+          };
+
+          console.log("🔄 User manually refreshed:", updatedUser);
+          setUser(updatedUser);
+        }
+      } catch (error: any) {
+        console.warn("❌ Error fetching user data in auth state:", error);
+        await recordHandledError(error);
+
       }
     }
   };
