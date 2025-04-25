@@ -73,6 +73,7 @@ export default {
               configFile: "./ios/Podfile.config.xcconfig"
           },
           android: {
+            enableProguardInReleaseBuilds: true,
             extraProguardRules: "./proguard-rules.pro"
           }
         }
