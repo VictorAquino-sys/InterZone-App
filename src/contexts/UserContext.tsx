@@ -21,6 +21,7 @@ export interface User {
   description?: string;
   blocked?: string[];
   termsAccepted?: boolean;
+  emailVerified?: boolean; // ✅ ADD THIS LINE
 }
 
 // Define a separate interface for the full Firestore user document
@@ -70,6 +71,13 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
       setLoading(true); // Set loading true when auth state changes
 
       if (firebaseUser) {
+        if (!firebaseUser.emailVerified) {
+          console.log("🚫 Email not verified, skipping Firestore fetch.");
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         try {
           const userRef = doc(db, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
@@ -86,6 +94,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               country: userData.country || "Unknown",
               language: RNLocalize.getLocales()[0].languageCode,
               termsAccepted: userData.termsAccepted || false, // 👈 Include termsAccepted
+              emailVerified: firebaseUser.emailVerified, // ✅ ADD THIS LINE
             };
             console.log("User logged in with updated data:", updatedUser);
             setUser(updatedUser);
@@ -126,6 +135,11 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
     const firebaseUser = auth.currentUser;
   
     if (firebaseUser) {
+      if (!firebaseUser.emailVerified) {
+        console.log("🚫 Skipping refresh, email not verified.");
+        setUser(null);
+        return;
+      }
       try {
         const userRef = doc(db, "users", firebaseUser.uid);
         const userSnap = await getDoc(userRef);
@@ -140,6 +154,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             country: userData.country || "Unknown",
             language: RNLocalize.getLocales()[0].languageCode,
             termsAccepted: userData.termsAccepted ?? false,
+            emailVerified: firebaseUser.emailVerified, // ✅ ADD HERE TOO
           };
 
           console.log("🔄 User manually refreshed:", updatedUser);

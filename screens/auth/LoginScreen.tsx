@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
-import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider } from "firebase/auth";
+import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider, sendEmailVerification } from "firebase/auth";
 import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
@@ -137,12 +137,26 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         country,
         language, // ✅ added
         createdAt: new Date().toISOString(),
+        termsAccepted: false,
       });
 
+      // ✅ Send email verification
+      await sendEmailVerification(authUser);
+
+      // ✅ Sign the user out to wait for email verification
+      await auth.signOut();
+
+      // ✅ Now show only 1 clean alert
+      Alert.alert(
+        i18n.t('verificationSentTitle'),
+        i18n.t('verificationSentMessage'),
+        [{ text: i18n.t('ok'), onPress: () => navigation.replace("LoginScreen") }]
+      );
+
       // Save user data in AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify(authUser));
-      await AsyncStorage.setItem('userId', authUser.uid);
-      await AsyncStorage.setItem('termsAccepted', 'false'); // let App.tsx handle navigation
+      // await AsyncStorage.setItem('user', JSON.stringify(authUser));
+      // await AsyncStorage.setItem('userId', authUser.uid);
+      // await AsyncStorage.setItem('termsAccepted', 'false'); // let App.tsx handle navigation
 
       console.log("User signed up:", authUser.email, "| Country:", country);
 
@@ -154,33 +168,92 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         case 'auth/invalid-email':
           errorMessage = i18n.t('invalidEmail');
           break;
-        case 'auth/wrong-password':
-          errorMessage = i18n.t('wrongPassword');
-          break;
-        case 'auth/user-not-found':
-          errorMessage = i18n.t('userNotFound');
-          break;
-          case 'auth/email-already-in-use':  // Handle duplicate email
+        case 'auth/email-already-in-use':
           errorMessage = i18n.t('emailAlreadyInUse');
           break;
+        case 'auth/weak-password':
+          errorMessage = i18n.t('weakPassword');
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = i18n.t('signUpDisabled');
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = i18n.t('networkError');
+          break;
+        case 'auth/internal-error':
+          errorMessage = i18n.t('internalError');
+          break;
+        case 'auth/invalid-credential':
+          errorMessage = i18n.t('invalidCredential');
+          break;
+        case 'auth/password-does-not-meet-requirements':
+          errorMessage = i18n.t('passwordRequirementsNotMet');
+          break;
+        default:
+          errorMessage = `${i18n.t('genericError')} (${error.code})`; // 👈 helpful debug
+          console.log(error.code);
       }
 
       Alert.alert(i18n.t('SignUpError'), errorMessage);
     }
   };
 
+  const handleResendVerificationEmail = async () => {
+    try {
+      if (!email) {
+        Alert.alert(
+          i18n.t('missingEmailTitle'),
+          i18n.t('missingEmailMessage')
+        );
+        return;
+      }
+  
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const authUser = userCredential.user;
+  
+      if (authUser.emailVerified) {
+        Alert.alert(
+          i18n.t('alreadyVerifiedTitle'),
+          i18n.t('alreadyVerifiedMessage')
+        );
+        return;
+      }
+  
+      await sendEmailVerification(authUser);
+      Alert.alert(
+        i18n.t('verificationSentTitle'),
+        i18n.t('verificationSentMessage')
+      );
+    } catch (error: any) {
+      await recordHandledError(error);
+      Alert.alert(
+        i18n.t('resendFailedTitle'),
+        error.message || i18n.t('resendFailedMessage')
+      );
+    }
+  };
+  
   const handlePasswordReset = async () => {
     if (email.trim() === '') {
-        Alert.alert('Input Error', 'Please enter your email address to receive a password reset link.');
-        return;
+      Alert.alert(
+        i18n.t('inputErrorTitle'),
+        i18n.t('inputErrorMessage')
+      );
+      return;
     }
-
+  
     try {
-        await sendPasswordResetEmail(auth, email);
-        Alert.alert('Check your email', 'A link to reset your password has been sent to your email address.');
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert(
+        i18n.t('resetSentTitle'),
+        i18n.t('resetSentMessage')
+      );
     } catch (error: any) {
-        await recordHandledError(error);
-        Alert.alert('Password Reset Failed', error.message || 'Failed to send password reset email.');
+      await recordHandledError(error);
+      Alert.alert(
+        i18n.t('resetFailedTitle'),
+        error.message || i18n.t('resetFailedMessage')
+      );
     }
   };
   
@@ -189,6 +262,17 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const authUser = userCredential.user;
+
+      // ❌ Block login if email not verified
+      if (!authUser.emailVerified) {
+        Alert.alert(
+          i18n.t('emailNotVerifiedTitle'),
+          i18n.t('emailNotVerifiedMessage')
+        );
+        await auth.signOut();  // ✅ Kill session before context loads
+        navigation.replace("LoginScreen"); // ✅ Reset stack
+        return;
+      }
  
       // Fetch user data from Firestore
       const userRef = doc(db, "users", authUser.uid);
@@ -199,19 +283,22 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         userData = userSnap.data() as UserData;
       }
 
-      // Store user data locally
-      await AsyncStorage.setItem('user', JSON.stringify(authUser));
+      // Optional local cache (safe to keep)
+      // await AsyncStorage.setItem('user', JSON.stringify(authUser));
       await AsyncStorage.setItem('userName' + authUser.uid, userData?.name || ""); // Save name
       await AsyncStorage.setItem('userCountry' + authUser.uid, userData?.country || "Unknown"); // Save country
 
       console.log("User logged in:", authUser.email);
       console.log("Fetched name:", userData?.name); 
 
+
+      await refreshUser(); // 👈 This triggers UserProvider to re-fetch Firestore + update `user`
+
       // Only navigate to NameInputScreen if the name is missing
-      if (!userData?.name) {
-        await AsyncStorage.setItem('userId', authUser.uid); // save for TermsScreen
-        await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
-      }
+      // if (!userData?.name) {
+      //   await AsyncStorage.setItem('userId', authUser.uid); // save for TermsScreen
+      //   await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
+      // }
     } catch (error: any) {
       await recordHandledError(error);
 
@@ -227,6 +314,20 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         case 'auth/user-not-found':
           errorMessage = i18n.t('userNotFound');
           break;
+        case 'auth/too-many-requests':
+          errorMessage = i18n.t('tooManyRequests');
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = i18n.t('networkError');
+          break;
+        case 'auth/internal-error':
+          errorMessage = i18n.t('internalError');
+          break;
+        case 'auth/invalid-credential':
+          errorMessage = i18n.t('invalidCredential');
+          break;
+        default:
+          errorMessage = `${i18n.t('genericError')} (${error.code})`; // 👈 helpful debug
       }
 
       Alert.alert(i18n.t('loginError'), errorMessage);
@@ -377,10 +478,17 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.forgotPasswordContainer}>
-              <TouchableOpacity onPress={handlePasswordReset} style={styles.buttonForgotPass}>
-                <Text style={styles.buttonForgotPassText}>{i18n.t('forgotPasswordButton')}</Text>
-              </TouchableOpacity>
+            <View style={styles.troubleAccessContainer}>
+              <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
+              <View style={styles.troubleLinks}>
+                <TouchableOpacity onPress={handlePasswordReset}>
+                  <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
+                </TouchableOpacity>
+                <Text style={styles.separator}> | </Text>
+                <TouchableOpacity onPress={handleResendVerificationEmail}>
+                  <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
 
@@ -513,17 +621,6 @@ const styles = StyleSheet.create({
     borderColor: '#0782F9',
     borderWidth: 2,
   },
-  buttonForgotPass: {
-    backgroundColor: 'white',
-    marginTop: 8,
-    borderColor: '#00897b',
-    // justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    width: "60%",
-    padding: 10,
-    borderRadius: 10,
-  },
   buttonText:{
     color: 'white',
     fontWeight: '700',
@@ -534,18 +631,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
   },
-  buttonForgotPassText: {
-    color: '#00897b',
-    fontWeight: '700',
-    fontSize: 14,  
-  },
-  forgotPasswordContainer: {
-    // marginTop: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '80%',
-  },  
   rootContainer: {
     flex: 1,
+  },
+  troubleAccessContainer: {
+    marginTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  troubleText: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 4,
+  },
+  troubleLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  troubleLink: {
+    color: '#0782F9',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  separator: {
+    marginHorizontal: 8,
+    color: '#999',
+    fontSize: 13,
   },
 })

@@ -3,6 +3,7 @@ Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
 ### 4-24
+    display error messages as toast/snackbar instead of alerts for a smoother UX.
     Build a debug screen that shows the user's lastKnownLocation and city-based feed
 
     💡 Let users set a "Home City" for fallback alerts if GPS isn’t available
