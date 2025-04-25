@@ -10,6 +10,7 @@ module.exports = function(api) {
           root: ['./'],
           alias: {
             "@": "./src",
+            'react-native-device-info': './react-native-device-info.js',
           }
         }
       ]

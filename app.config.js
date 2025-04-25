@@ -29,6 +29,7 @@ export default {
       usesAppleSignIn: true,
       jsEngine: "hermes",
       infoPlist: {
+        LSApplicationQueriesSchemes: ['itms-apps'],
         NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events, even when the app is not open. For example, you might get alerts about a concert or food truck gathering near you.",
         NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you’ll see local meetups and concerts happening in your city.",
         ITSAppUsesNonExemptEncryption: false,
@@ -50,12 +51,7 @@ export default {
         "android.permission.RECORD_AUDIO",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_BACKGROUND_LOCATION",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION",
+      
         "android.permission.READ_EXTERNAL_STORAGE", 
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
@@ -123,6 +119,11 @@ export default {
         }
       ],
     ],
+    updates: {
+      url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6", //production URL
+      fallbackToCacheTimeout: 0, // Launch as fast as possible
+      checkAutomatically: "ON_LOAD", // Check for updates every time app starts
+    },
     extra: {
       eas: {
         projectId: "02152cf1-073f-43da-8d04-f06d2948bde6"

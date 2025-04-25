@@ -24,9 +24,9 @@ import { RootStackParamList } from '../src/navigationTypes';
 import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import UpdateChecker from '../src/components/UpdateChecker';
+import UpdateBanner from '@/components/UpdateBanner';
 import { logScreen } from '@/utils/analytics';
-import { forceCrash } from '@/utils/crashlytics';
+// import { forceCrash } from '@/utils/crashlytics';
 import PostCard from '@/components/PostCard';
 import Animated, {
   useAnimatedStyle,
@@ -166,7 +166,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     React.useCallback(() => {
       const onFocus = async () => {
         await logScreen('HomeScreen');
-        
+
         if (city) {
           setLoading(true);
           console.log("🔄 Fetching latest posts on screen focus for city:", city);
@@ -609,8 +609,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* 🔔 Version update checker */}
-        <UpdateChecker />
+        {/* 🔔 Expo Updates Banner */}
+        <UpdateBanner />
+
 
         {loading ? (
           <View style={styles.loadingContainer}>
