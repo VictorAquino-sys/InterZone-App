@@ -42,7 +42,7 @@ export default {
       package: IS_DEV ? "com.zhd.interzone" : "com.zhd.interzone",
       versionCode: 22,
       jsEngine: "hermes",
-      enableProguardInReleaseBuilds: true,
+      // enableProguardInReleaseBuilds: true,
       enableShrinkResourcesInReleaseBuilds: true,
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",
