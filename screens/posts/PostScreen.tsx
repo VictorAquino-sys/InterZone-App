@@ -30,6 +30,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [charCount, setCharCount] = useState<number>(0); 
   const [city, setCity] = useState<string | null>(null); // To store the city name
   const [location, setLocation] = useState<string | null>(null);
+  const [imagePath, setImagePath] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
   const [manualCoords, setManualCoords] = useState<string>(''); // for user input
@@ -82,6 +83,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         console.log("Starting upload for image:", imageName, "with MIME type", mimeType);
 
         await uploadBytes(imageRef, blob, { contentType: mimeType });
+        setImagePath(imageRef.fullPath); // ✅ Store full path for cleanup
 
         const downloadUrl = await getDownloadURL(imageRef);
         console.log("Image uploaded successfully:", downloadUrl);
@@ -135,7 +137,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri); // Store selected image URI
-      handleImageUpload(result.assets[0].uri); // Pass URI to function, ensuring it's a string
+      // handleImageUpload(result.assets[0].uri); // Pass URI to function, ensuring it's a string
     } else {
       console.log('Image picker was canceled or no image was selected');
     }
@@ -294,6 +296,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         content: postText,
         timestamp: Timestamp.fromDate(new Date()),
         imageUrl: imageUrl || "", // Attach uploaded image URL
+        imagePath: imagePath || "",
         user: {
           uid: authUser.uid,
           name: latestUserData.name || "Anonymous", // Use updated name
@@ -315,6 +318,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       setPostText(''); // Clear the input field
       setLocation(null);
       setImageUri(null);
+      setImagePath(null);      // ✅ Clear stored image path
+      setSelectedCategory(''); // ✅ Reset selected category
     } catch (error: any) {
       console.error("Error adding post: ", error);
       Alert.alert("Upload Error", (error as Error).message || "Unknow error occurred");
@@ -393,7 +398,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
               <Picker.Item label={i18n.t('categories.deals')} value="deals" color="cornflowerblue"/>
               <Picker.Item label={i18n.t('categories.random')} value="random" color="cornflowerblue"/>  
               <Picker.Item label={i18n.t('categories.ruteros')} value="ruteros" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.business')} value="bussiness" color="cornflowerblue"/>            
+              <Picker.Item label={i18n.t('categories.business')} value="bussiness" color="cornflowerblue"/>
+              <Picker.Item label={i18n.t('categories.tutors')} value="tutors" color="cornflowerblue"/>
             </Picker>
           </View>
 

@@ -30,7 +30,7 @@ export default {
       jsEngine: "hermes",
       infoPlist: {
         LSApplicationQueriesSchemes: ['itms-apps'],
-        NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events, even when the app is not open. For example, you might get alerts about a concert or food truck gathering near you.",
+        NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events while you are using the app. For example, you might get alerts about a concert or food truck gathering near you.",        
         NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you’ll see local meetups and concerts happening in your city.",
         ITSAppUsesNonExemptEncryption: false,
         EXUpdatesRuntimeVersion: "1.0.0",
@@ -76,6 +76,7 @@ export default {
               configFile: "./ios/Podfile.config.xcconfig"
           },
           android: {
+            enableProguardInReleaseBuilds: true,
             extraProguardRules: "./proguard-rules.pro"
           }
         }
@@ -108,7 +109,7 @@ export default {
         {
           locationAlwaysAndWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location at all times.",
           locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location.",
-          isAndroidBackgroundLocationEnabled: true,
+          isAndroidBackgroundLocationEnabled: false,
           isIosBackgroundLocationEnabled: false
         }
       ],

@@ -13,6 +13,7 @@ export const categories: Category[] = [
     new Category('ruteros', i18n.t('categories.ruteros'), require('../../assets/ruteros_icon.png'), '#b2ebf2'),
     new Category('hotels', i18n.t('categories.hotels'), require('../../assets/hoteles_icon.png'), '#b2ebf2'),
     new Category('business', i18n.t('categories.business'), require('../../assets/business_icon.png'), '#b2ebf2'),
+    new Category('tutors', i18n.t('categories.tutors'), require('../../assets/tutors_icon.png'), '#f3e5f5'),
 ];
 
 export function getCategoryByKey(key: string): Category | undefined {

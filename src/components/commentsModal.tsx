@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, Button, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, Button, Alert, KeyboardAvoidingView, Platform, ActionSheetIOS } from 'react-native';
 import { collection, getDocs, query, orderBy, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, limit, increment } from 'firebase/firestore';
+import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/config/firebase';
 import i18n from '@/i18n';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,13 +24,13 @@ type Props = {
     avatar: string;
   };
   setCommentCount: (count: number) => void;
+  postOwnerId: string;
 };
 
 const MAX_COMMENTS = 10;
 const MAX_COMMENT_LENGTH = 200;
 
-const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser, setCommentCount }) => {
-  const [comments, setComments] = useState<Comment[]>([]);
+const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser, setCommentCount, postOwnerId }) => {  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [localCommentCount, setLocalCommentCount] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,6 +81,56 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
         Alert.alert("Something went wrong", "Couldn't post your comment. Please try again.");
     } finally {
         setIsSubmitting(false);
+    }
+  };
+
+  const handleCommentMenu = (comment: Comment) => {
+    const isCommentAuthor = comment.userId === currentUser.uid;
+    const isPostOwner = currentUser.uid === postOwnerId;
+  
+    const options = [i18n.t('comments.report')];
+    if (isPostOwner || isCommentAuthor) options.push(i18n.t('comments.delete'));
+    if (isCommentAuthor) options.push(i18n.t('comments.edit'));
+    options.push(i18n.t('comments.cancel'));
+  
+    const cancelIndex = options.length - 1;
+    const destructiveIndex = options.indexOf(i18n.t('comments.delete'));
+  
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: cancelIndex,
+          destructiveButtonIndex: destructiveIndex,
+        },
+        (buttonIndex) => {
+          const selected = options[buttonIndex];
+          if (selected === i18n.t('comments.report')) reportComment(comment);
+          else if (selected === i18n.t('comments.delete')) handleDelete(comment.id);
+          else if (selected === i18n.t('comments.edit')) {
+            setEditingId(comment.id);
+            setEditedText(comment.content);
+          }
+        }
+      );
+    } else {
+      // Optional: implement Android menu using a modal
+    }
+  };
+
+  const reportComment = async (comment: Comment) => {
+    try {
+      await addDoc(collection(db, 'reports'), {
+        type: 'comment',
+        commentId: comment.id,
+        postId,
+        reportedBy: currentUser.uid,
+        timestamp: serverTimestamp()
+      });
+      Alert.alert(i18n.t('comments.reported'), i18n.t('comments.thankYouReport'));
+    } catch (err) {
+      console.error("Report failed:", err);
+      Alert.alert("Error", "Could not send report. Try again.");
     }
   };
 
@@ -138,8 +189,20 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                 
                     <View style={styles.commentBubble}>
                         <View style={styles.commentHeader}>
-                        <Text style={styles.commentAuthor}>{item.userName}</Text>
-                        </View>
+                          <Text style={styles.commentAuthor}>{item.userName}</Text>
+                          {(() => {
+                             const isCommentAuthor = item.userId === currentUser.uid;
+                             const isPostOwner = currentUser.uid === postOwnerId;
+                             const shouldShowEllipsis = !isCommentAuthor || (isPostOwner && !isCommentAuthor);
+ 
+                             return shouldShowEllipsis ? (
+                               <TouchableOpacity onPress={() => handleCommentMenu(item)}>
+                                 <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
+                               </TouchableOpacity>
+                             ) : null;
+                           })()}
+ 
+                         </View>
                 
                         {editingId === item.id ? (
                         <>
@@ -218,10 +281,6 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                     }
                     />        
                 </View>
-
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={{ color: '#007aff' }}>{i18n.t('comments.close')}</Text>
-                </TouchableOpacity>
           </SafeAreaView>
         </KeyboardAvoidingView>
     </Modal>
@@ -280,6 +339,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 2,
   },
   commentAuthor: {

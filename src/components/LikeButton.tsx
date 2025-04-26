@@ -1,7 +1,7 @@
 import React, { useState, useEffect, FunctionComponent } from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from '../config/firebase';
 
 type LikeButtonProps = {
@@ -31,16 +31,25 @@ const LikeButton: FunctionComponent<LikeButtonProps> = ({ postId, userId, likedC
     const toggleLike = async () => {
         const postRef = doc(db, "posts", postId);
         try {
+            const postSnap = await getDoc(postRef);
+            const currentLikes = postSnap.data()?.likedBy || [];
+        
             const newLiked = !liked;
+            const updatedLikes = newLiked
+              ? [...new Set([...currentLikes, userId])]
+              : currentLikes.filter((uid: string) => uid !== userId);
+        
             setLiked(newLiked);
+            setLikeCount(updatedLikes.length);
+        
             await updateDoc(postRef, {
-                likedBy: newLiked ? arrayUnion(userId) : arrayRemove(userId)
-            });
-            setLikeCount(prev => newLiked ? prev + 1 : prev - 1);
+              likedBy: updatedLikes
+            }); 
+
         } catch (error) {
-            console.error("Error toggling like:", error);
-            // setLiked(liked => !liked); // Revert optimistic update on error
-            setLiked(prev => !prev); //Revert on error
+            console.error("❌ Error toggling like:", error);
+            setLiked(prev => !prev);
+            setLikeCount(prev => liked ? prev - 1 : prev + 1);
         }
     };
 

@@ -15,15 +15,40 @@
     "Email": "Ingrese correo electronico",
     "Password": "Contraseña",
     "registerButton": "Registrate",
+    "passwordRequirementsNotMet": "Tu contraseña debe incluir al menos 1 letra mayúscula, 1 letra minúscula, 1 número y 1 carácter especial, y tener entre 6 y 20 caracteres.",
+    "emailNotVerifiedTitle": "Correo no verificado",
+    "emailNotVerifiedMessage": "Por favor, verifica tu correo antes de iniciar sesión. Revisa tu bandeja de entrada o spam.",
     "loginError": "Error de inicio de sesión",
     "SignUpError": "Error de registro",
     "invalidEmail": "Dirección de correo inválida. Por favor, ingrese un correo válido.",
     "wrongPassword": "Contraseña incorrecta. Inténtalo de nuevo.",
     "userNotFound": "No se encontró una cuenta con este correo.",
     "genericError": "Ocurrió un error. Inténtalo de nuevo.",
+    "invalidCredential": "Credenciales inválidas. Verifica tu correo y contraseña.",
+    "internalError": "Algo salió mal en el servidor. Inténtalo de nuevo pronto.",
     "emailAlreadyInUse": "La dirección de correo electrónico ya está en uso. Por favor, usa otro correo electrónico.",
     "passwordRequirement": "La contraseña debe tener al menos 6 caracteres y no mas de 20.",
-    "forgotPasswordButton": "Olvidaste tu contraseña?",
+
+
+    "troubleAccess": "¿Tienes problemas para acceder?",
+    "forgotPasswordLink": "Restablecer contraseña",
+    "resendVerificationLink": "Reenviar verificación",
+
+    "missingEmailTitle": "Correo requerido",
+    "missingEmailMessage": "Por favor, ingresa tu correo electrónico primero.",
+    "alreadyVerifiedTitle": "Ya verificado",
+    "alreadyVerifiedMessage": "Tu correo electrónico ya ha sido verificado.",
+    "verificationSentTitle": "Correo de verificación enviado",
+    "verificationSentMessage": "Revisa tu bandeja de entrada o carpeta de spam.",
+    "resendFailedTitle": "Error",
+    "resendFailedMessage": "No se pudo enviar el correo de verificación.",
+
+    "inputErrorTitle": "Error de entrada",
+    "inputErrorMessage": "Ingresa tu correo para recibir el enlace de restablecimiento.",
+    "resetSentTitle": "Revisa tu correo",
+    "resetSentMessage": "Te hemos enviado un enlace para restablecer tu contraseña.",
+    "resetFailedTitle": "Error al restablecer",
+    "resetFailedMessage": "No se pudo enviar el correo de restablecimiento.",
     
     "nameInputPrompt": "Introduce tu nombre",
     "saveName": "Guardar",
@@ -86,7 +111,8 @@
         "trivia": "Smart Sparks",
         "ruteros": "Ruteros",
         "hotels": "Hoteles",
-        "business": "Emprendimientos"
+        "business": "Emprendimientos",
+        "tutors": "Tutores"        
     },
     "testYourKnowledge": "Cuanto sabes sobre musica?",
     "Villareal": "Villareal - Historia Universal",
@@ -123,6 +149,8 @@
 
     "report": {
         "title": "Reportar esta publicación",
+        "menu": "Opciones",
+        "report": "Reportar",
         "cancel": "Cancelar",
         "thankYou": "Gracias",
         "submitted": "Tu reporte ha sido enviado.",
@@ -173,6 +201,10 @@
     "comments": {
         "title": "Comentarios",
         "writePlaceholder": "Escribe un comentario...",
+        "menu": "Opciones",
+        "report": "Reportar",
+        "reported": "Comentario reportado",
+        "thankYouReport": "Gracias por tu reporte",
         "maxReached": "Se alcanzó el máximo de 10 comentarios",
         "posting": "Publicando...",
         "post": "Publicar",

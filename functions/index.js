@@ -88,16 +88,15 @@ exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (even
 
 exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
   const post = event.data.data();
-  const city = post.city;
+
+  const cityLabel = post.city; // This should match `lastKnownLocation.label`  
   const posterUid = post.user.uid;
   const posterName = post.user.name;
   const postId = event.params.postId;
 
-  console.log(`📬 New post created in city: ${city} by ${posterName} (uid: ${posterUid})`);
-
-  const usersSnap = await db.collection("users").where("city", "==", city).get();
-
-  console.log(`👥 Users in same city: ${usersSnap.size}`);
+  console.log(`📬 New post created in city: ${cityLabel} by ${posterName} (uid: ${posterUid})`);
+  
+  const usersSnap = await db.collection("users").get();
 
   const messages = [];
 
@@ -105,17 +104,25 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
     const user = doc.data();
     const { uid, expoPushToken, language = 'en' } = user;
 
-    if (uid !== posterUid && Expo.isExpoPushToken(expoPushToken)) {
+    const userLocationLabel = user.lastKnownLocation?.label;
+    const tokenValid = expoPushToken && Expo.isExpoPushToken(expoPushToken);
+ 
+    if (
+      uid !== posterUid &&
+      userLocationLabel &&
+      tokenValid &&
+      userLocationLabel.toLowerCase() === cityLabel.toLowerCase()
+    ) {
       messages.push({
-        to: expoPushToken,
-        sound: "default",
-        title: i18n[language].notification.newPostTitle,
-        body: `${posterName} ${i18n[language].notification.newPostBody} ${city}`,
-        data: {
-          type: "post",
-          postId: postId,
-          url: `interzone://post/${postId}`, // Deep link to PostDetail
-        }
+          to: expoPushToken,
+          sound: "default",
+          title: i18n[language].notification.newPostTitle,
+          body: `${posterName} ${i18n[language].notification.newPostBody} ${cityLabel}`,          
+          data: {
+            type: "post",
+            postId: postId,
+            url: `interzone://post/${postId}`
+          }
       });
     }
   });
@@ -152,7 +159,6 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
         const { status, message, details } = receipts[receiptId];
         if (status === 'error') {
           console.error(`❌ Receipt error for ${receiptId}: ${message}`, details);
-          // Optional: disable or clean up invalid Expo push tokens in Firestore
         }
       }
     } catch (err) {
@@ -221,5 +227,53 @@ exports.deleteConversationOnUnfriend = onDocumentDeleted("users/{userId}/friends
 
   } catch (error) {
     console.error("❌ Failed to delete conversation on unfriend:", error);
+  }
+});
+
+
+exports.cleanUpReportsOnCommentDelete = onDocumentDeleted("posts/{postId}/comments/{commentId}", async (event) => {
+  const { commentId } = event.params;
+  const reportsRef = db.collection("reports");
+
+  try {
+    const snapshot = await reportsRef.where("commentId", "==", commentId).get();
+
+    if (snapshot.empty) {
+      console.log(`📭 No reports found for deleted comment ${commentId}`);
+      return;
+    }
+
+    const batch = db.batch();
+    snapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    console.log(`🧹 Cleaned up ${snapshot.size} report(s) for deleted comment ${commentId}`);
+  } catch (error) {
+    console.error(`❌ Failed to clean reports for comment ${commentId}:`, error);
+  }
+});
+
+// Clean up Storage image when post is deleted
+exports.cleanUpPostImageOnDelete = onDocumentDeleted("posts/{postId}", async (event) => {
+  const post = event.data?.data();
+  const postId = event.params.postId;
+
+  if (!post?.imagePath) {
+    console.log(`🫼 Post ${postId} deleted without image — nothing to clean.`);
+    return;
+  }
+
+  const bucket = storage.bucket();
+  const file = bucket.file(post.imagePath);
+
+  try {
+    await file.delete();
+    console.log(`🗑️ Deleted image: ${post.imagePath} for post ${postId}`);
+  } catch (error) {
+    if (error.code === 404) {
+      console.warn(`⚠️ Image not found: ${post.imagePath}`);
+    } else {
+      console.error(`❌ Failed to delete image ${post.imagePath}:`, error);
+    }
   }
 });
