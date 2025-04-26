@@ -39,6 +39,7 @@
     npx expo rebuild
     Android
     npx expo prebuild --clean
+    
     IOS
     npx eas build:configure
     to open xcode project:

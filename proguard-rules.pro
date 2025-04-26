@@ -1,7 +1,6 @@
 ###############################################
 # Firebase / Firestore / Firebase Auth / Storage
 ###############################################
-# Keep everything in Firebase packages
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
 
@@ -35,13 +34,11 @@
 ###############################################
 # Misc
 ###############################################
-# Allow reflection (used by some plugins like react-navigation)
 -keepclassmembers class * {
     @com.facebook.react.bridge.ReactMethod <methods>;
     @com.facebook.react.uimanager.annotations.ReactProp <methods>;
 }
 
-# Needed for serializable classes (sometimes in AsyncStorage or local state)
 -keepclassmembers class * implements java.io.Serializable {
     static final long serialVersionUID;
     private static final java.io.ObjectStreamField[] serialPersistentFields;
@@ -50,7 +47,6 @@
 }
 
 ###############################################
-# Diagnostic (optional, useful for debugging)
+# Diagnostic (optional)
 ###############################################
-# Generate R8 report (optional, but great for inspection)
 # -printconfiguration build/outputs/mapping/proguard/full-r8-config.txt
