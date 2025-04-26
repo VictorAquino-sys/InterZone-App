@@ -42,7 +42,6 @@ export default {
       package: IS_DEV ? "com.zhd.interzone" : "com.zhd.interzone",
       versionCode: 22,
       jsEngine: "hermes",
-      // enableProguardInReleaseBuilds: true,
       enableShrinkResourcesInReleaseBuilds: true,
       permissions: [
         "android.permission.ACCESS_FINE_LOCATION",
@@ -73,7 +72,7 @@ export default {
               configFile: "./ios/Podfile.config.xcconfig"
           },
           android: {
-            enableProguardInReleaseBuilds: true,
+            enableProguardInReleaseBuilds: false,
             extraProguardRules: "./proguard-rules.pro"
           }
         }
