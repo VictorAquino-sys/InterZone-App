@@ -6,9 +6,7 @@
 -dontwarn com.google.firebase.**
 
 # Firestore models using reflection (Gson)
--keepattributes Signature
--keepattributes *Annotation*
-
+-keepattributes Signature, *Annotation*
 -keep class com.google.gson.** { *; }
 -dontwarn com.google.gson.**
 
