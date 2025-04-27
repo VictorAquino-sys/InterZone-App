@@ -1,10 +1,12 @@
 import React, { useEffect, useState} from 'react';
-import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button } from 'react-native';
+import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button, Modal } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Avatar from './Avatar';
 import LikeButton from './LikeButton';
 import i18n from '@/i18n';
 import { Post } from '../contexts/PostsContext';
+import * as Clipboard from 'expo-clipboard';
+import ImageViewer from 'react-native-image-zoom-viewer';
 import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, deleteDoc, addDoc, serverTimestamp, collection, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { getCategoryByKey } from '@/config/categoryData';
@@ -49,6 +51,8 @@ const PostCard: React.FC<PostCardProps> = ({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedComment, setEditedComment] = useState('');
 
+  const [zoomModalVisible, setZoomModalVisible] = useState(false);
+  const [copyMessage, setCopyMessage] = useState('');
 
   // Fetch comment count on mount
   useEffect(() => {
@@ -180,14 +184,35 @@ const PostCard: React.FC<PostCardProps> = ({
     setNewComment('');
     setCommentCount(prev => prev + 1); //update comment count
     handleToggleComments(); // Re-fetch latest
-  }
+  };
+
+  const handleOpenImage = (imageUrl: string) => {
+    setZoomModalVisible(true); // Open zoom modal
+  };
+
+  const handleCloseImage = () => {
+    setZoomModalVisible(false); // Close zoom modal
+  };
+
+  const handleCopyText = async () => {
+    try {
+      await Clipboard.setStringAsync(item.content); // Copy post content to clipboard
+      setCopyMessage('Post text copied to clipboard!'); // Update the state for feedback messsage
+      Alert.alert('Copied to Clipboard', 'Post text has been copied!'); // Display feedback to user.
+  
+      // Reset copy message after 2 seconds
+      setTimeout(() => setCopyMessage(''), 2000);
+    } catch (error) {
+      console.error('Failed to copy text to clipboard', error);
+      Alert.alert('Error', 'Failed to copy the text');
+    }
+  };
 
   return (
     <View style={styles.postItem}>
       <View style={styles.postHeader}>
         <View style={styles.userContainer}>
-          <TouchableOpacity
-            onPress={() => {
+          <TouchableOpacity onPress={() => {
               if (item.user?.avatar) {
                 onOpenImage(item.user.avatar);
               } else {
@@ -223,15 +248,32 @@ const PostCard: React.FC<PostCardProps> = ({
         </View>
       </View>
 
-      <Text style={styles.postText}>{item.content}</Text>
+      <TouchableOpacity onPress={handleCopyText}>
+        <Text style={styles.postText}>{item.content}</Text>
+      </TouchableOpacity>
+
+      {/* Stylish Toast for Copy Feedback */}
+      {copyMessage && (
+        <View style={styles.toastContainer}>
+          <Text style={styles.toastText}>{copyMessage}</Text>
+        </View>
+      )}
 
       {item.imageUrl && (
-        <TouchableOpacity onPress={() => onOpenImage(item.imageUrl)}>
+        <TouchableOpacity onPress={() => handleOpenImage(item.imageUrl)}>
           <View style={styles.postImageWrapper}>
             <Image source={{ uri: item.imageUrl }} style={styles.postImage} resizeMode='cover' />
           </View>
         </TouchableOpacity>
       )}
+
+      <Modal visible={zoomModalVisible} transparent={true} onRequestClose={handleCloseImage}>
+        <ImageViewer
+        imageUrls={[{ url: item.imageUrl }]}  // Pass the image URL to the zoom viewer
+        onSwipeDown={handleCloseImage} // Close on swipe down
+        enableSwipeDown={true} // Allow swipe down to close
+        />
+      </Modal>
 
       <View style={styles.likeButtonWrapper}>
         <LikeButton postId={item.id} userId={userId} />
@@ -478,6 +520,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
     lineHeight: 20,
+    color: '#333',
   },
   postImageWrapper: {
     shadowColor: '#000',
@@ -567,5 +610,30 @@ const styles = StyleSheet.create({
   editText: {
     fontSize: 13,
     color: '#007aff',
+  },
+  copyMessage: {
+    fontSize: 14,
+    color: '#333',
+    padding: 5,
+    textAlign: 'center',
+    backgroundColor: '#f4f4f4',
+    borderRadius: 5,
+    marginTop: 8,
+  },
+  toastContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: '10%',
+    right: '10%',
+    backgroundColor: '#333',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    zIndex: 999,
+  },
+  toastText: {
+    color: '#fff',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

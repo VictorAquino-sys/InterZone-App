@@ -1,5 +1,11 @@
 (Daily logs of what have been worked on)
 
+### 04-26
+    react-native-image-zoom-viewer:
+    npm i react-native-image-zoom-viewer --save
+    Implement Clipboard CopyFeature:
+    npx expo install expo-clipboard
+
 ### 04-23
     menu for each comment
     actionsheetIOS for contextual options
