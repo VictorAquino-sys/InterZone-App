@@ -50,8 +50,14 @@
     "resetFailedTitle": "Password Reset Failed",
     "resetFailedMessage": "Failed to send password reset email.",
 
-    "nameInputPrompt": "Enter your name",
+
+    "nameInputTitle": "Enter your name",
+    "nameInputPrompt": "Your name",
     "saveName": "Save Name",
+    "nameEmptyError": "Name cannot be empty.",
+    "missingUserInfo": "Missing user information.",
+    "saveError": "Failed to save name. Please try again.",
+
     "profileTitle": "Profile",
     "updateProfileButton": "Update Profile",
     "logoutButton": "Logout",

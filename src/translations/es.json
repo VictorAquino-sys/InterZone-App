@@ -49,8 +49,12 @@
     "resetFailedMessage": "No se pudo enviar el correo de restablecimiento.",
 
 
-    "nameInputPrompt": "Introduce tu nombre",
-    "saveName": "Guardar",
+    "nameInputTitle": "Ingresa tu nombre",
+    "nameInputPrompt": "Tu nombre",
+    "saveName": "Guardar nombre",
+    "nameEmptyError": "El nombre no puede estar vacío.",
+    "missingUserInfo": "Falta la información del usuario.",
+    "saveError": "Error al guardar el nombre. Intenta nuevamente.",
     "profileTitle": "Perfil",
     "updateProfileButton": "Actualizar Perfil",
     "logoutButton": "Cerrar sesión",
