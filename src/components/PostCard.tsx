@@ -199,13 +199,27 @@ const PostCard: React.FC<PostCardProps> = ({
     try {
       await Clipboard.setStringAsync(item.content); // Copy post content to clipboard
       setCopyMessage(i18n.t('postCard.copySuccess')); // Update the state for feedback message
-      Alert.alert(i18n.t('postCard.copiedToClipboard'), i18n.t('postCard.copyMessage')); // Display feedback to user
+      
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        position: 'top',
+        text1: i18n.t('postCard.copiedToClipboard'),
+        text2: i18n.t('postCard.copyMessage'),
+      });
   
       // Reset copy message after 2 seconds
       setTimeout(() => setCopyMessage(''), 2000);
     } catch (error) {
       console.error('Failed to copy text to clipboard', error);
-      Alert.alert(i18n.t('error'), i18n.t('postCard.copyError')); // Localized error message
+  
+      // Show error toast
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: i18n.t('error'),
+        text2: i18n.t('postCard.copyError'), // Localized error message
+      });
     }
   };
 
@@ -599,6 +613,7 @@ const styles = StyleSheet.create({
   },
   commentAuthor: {
     fontWeight: 'bold',
+    color: '#007aff', // Added color to indicate it's tappable
   },
   commentInput: {
     borderWidth: 1,
