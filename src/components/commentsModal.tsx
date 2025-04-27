@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Modal, StyleSheet, Button, Alert, KeyboardAvoidingView, Platform, ActionSheetIOS } from 'react-native';
-import { collection, getDocs, query, orderBy, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, limit, increment } from 'firebase/firestore';
+import { collection, getDocs, getDoc, query, orderBy, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, limit, increment } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/config/firebase';
 import i18n from '@/i18n';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigationTypes';  // Adjust the path as needed
 
 type Comment = {
   id: string;
@@ -30,12 +34,15 @@ type Props = {
 const MAX_COMMENTS = 10;
 const MAX_COMMENT_LENGTH = 200;
 
-const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser, setCommentCount, postOwnerId }) => {  const [comments, setComments] = useState<Comment[]>([]);
+const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser, setCommentCount, postOwnerId }) => {
+  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [localCommentCount, setLocalCommentCount] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedText, setEditedText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'UserProfile'>>();
 
   useEffect(() => {
     if (visible) fetchComments();
@@ -77,8 +84,8 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
         setNewComment('');
         await fetchComments();
     }catch (error) {
-        console.error('Failed to post comment:', error);
-        Alert.alert("Something went wrong", "Couldn't post your comment. Please try again.");
+      console.error('Failed to post comment:', error);
+      Alert.alert(i18n.t("comments.error"), i18n.t("comments.unexpectedError"));
     } finally {
         setIsSubmitting(false);
     }
@@ -130,10 +137,10 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
       Alert.alert(i18n.t('comments.reported'), i18n.t('comments.thankYouReport'));
     } catch (err) {
       console.error("Report failed:", err);
-      Alert.alert("Error", "Could not send report. Try again.");
+      Alert.alert(i18n.t("comments.error"), i18n.t("comments.unexpectedError"));
     }
   };
-
+  
   const handleDelete = async (commentId: string) => {
     await deleteDoc(doc(db, 'posts', postId, 'comments', commentId));
     await updateDoc(doc(db, 'posts', postId), {
@@ -158,6 +165,48 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
       console.error('Failed to update comment:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleUserProfileNavigation = async (userId: string) => {
+    if (!userId) {
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: i18n.t('comments.error'),
+        text2: i18n.t('comments.userNotFound'),
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
+  
+      if (!userDocSnap.exists()) {
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: i18n.t('comments.error'),
+          text2: i18n.t('comments.userNoLongerExists'),
+        });
+        return;
+      }
+  
+      // Proceed with navigation if the user exists
+      navigation.navigate('UserProfile', { userId });
+    } catch (error) {
+      console.error("Failed to navigate to profile:", error);
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: i18n.t('comments.error'),
+        text2: i18n.t('comments.unexpectedError'),
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -189,20 +238,23 @@ const CommentsModal: React.FC<Props> = ({ visible, onClose, postId, currentUser,
                 
                     <View style={styles.commentBubble}>
                         <View style={styles.commentHeader}>
-                          <Text style={styles.commentAuthor}>{item.userName}</Text>
+                          <TouchableOpacity onPress={() => handleUserProfileNavigation(item.userId)}>
+                            <Text style={styles.commentAuthor}>{item.userName}</Text>
+                          </TouchableOpacity>
+
                           {(() => {
-                             const isCommentAuthor = item.userId === currentUser.uid;
-                             const isPostOwner = currentUser.uid === postOwnerId;
-                             const shouldShowEllipsis = !isCommentAuthor || (isPostOwner && !isCommentAuthor);
- 
-                             return shouldShowEllipsis ? (
-                               <TouchableOpacity onPress={() => handleCommentMenu(item)}>
-                                 <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
-                               </TouchableOpacity>
-                             ) : null;
-                           })()}
- 
-                         </View>
+                            const isCommentAuthor = item.userId === currentUser.uid;
+                            const isPostOwner = currentUser.uid === postOwnerId;
+                            const shouldShowEllipsis = !isCommentAuthor || (isPostOwner && !isCommentAuthor);
+
+                            return shouldShowEllipsis ? (
+                              <TouchableOpacity onPress={() => handleCommentMenu(item)}>
+                                <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
+                              </TouchableOpacity>
+                            ) : null;
+                          })()}
+
+                        </View>
                 
                         {editingId === item.id ? (
                         <>
@@ -343,10 +395,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 2,
-  },
+  },  
   commentAuthor: {
     fontWeight: 'bold',
     fontSize: 14,
+    color: '#007aff', // Added color to indicate it's tappable
   },
   commentText: {
     fontSize: 14,

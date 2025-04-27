@@ -1,5 +1,37 @@
 (Daily logs of what have been worked on)
 
+### 04-26
+     react-native-image-zoom-viewer:
+     npm i react-native-image-zoom-viewer --save
+     Implement Clipboard CopyFeature:
+     npx expo install expo-clipboard
+     Install Toast:
+     npm i react-native-toast-message
+ 
+ ### 04-23
+     menu for each comment
+     actionsheetIOS for contextual options
+     Logic for report, delete, and edit with role checks
+ 
+ ### 04-22
+     Enable Code Shrinking & Obfuscation
+     Install Firebase Analytics with React Native Firebase
+     dependencies:
+     expo install expo-firebase-analytics
+     Firebase Crashlytics setup (Expo + EAS Build)
+     dependencies needed:
+     npm install @react-native-firebase/app@21.14.0 \
+                 @react-native-firebase/auth@21.14.0 \
+                 @react-native-firebase/firestore@21.14.0
+     npm i @react-native-firebase/analytics
+     remove expo-firebase-analytics
+     npm uninstall expo-firebase-analytics
+     We updated to Firebasev22+ (There is nothing to do for now)
+     Implement In-App Update (Play Store):
+     npm i expo-updates
+     sp-react-native-in-app-updates:
+     npm install sp-react-native-in-app-updates --save
+
 ### 04-20
     Smart Suppression of notifications: Don't show a push notification if the user is already in the chat with the sender.
     npm install date-fns --save

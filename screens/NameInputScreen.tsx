@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, FunctionComponent } from 'react';
-import { View, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, TextInput, Button, StyleSheet, Alert, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth } from "firebase/auth";
 import i18n from '@/i18n'; 
@@ -52,12 +52,12 @@ const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }
 
     const handleSaveName = async () => {
         if (!name.trim()) {
-            Alert.alert("Error", "Name cannot be empty.");
+            Alert.alert(i18n.t('error'), i18n.t('nameEmptyError'));
             return;
         }
 
         if (!userId) {
-            Alert.alert('Missing user information.');
+            Alert.alert(i18n.t('error'), i18n.t('missingUserInfo'));
             return;
         }
 
@@ -80,16 +80,21 @@ const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }
         } catch (error) {
             // Alert.alert(i18n.t('error'), i18n.t('saveError'));
             console.error('Failed to save name', error);
-            Alert.alert("Failed to save name. Please try again.");
+            Alert.alert(i18n.t('error'), i18n.t('saveError'));
         }
     };
 
     if (checking) {
-        return <ActivityIndicator size="large" color="#0000ff" />;
+        return (
+            <View style={styles.loaderContainer}>
+                <ActivityIndicator size="large" color="#26c6da" />
+            </View>
+        );
     }
 
     return (
         <View style={styles.container}>
+            <Text style={styles.title}>{i18n.t('nameInputTitle')}</Text>
             <TextInput
                 placeholder={i18n.t('nameInputPrompt')}
                 value={name}
@@ -97,7 +102,9 @@ const NameInputScreen: FunctionComponent<NameInputScreenProps> = ({ navigation }
                 style={styles.input}
                 autoFocus
             />
-            <Button title={i18n.t('saveName')} onPress={handleSaveName} />
+            <TouchableOpacity style={styles.saveButton} onPress={handleSaveName}>
+                <Text style={styles.saveButtonText}>{i18n.t('saveName')}</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -107,15 +114,46 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20
+        padding: 20,
+        backgroundColor: '#f8f8f8'
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 20,
+        textAlign: 'center',
     },
     input: {
         width: '100%',
-        height: 40,
-        marginVertical: 10,
+        height: 50,
+        marginVertical: 15,
+        padding: 15,
         borderWidth: 1,
-        padding: 10,
+        borderRadius: 8,
+        borderColor: '#ccc',
+        fontSize: 16,
+        backgroundColor: '#fff',
     },
+    saveButton: {
+        width: '100%',
+        height: 50,
+        backgroundColor: '#007aff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    saveButtonText: {
+        fontSize: 18,
+        color: '#fff',
+        fontWeight: '600',
+    },
+    loaderContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+    }
 });
 
 export default NameInputScreen;

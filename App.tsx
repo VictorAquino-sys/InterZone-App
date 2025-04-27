@@ -38,6 +38,7 @@ import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
 import { logScreen } from '@/utils/analytics';
+import Toast from 'react-native-toast-message';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

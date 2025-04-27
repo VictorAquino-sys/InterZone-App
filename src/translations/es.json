@@ -28,8 +28,6 @@
     "internalError": "Algo salió mal en el servidor. Inténtalo de nuevo pronto.",
     "emailAlreadyInUse": "La dirección de correo electrónico ya está en uso. Por favor, usa otro correo electrónico.",
     "passwordRequirement": "La contraseña debe tener al menos 6 caracteres y no mas de 20.",
-
-
     "troubleAccess": "¿Tienes problemas para acceder?",
     "forgotPasswordLink": "Restablecer contraseña",
     "resendVerificationLink": "Reenviar verificación",
@@ -49,9 +47,14 @@
     "resetSentMessage": "Te hemos enviado un enlace para restablecer tu contraseña.",
     "resetFailedTitle": "Error al restablecer",
     "resetFailedMessage": "No se pudo enviar el correo de restablecimiento.",
-    
-    "nameInputPrompt": "Introduce tu nombre",
-    "saveName": "Guardar",
+
+
+    "nameInputTitle": "Ingresa tu nombre",
+    "nameInputPrompt": "Tu nombre",
+    "saveName": "Guardar nombre",
+    "nameEmptyError": "El nombre no puede estar vacío.",
+    "missingUserInfo": "Falta la información del usuario.",
+    "saveError": "Error al guardar el nombre. Intenta nuevamente.",
     "profileTitle": "Perfil",
     "updateProfileButton": "Actualizar Perfil",
     "logoutButton": "Cerrar sesión",
@@ -112,7 +115,7 @@
         "ruteros": "Ruteros",
         "hotels": "Hoteles",
         "business": "Emprendimientos",
-        "tutors": "Tutores"        
+        "tutors": "Tutores"
     },
     "testYourKnowledge": "Cuanto sabes sobre musica?",
     "Villareal": "Villareal - Historia Universal",
@@ -214,7 +217,12 @@
         "close": "Cerrar",
         "edit": "Editar",
         "delete": "Eliminar",
-        "charCount": "{{count}} / {{max}}"
+        "charCount": "{{count}} / {{max}}",
+
+        "error": "Error",
+        "userNotFound": "Perfil de usuario no encontrado.",
+        "userNoLongerExists": "Este usuario ya no existe.",
+        "unexpectedError": "Ocurrió un error inesperado. Por favor, inténtelo de nuevo más tarde."
       },
 
       "postCard": {
@@ -230,8 +238,13 @@
         "edit": "editar",
         "delete": "eliminar",
         "update": "Enviar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "copySuccess": "¡Texto de la publicación copiado al portapapeles!",
+        "copiedToClipboard": "Copiado al portapapeles",
+        "copyMessage": "¡El texto de la publicación ha sido copiado!",
+        "copyError": "Error al copiar el texto"
     },
+    "error": "Error",
     
     "messages": {
         "noConversations": "💬 Aún no tienes conversaciones.",
