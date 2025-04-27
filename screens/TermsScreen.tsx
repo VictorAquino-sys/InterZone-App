@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Button, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Button, Alert, Linking } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,10 +11,7 @@ import { useUser } from '@/contexts/UserContext';
 import { db } from '../src/config/firebase'; // Import Firestore
 import { doc, updateDoc } from 'firebase/firestore';
 
-// type TermsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Terms'>;
-
 export default function TermsScreen() {
-    // const navigation = useNavigation<TermsScreenNavigationProp>();
     const [agreed, setAgreed] = useState(false);
     const scrollRef = useRef<ScrollView>(null);
     const { user, updateUserProfile } = useUser();
@@ -47,6 +44,10 @@ export default function TermsScreen() {
       }
     };
 
+    const openLink = (url: string) => {
+      Linking.openURL(url);
+    };
+
     return (
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -56,9 +57,9 @@ export default function TermsScreen() {
             <Text style={styles.title}>{i18n.t('terms.title')}</Text>
       
             <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 40 }}>
-            <Text style={styles.termsText}>
+              <Text style={styles.termsText}>
                 {i18n.t('terms.text')}
-            </Text>
+              </Text>
             </ScrollView>
       
             <View style={{ marginBottom: 20 }}>
@@ -72,7 +73,17 @@ export default function TermsScreen() {
                 theme={{ colors: { primary: '#007AFF' } }}
               />
       
-                <Button title={i18n.t('terms.continue')} onPress={handleContinue} />
+              <Button title={i18n.t('terms.continue')} onPress={handleContinue} />
+      
+              {/* Add links to Privacy Policy and Terms of Use */}
+              <View style={styles.linksContainer}>
+                <Text style={styles.linkText} onPress={() => openLink('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}>
+                  {i18n.t('terms.privacyPolicy')}
+                </Text>
+                <Text style={styles.linkText} onPress={() => openLink('https://doc-hosting.flycricket.io/interzone-terms-of-use/939c3e2c-42a7-47e6-8d8f-59e7b9890735/terms')}>
+                  {i18n.t('terms.termsOfUse')}
+                </Text>
+              </View>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -85,14 +96,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 60,
         backgroundColor: '#fff',
-      },
-      title: {
+    },
+    title: {
         fontSize: 26,
         fontWeight: 'bold',
         marginBottom: 20,
         color: '#333',
-      },
-      scroll: {
+    },
+    scroll: {
         flex: 1,
         marginBottom: 20,
         padding: 15,
@@ -103,13 +114,20 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowRadius: 4,
         elevation: 3,
-      },
-      termsText: {
+    },
+    termsText: {
         fontSize: 16,
         lineHeight: 24,
         color: '#444',
-      },
-      checkboxRow: {
-        marginBottom: 20,
-      },
+    },
+    linksContainer: {
+        marginTop: 10,
+        alignItems: 'center',
+    },
+    linkText: {
+        fontSize: 14,
+        color: '#007AFF',
+        textDecorationLine: 'underline',
+        marginVertical: 5,
+    }
 });

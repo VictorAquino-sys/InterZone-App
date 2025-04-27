@@ -1,11 +1,14 @@
 {
 
     "terms": {
-        "title": "Términos de uso",
-        "agree": "Acepto los Términos de uso. (Toque aqui)",
+        "title": "Términos de Uso",
+        "agree": "Acepto los Términos de Uso. (Haz clic aquí)",
         "continue": "Continuar",
-        "text": "¡Bienvenido a InterZone!\n\nAl usar esta aplicación, aceptas los siguientes términos:\n\n• No publicarás ni compartirás contenido abusivo, amenazante, ofensivo o de odio.\n\n• No acosarás ni intimidarás a otros usuarios.\n\n• Aceptas nuestra política de cero tolerancia hacia contenido objetable.\n\n• Puedes reportar contenido inapropiado usando la función de denuncia.\n\n• Puedes bloquear a usuarios ofensivos.\n\n• Nos reservamos el derecho de eliminar contenido y suspender cuentas que violen estos términos.\n\n• Para soporte, contáctanos a contact.interzone.devs@gmail.com\n\nTus datos se manejan de acuerdo con nuestra Política de Privacidad.\n\n(Desplázate hacia abajo para aceptar)"
+        "text": "¡Bienvenido a InterZone!\n\nAl usar esta aplicación, aceptas los siguientes términos:\n\n• No publicarás ni compartirás contenido abusivo, amenazante, ofensivo o de odio.\n\n• No acosarás ni intimidarás a otros.\n\n• Aceptas nuestra política de tolerancia cero con el contenido objetable.\n\n• Puedes reportar contenido inapropiado mediante la función de bandera.\n\n• Puedes bloquear usuarios que sean ofensivos para ti.\n\n• Nos reservamos el derecho de eliminar contenido y suspender cuentas que violen estos términos.\n\n• Para soporte, contáctanos en interzone.devs@gmail.com\n\nTu información se maneja de acuerdo con nuestra Política de Privacidad.\n\n(Pulsa hacia abajo para aceptar)",
+        "privacyPolicy": "Política de Privacidad",
+        "termsOfUse": "Términos de Uso"
     },
+
 
     "loginButton": "Iniciar sesión",
     "welcomeMessage": "¡Bienvenido a la aplicación!",
