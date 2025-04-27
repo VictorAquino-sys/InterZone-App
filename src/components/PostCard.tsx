@@ -7,11 +7,12 @@ import i18n from '@/i18n';
 import { Post } from '../contexts/PostsContext';
 import * as Clipboard from 'expo-clipboard';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, deleteDoc, addDoc, serverTimestamp, collection, updateDoc, doc, increment } from 'firebase/firestore';
+import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, deleteDoc, addDoc, serverTimestamp, collection, getDoc, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { getCategoryByKey } from '@/config/categoryData';
 import CommentsModal from './commentsModal';
 import { KeyboardAvoidingView, Platform } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
@@ -208,6 +209,34 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
+  const handleUserProfileNavigation = async (userId: string) => {
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        Toast.show({
+          type: 'error',
+          position: 'top',
+          text1: i18n.t('error'),
+          text2: i18n.t('userNotFound'),
+        });
+        return;
+      }
+
+      // Proceed with navigation if the user exists
+      onUserProfile(userId);
+    } catch (error) {
+      console.error("Failed to navigate to profile:", error);
+      Toast.show({
+        type: 'error',
+        position: 'top',
+        text1: i18n.t('error'),
+        text2: i18n.t('unexpectedError'),
+      });
+    }
+  };
+
   return (
     <View style={styles.postItem}>
       <View style={styles.postHeader}>
@@ -216,7 +245,12 @@ const PostCard: React.FC<PostCardProps> = ({
               if (item.user?.avatar) {
                 onOpenImage(item.user.avatar);
               } else {
-                Alert.alert(i18n.t('NoPhoto'));
+                Toast.show({
+                  type: 'error',
+                  position: 'top',
+                  text1: i18n.t('error'),
+                  text2: i18n.t('NoPhoto'),
+                });              
               }
             }}
           >
@@ -229,8 +263,8 @@ const PostCard: React.FC<PostCardProps> = ({
 
           <View style={styles.postDetails}>
             <TouchableOpacity
-              onPress={() => onUserProfile(item.user?.uid)}
-            >
+              onPress={() => handleUserProfileNavigation(item.user?.uid || '')} // Use navigation for post owner profile
+              >
               <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
             </TouchableOpacity>
             <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
@@ -289,7 +323,9 @@ const PostCard: React.FC<PostCardProps> = ({
           {comments.map(comment => (
             <View key={comment.id} style={styles.commentItem}>
               <View style={styles.commentHeader}>
-                <Text style={styles.commentAuthor}>{comment.userName}</Text>
+              <TouchableOpacity onPress={() => handleUserProfileNavigation(comment.userId)}>
+                  <Text style={styles.commentAuthor}>{comment.userName || i18n.t('anonymous')}</Text>
+                </TouchableOpacity>
                 {(() => {
                   const isCommentAuthor = comment.userId === user.uid;
                   const isPostOwner = user.uid === item.user?.uid;

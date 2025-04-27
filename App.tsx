@@ -37,6 +37,7 @@ import { db } from '@/config/firebase'; // adjust path if needed
 import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
+import Toast from 'react-native-toast-message';
 import { logScreen } from '@/utils/analytics';
 
 Notifications.setNotificationHandler({

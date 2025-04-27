@@ -5,6 +5,9 @@
     npm i react-native-image-zoom-viewer --save
     Implement Clipboard CopyFeature:
     npx expo install expo-clipboard
+    install Toast Message
+    npm install react-native-toast-message
+
 
 ### 04-23
     menu for each comment

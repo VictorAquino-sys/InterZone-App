@@ -217,7 +217,12 @@
         "close": "Cerrar",
         "edit": "Editar",
         "delete": "Eliminar",
-        "charCount": "{{count}} / {{max}}"
+        "charCount": "{{count}} / {{max}}",
+
+        "error": "Error",
+        "userNotFound": "Perfil de usuario no encontrado.",
+        "userNoLongerExists": "Este usuario ya no existe.",
+        "unexpectedError": "Ocurrió un error inesperado. Por favor, inténtelo de nuevo más tarde."
       },
 
       "postCard": {

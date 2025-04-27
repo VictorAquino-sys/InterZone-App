@@ -220,7 +220,12 @@
       "close": "Close",
       "edit": "Edit",
       "delete": "Delete",
-      "charCount": "{{count}} / {{max}}"
+      "charCount": "{{count}} / {{max}}",
+
+      "error": "Error",
+      "userNotFound": "User profile not found.",
+      "userNoLongerExists": "This user no longer exists.",
+      "unexpectedError": "An unexpected error occurred. Please try again later."
     },
 
     "postCard": {
