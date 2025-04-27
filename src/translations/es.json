@@ -233,8 +233,13 @@
         "edit": "editar",
         "delete": "eliminar",
         "update": "Enviar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "copySuccess": "¡Texto de la publicación copiado al portapapeles!",
+        "copiedToClipboard": "Copiado al portapapeles",
+        "copyMessage": "¡El texto de la publicación ha sido copiado!",
+        "copyError": "Error al copiar el texto"
     },
+    "error": "Error",
     
     "messages": {
         "noConversations": "💬 Aún no tienes conversaciones.",

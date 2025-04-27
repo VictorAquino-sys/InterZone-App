@@ -197,14 +197,14 @@ const PostCard: React.FC<PostCardProps> = ({
   const handleCopyText = async () => {
     try {
       await Clipboard.setStringAsync(item.content); // Copy post content to clipboard
-      setCopyMessage('Post text copied to clipboard!'); // Update the state for feedback messsage
-      Alert.alert('Copied to Clipboard', 'Post text has been copied!'); // Display feedback to user.
+      setCopyMessage(i18n.t('postCard.copySuccess')); // Update the state for feedback message
+      Alert.alert(i18n.t('postCard.copiedToClipboard'), i18n.t('postCard.copyMessage')); // Display feedback to user
   
       // Reset copy message after 2 seconds
       setTimeout(() => setCopyMessage(''), 2000);
     } catch (error) {
       console.error('Failed to copy text to clipboard', error);
-      Alert.alert('Error', 'Failed to copy the text');
+      Alert.alert(i18n.t('error'), i18n.t('postCard.copyError')); // Localized error message
     }
   };
 

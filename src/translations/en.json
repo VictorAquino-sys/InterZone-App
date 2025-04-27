@@ -107,6 +107,7 @@
     "funnyMessage": "Ah ah! Still working on this awesome feature 😆🎉",
     "anonymous": "Anonymous",
     "searchPlaceholder": "Search categories",
+
     "categories": {
       "events": "Events",
       "restaurants": "Restaurants",
@@ -235,8 +236,14 @@
       "edit": "edit",
       "delete": "delete",
       "update": "update",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "copySuccess": "Post text copied to clipboard!",
+      "copiedToClipboard": "Copied to Clipboard",
+      "copyMessage": "Post text has been copied!",
+      "copyError": "Failed to copy the text"
     },
+
+    "error": "Error",
 
     "messages": {
       "noConversations": "💬 You don’t have any conversations yet.",
