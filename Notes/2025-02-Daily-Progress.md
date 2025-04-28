@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 04-28
+    Expo Audio playback and recording in apps.
+    npx expo install expo-av
+
 ### 04-26
     react-native-image-zoom-viewer:
     npm i react-native-image-zoom-viewer --save

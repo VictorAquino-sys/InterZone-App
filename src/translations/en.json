@@ -125,6 +125,8 @@
     },
     "testYourKnowledge": "Test Your Knowledge",
 
+    "selecCategoryPrompt": "Please select a category to proceed.",
+    "waitingForLocation": "Waiting for location...",
     "createPost": "Create Post",
     "categoryRequired": "Category required.",
     "selectCategory": "Select a category",

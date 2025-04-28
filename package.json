@@ -82,7 +82,8 @@
     "react-native-vector-icons": "^10.1.0",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
-    "uuid": "^7.0.3"
+    "uuid": "^7.0.3",
+    "expo-av": "~14.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

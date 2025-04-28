@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { checkLocation } from '../../src/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../../src/navigationTypes';
+import { ContentType } from 'expo-clipboard';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -33,13 +34,20 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
-  const [manualCoords, setManualCoords] = useState<string>(''); // for user input
 
   const [locationIconVisible, setLocationIconVisible] = useState(true);
 
-
   const [selectedCategory, setSelectedCategory] = useState<string | null>('');
-  // const pickerRef = useRef<Picker<string> | null>(null);  // Use generic to specify the element type
+
+  // Check if the category supports video posts
+  const isVideoCategory = selectedCategory === 'business' || selectedCategory === 'music' || selectedCategory === "tutors";
+
+  // Disable the icons if no category is selected
+  const isVideoCategorySelected = selectedCategory !== '';
+
+  // Disable the image and video picker if no category is selected or location is still loading
+  const isCategorySelected = selectedCategory !== '';
+  const isLocationReady = !locationLoading;
 
   const { user } = useUser(); // Use the useUser hook
   const { setPosts } = usePosts();
@@ -235,6 +243,96 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
+  const uploadVideoToStorage = async (uri:string): Promise<string | null> => {
+    if(!uri) {
+      console.error("No URI provided for upload");
+      return null;
+    }
+
+    try {
+      setUploading(true);
+      console.log("Preparing the fetch the video blob from URI");
+
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      if(!blob || blob.size === 0) {
+        console.error("Blob is empty or failed to create blob from URI:", uri);
+        return null;
+      }
+
+      console.log("Video blob created successfully, preparing upload...");
+
+      // Extract the file extension and set MIME type for video
+      const fileExtension = uri.split('.').pop() ?? 'mp4';
+      const mimeType = mime.getType(fileExtension) || 'application/octet-stream';
+
+      if (!authUser) {
+        console.error("Authentication required for uploading videos.");
+        return null;
+      }
+
+      // Generate a unique path for the video upload in FIrebase Storage
+      const videoName = `postVideos/${authUser.uid}/${Date.now()}.${fileExtension}`;
+      const videoRef = ref(storage, videoName);
+
+      console.log("Starting video upload for:", videoName, "with MIME type", mimeType);
+
+      // Upload the video blob to Firebase Storage
+      await uploadBytes(videoRef, blob, { contentType: mimeType });
+
+      // Get the download URL of the uploaded video
+      const downloadUrl = await getDownloadURL(videoRef);
+      console.log("Video uploaded successfully:", downloadUrl);
+
+      return downloadUrl; // Return the download URL of the video
+    } catch (error: any) {
+      console.error("Error uploading video:", error);
+      if (error.code) {
+        console.error("Firebase error code:", error.code);
+      }
+      Alert.alert("Upload Error", (error as Error).message || "Unknown error occurred");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleVideoUpload = async (uri: string): Promise<string> => {
+    try {
+      const videoUrl = await uploadVideoToStorage(uri);
+      return videoUrl || "";
+    } catch (error) {
+      console.error("Error handling the video upload:", error);
+      return "";
+    }
+  };
+
+  const pickVideo = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+      console.log('Video selected:', result.assets[0].uri);
+
+      // If you want to upload the video, call `handleVideoUpload`
+      const videoUrl = await handleVideoUpload(result.assets[0].uri);
+      console.log("Video uploaded to Firebase:", videoUrl);
+    } else {
+      console.log('Video picker was canceled or no video was selected');
+    }
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       setLocationIconVisible(true); // Reset icon visibility
@@ -359,10 +457,26 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           )}
 
           <View style={styles.iconsContainer}>
-            <TouchableOpacity onPress={pickImage} disabled={locationLoading}>
-                <Ionicons name="image-outline" size={30} color={locationLoading ? "gray" : "#FF9966"} />
+            {/* Image picker button */}
+            <TouchableOpacity 
+              onPress={pickImage} 
+              disabled={locationLoading || !isLocationReady}> // Disable until category is selected and location is ready
+                <Ionicons 
+                  name="image-outline" 
+                  size={30} 
+                  color={(!isCategorySelected || !isLocationReady) ? "gray" : "#FF9966"} /> // Gray out if no category or location is ready
             </TouchableOpacity>
 
+            {/* Video picker button */}
+            {isCategorySelected && isLocationReady && ( isVideoCategory && ( // Show video icon only when category and location are ready
+              <TouchableOpacity onPress={pickVideo}>
+                <Ionicons
+                  name="videocam"
+                  size={30}
+                  color={(!isCategorySelected || !isLocationReady) ? "gray" : "#FF9966"} // Gray out if no category or location is ready
+                />
+              </TouchableOpacity>
+            ))}
 
             {locationIconVisible ? (
               <TouchableOpacity onPress={handleAddLocation}>
@@ -403,10 +517,19 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             </Picker>
           </View>
 
+          {/* Show prompts when category or location is not ready */}
+          {!isCategorySelected && (
+            <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
+          )}
+
+          {locationLoading && (
+            <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
+          )}
+
           <TouchableOpacity
             style={styles.buttonContainer}
             onPress={handleDone}
-            disabled={uploading || locationLoading}
+            disabled={uploading || locationLoading || !isCategorySelected || !isLocationReady}
             activeOpacity={0.8} // Optional: Controls the opacity on touch
           >
             <Text style={styles.buttonText}>{uploading ? "Uploading..." : i18n.t('doneButton')}</Text>
@@ -504,5 +627,19 @@ const styles = StyleSheet.create({
     color: 'white', // Text color
     fontSize: 20, // Font size
     fontWeight: 'bold', // Font weight
+  },
+  categoryPrompt: {
+    color: 'gray',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
+    paddingHorizontal: 20, // Add some padding for better visual alignment
+  },
+  locationPrompt: {
+    color: 'gray',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
+    paddingHorizontal: 20, // Add some padding for better visual alignment
   },
 });

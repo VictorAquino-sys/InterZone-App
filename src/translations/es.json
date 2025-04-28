@@ -89,6 +89,9 @@
     "send": "Enviar",
     "NoPhoto": "No hay foto disponible",
 
+    "selecCategoryPrompt": "Por favor, selecciona una categoría para continuar.",
+    "waitingForLocation": "Esperando por la ubicación...",
+
     "postPlaceholder": "¿Qué estás pensando?",
     "doneButton": "Publicar",
     "emptyPostTitle": "Publicación vacía",
