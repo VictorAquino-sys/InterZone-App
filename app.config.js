@@ -31,7 +31,10 @@ export default {
       infoPlist: {
         LSApplicationQueriesSchemes: ['itms-apps'],
         NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events while you are using the app. For example, you might get alerts about a concert or food truck gathering near you.",
-        NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you’ll see local meetups and concerts happening in your city.",
+        NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you will see local meetups and concerts happening in your city.",
+        NSMicrophoneUsageDescription: "We need access to your microphone to record videos.",
+        NSPhotoLibraryUsageDescription: "InterZone needs access to your photo library to upload and share media.",
+        NSCameraUsageDescription: "InterZone needs access to your camera to record and upload videos or photos.",
         ITSAppUsesNonExemptEncryption: false,
         EXUpdatesRuntimeVersion: "1.0.0",
         EXUpdatesURL: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6"
@@ -50,6 +53,7 @@ export default {
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.READ_EXTERNAL_STORAGE", 
         "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SCHEDULE_EXACT_ALARM"
       ],
@@ -107,6 +111,12 @@ export default {
           locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location.",
           isAndroidBackgroundLocationEnabled: false,
           isIosBackgroundLocationEnabled: false
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
         }
       ],
       [

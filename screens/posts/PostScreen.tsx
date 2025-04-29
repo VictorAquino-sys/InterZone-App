@@ -19,6 +19,8 @@ import { checkLocation } from '../../src/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../../src/navigationTypes';
 import { ContentType } from 'expo-clipboard';
+import { Video } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -32,7 +34,10 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [city, setCity] = useState<string | null>(null); // To store the city name
   const [location, setLocation] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
+  const [videoPath, setVideoPath] = useState<string | null>(null); // Video path state
+  const [videoUri, setVideoUri] = useState<string | null>(null); // Store video URI
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
+  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null); // New state to track media type
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
 
   const [locationIconVisible, setLocationIconVisible] = useState(true);
@@ -109,6 +114,87 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
+  const clearCache = async () => {
+    try {
+      const cacheUri = videoUri;
+      if (cacheUri) {
+        await FileSystem.deleteAsync(cacheUri);  // Remove the cached file
+        console.log("Cache cleared for file:", cacheUri);
+      }
+    } catch (error) {
+      console.error("Failed to clear cache:", error);
+    }
+  };
+
+  const uploadVideoToStorage = async (uri:string): Promise<string | null> => {
+    if(!uri) {
+      console.error("No URI provided for upload");
+      return null;
+    }
+
+    try {
+      setUploading(true);
+      console.log("Preparing the fetch the video blob from URI");
+
+      console.log("Before fetch");
+
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      console.log("After fetch");
+
+      if (!response.ok) {
+        console.error("Failed to fetch the video from URI:", uri);
+        throw new Error("Failed to fetch video");
+      }
+
+
+      if(!blob || blob.size === 0) {
+        console.error("Blob is empty or failed to create blob from URI:", uri);
+        return null;
+      }
+
+      console.log("setting timeout to 5000");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log("Video blob created successfully, preparing upload...");
+
+      // Extract the file extension and set MIME type for video
+      const fileExtension = uri.split('.').pop() ?? 'mp4';
+      const mimeType = mime.getType(fileExtension) || 'application/octet-stream';
+
+      if (!authUser) {
+        console.error("Authentication required for uploading videos.");
+        return null;
+      }
+
+      // Generate a unique path for the video upload in FIrebase Storage
+      const videoName = `postVideos/${authUser.uid}/${Date.now()}.${fileExtension}`;
+      const videoRef = ref(storage, videoName);
+
+      console.log("Starting video upload for:", videoName, "with MIME type", mimeType);
+
+      // Upload the video blob to Firebase Storage
+      await uploadBytes(videoRef, blob, { contentType: mimeType });
+      setVideoPath(videoRef.fullPath); // Store video path for future use or deletion
+
+      // Get the download URL of the uploaded video
+      const downloadUrl = await getDownloadURL(videoRef);
+      console.log("Video uploaded successfully:", downloadUrl);
+
+      return downloadUrl; // Return the download URL of the video
+    } catch (error: any) {
+      console.error("Error uploading video:", error);
+      if (error.code) {
+        console.error("Firebase error code:", error.code);
+      }
+      Alert.alert("Upload Error", (error as Error).message || "Unknown error occurred");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const resizeImage = async (uri: string): Promise<string> => {
     const resizedPhoto = await manipulateAsync(
       uri,
@@ -145,6 +231,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri); // Store selected image URI
+      setMediaType('image'); // Set media type to image
+      setVideoUri(null); // Clear video URI if image is selected
       // handleImageUpload(result.assets[0].uri); // Pass URI to function, ensuring it's a string
     } else {
       console.log('Image picker was canceled or no image was selected');
@@ -243,91 +331,54 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
-  const uploadVideoToStorage = async (uri:string): Promise<string | null> => {
-    if(!uri) {
-      console.error("No URI provided for upload");
-      return null;
-    }
-
-    try {
-      setUploading(true);
-      console.log("Preparing the fetch the video blob from URI");
-
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      if(!blob || blob.size === 0) {
-        console.error("Blob is empty or failed to create blob from URI:", uri);
-        return null;
-      }
-
-      console.log("Video blob created successfully, preparing upload...");
-
-      // Extract the file extension and set MIME type for video
-      const fileExtension = uri.split('.').pop() ?? 'mp4';
-      const mimeType = mime.getType(fileExtension) || 'application/octet-stream';
-
-      if (!authUser) {
-        console.error("Authentication required for uploading videos.");
-        return null;
-      }
-
-      // Generate a unique path for the video upload in FIrebase Storage
-      const videoName = `postVideos/${authUser.uid}/${Date.now()}.${fileExtension}`;
-      const videoRef = ref(storage, videoName);
-
-      console.log("Starting video upload for:", videoName, "with MIME type", mimeType);
-
-      // Upload the video blob to Firebase Storage
-      await uploadBytes(videoRef, blob, { contentType: mimeType });
-
-      // Get the download URL of the uploaded video
-      const downloadUrl = await getDownloadURL(videoRef);
-      console.log("Video uploaded successfully:", downloadUrl);
-
-      return downloadUrl; // Return the download URL of the video
-    } catch (error: any) {
-      console.error("Error uploading video:", error);
-      if (error.code) {
-        console.error("Firebase error code:", error.code);
-      }
-      Alert.alert("Upload Error", (error as Error).message || "Unknown error occurred");
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleVideoUpload = async (uri: string): Promise<string> => {
-    try {
-      const videoUrl = await uploadVideoToStorage(uri);
-      return videoUrl || "";
-    } catch (error) {
-      console.error("Error handling the video upload:", error);
-      return "";
-    }
-  };
-
   const pickVideo = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Sorry, we need camera roll permissions to make this work!');
       return;
     }
-
+  
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
       quality: 1,
     });
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-      console.log('Video selected:', result.assets[0].uri);
 
-      // If you want to upload the video, call `handleVideoUpload`
-      const videoUrl = await handleVideoUpload(result.assets[0].uri);
-      console.log("Video uploaded to Firebase:", videoUrl);
+    if (!authUser || !authUser.uid) {
+      console.error("User is not authenticated!");
+      return;
+    }
+
+    console.log("User UID:", authUser.uid);
+    console.log("Uploading to path: postVideos/" + authUser.uid + "/..." );
+
+    if (!result.canceled) {
+      const videoUri = result.assets[0].uri;
+      let videoDurationInMillis = result.assets[0].duration ?? 0; // Duration in milliseconds
+  
+      // Ensure duration is a valid number and convert to seconds
+      if (typeof videoDurationInMillis === 'number') {
+        const videoDurationInSeconds = videoDurationInMillis / 1000; // Convert from milliseconds to seconds
+        console.log('Video Duration (seconds):', videoDurationInSeconds);
+  
+        // Check if the video duration is greater than 4 minutes (240 seconds)
+        if (videoDurationInSeconds > 240) {
+          Alert.alert('Video too long', 'Please select a video that is no longer than 4 minutes.');
+          return; // Prevent further actions if the video is too long
+        }
+  
+        setVideoUri(videoUri); // Store the selected video URI
+        setMediaType('video'); // Set media type to video
+        setImageUri(null); // Clear image URI if video is selected
+        console.log('Video selected:', videoUri);
+  
+        // Proceed with video upload
+        // const videoUrl = await handleVideoUpload(videoUri);
+        // console.log('Video uploaded to Firebase:', videoUrl);
+      } else {
+        Alert.alert('Error', 'The video duration is invalid.');
+      }
     } else {
       console.log('Video picker was canceled or no video was selected');
     }
@@ -362,6 +413,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       return;
     }
 
+    if (mediaType === null) {
+      Alert.alert("Media Error", "Please select either an image or a video, not both.");
+      return;
+    }
+
     setUploading(true);
 
     try {
@@ -373,20 +429,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
       // Upload image if provided
       let imageUrl = "";
-      if (imageUri) {
+      let videoUrl = "";
+
+      if (mediaType === 'image' && imageUri) {
         console.log("Resizing and uploading image...");
-        const uploadUrl = await handleImageUpload(imageUri);
-        // imageUrl = await uploadImageToStorage(imageUri) || '';
-        if (uploadUrl) {
-          imageUrl = uploadUrl;
-        } else {
-          Alert.alert("Upload Failed", "Could not upload image. Try again.");
-          setUploading(false);
-          return;
-        }
+        imageUrl = await uploadImageToStorage(imageUri) || '';
+      } else if (mediaType === 'video' && videoUri) {
+        videoUrl = await uploadVideoToStorage(videoUri) || '';
+        console.log("Uploading video...");
       }
 
-      console.log("Image URL to be stored in Firestore:", imageUrl);
 
       // Create post with latest user data
       const postData = {
@@ -395,6 +447,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         timestamp: Timestamp.fromDate(new Date()),
         imageUrl: imageUrl || "", // Attach uploaded image URL
         imagePath: imagePath || "",
+        videoUrl: videoUrl || "", // Attach uploaded video URL
+        videoPath: videoPath || "", // Store video path for later use
         user: {
           uid: authUser.uid,
           name: latestUserData.name || "Anonymous", // Use updated name
@@ -417,7 +471,10 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       setLocation(null);
       setImageUri(null);
       setImagePath(null);      // ✅ Clear stored image path
+      setVideoUri(null); // Clear stored video URI
+      setVideoPath(null); // Clear video path
       setSelectedCategory(''); // ✅ Reset selected category
+      setMediaType(null); // Reset media type
     } catch (error: any) {
       console.error("Error adding post: ", error);
       Alert.alert("Upload Error", (error as Error).message || "Unknow error occurred");
@@ -449,6 +506,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             </Text>
           </View>
 
+          {/* Image Preview */}
           {imageUri && (
             <View style={styles.imagePreviewContainer}>
               <Text style={styles.previewText}>{i18n.t('imagePreview')}</Text>
@@ -456,24 +514,40 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             </View>
           )}
 
+          {/* Video Preview */}
+          {videoUri && (
+            <View style={styles.imagePreviewContainer}>
+              <Text style={styles.previewText}>{i18n.t('videoPreview')}</Text>
+              <Video
+                source={{ uri: videoUri }}
+                rate={1.0}
+                volume={1.0}
+                isMuted={false}
+                shouldPlay
+                isLooping
+                style={styles.videoPreview}
+              />
+            </View>
+          )}
+
           <View style={styles.iconsContainer}>
             {/* Image picker button */}
             <TouchableOpacity 
               onPress={pickImage} 
-              disabled={locationLoading || !isLocationReady}> // Disable until category is selected and location is ready
+              disabled={locationLoading || !isLocationReady || !isCategorySelected || mediaType === 'video'}>
                 <Ionicons 
                   name="image-outline" 
                   size={30} 
-                  color={(!isCategorySelected || !isLocationReady) ? "gray" : "#FF9966"} /> // Gray out if no category or location is ready
+                  color={(!isCategorySelected || !isLocationReady || mediaType === 'video') ? "gray" : "#FF9966"} /> 
             </TouchableOpacity>
 
             {/* Video picker button */}
             {isCategorySelected && isLocationReady && ( isVideoCategory && ( // Show video icon only when category and location are ready
-              <TouchableOpacity onPress={pickVideo}>
+              <TouchableOpacity onPress={pickVideo} disabled={mediaType === 'image'}>
                 <Ionicons
                   name="videocam"
                   size={30}
-                  color={(!isCategorySelected || !isLocationReady) ? "gray" : "#FF9966"} // Gray out if no category or location is ready
+                  color={(!isCategorySelected || !isLocationReady || mediaType === 'image') ? "gray" : "#FF9966"} // Gray out if no category or location is ready
                 />
               </TouchableOpacity>
             ))}
@@ -641,5 +715,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
     paddingHorizontal: 20, // Add some padding for better visual alignment
+  },
+  videoPreview: {
+    width: '100%',
+    height: 200,  // Adjust based on your layout
+    marginTop: 10,
   },
 });

@@ -13,6 +13,7 @@ import { getCategoryByKey } from '@/config/categoryData';
 import CommentsModal from './commentsModal';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { Video } from 'expo-av';
 
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
@@ -322,6 +323,21 @@ const PostCard: React.FC<PostCardProps> = ({
         enableSwipeDown={true} // Allow swipe down to close
         />
       </Modal>
+
+      {/* Video Preview */}
+      {item.videoUrl && (
+        <View style={styles.videoPreviewContainer}>
+          <Video
+            source={{ uri: item.videoUrl }}  // Use videoUrl from item
+            rate={1.0}
+            volume={1.0}
+            isMuted={false}
+            shouldPlay
+            isLooping
+            style={styles.videoPreview}
+          />
+        </View>
+      )}
 
       <View style={styles.likeButtonWrapper}>
         <LikeButton postId={item.id} userId={userId} />
@@ -686,5 +702,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     textAlign: 'center',
+  },
+
+
+  videoPreviewContainer: {
+    marginTop: 10,
+    alignItems: 'center', // Center the video preview
+  },
+  videoPreview: {
+    width: '100%',
+    height: 200,  // You can adjust the height as needed
+    marginTop: 10,
   },
 });
