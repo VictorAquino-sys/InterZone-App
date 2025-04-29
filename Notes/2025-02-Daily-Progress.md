@@ -3,6 +3,9 @@
 ### 04-28
     Expo Audio playback and recording in apps.
     npx expo install expo-av
+    Install expo-video:
+    npx expo install expo-video
+
 
 ### 04-26
     react-native-image-zoom-viewer:

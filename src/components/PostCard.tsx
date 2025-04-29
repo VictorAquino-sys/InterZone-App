@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from 'react';
+import React, { useEffect, useState, useRef} from 'react';
 import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button, Modal } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Avatar from './Avatar';
@@ -13,7 +13,9 @@ import { getCategoryByKey } from '@/config/categoryData';
 import CommentsModal from './commentsModal';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { Video } from 'expo-av';
+// import { Video, ResizeMode } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
+
 
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
@@ -28,6 +30,10 @@ interface PostCardProps {
     onOpenImage: (imageUrl: string) => void;
     onUserProfile: (userId: string) => void;
     formatDate: (timestamp: Timestamp | null | undefined) => string;
+
+    // onVideoClick: (videoUrl: string) => void; // Pass the full-screen state
+    isFullScreen: boolean;
+    toggleFullScreen: () => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -38,7 +44,11 @@ const PostCard: React.FC<PostCardProps> = ({
   onReport,
   onOpenImage,
   onUserProfile,
-  formatDate
+  formatDate,
+  
+  // onVideoClick, // Add this prop
+  isFullScreen,  // Full-screen state passed from HomeScreen
+  toggleFullScreen,  // Full-screen toggle passed from HomeScreen
 }) => {
   const category = getCategoryByKey(item.categoryKey);
 
@@ -55,6 +65,13 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const [zoomModalVisible, setZoomModalVisible] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
+
+  const [isPlaying, setIsPlaying] = useState(false); // State to track play/pause
+  const videoRef = useRef<VideoView | null>(null); // Now it can hold a reference to the Video component
+  const [status, setStatus] = useState<any>({}); // Update state with appropriate type for Video status
+  const [showControls, setShowControls] = useState(false); // To control visibility of the play/pause button
+  const [isVideoModalVisible, setIsVideoModalVisible] = useState(false); // Modal visibility state
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null); // State for selected video URL
 
   // Fetch comment count on mount
   useEffect(() => {
@@ -196,6 +213,45 @@ const PostCard: React.FC<PostCardProps> = ({
     setZoomModalVisible(false); // Close zoom modal
   };
 
+  // Create video player instance
+  const player = useVideoPlayer(item.videoUrl, (player) => {
+    player.loop = true;
+    player.play();
+  });
+
+  // Handle video play/pause
+  const togglePlayPause = () => {
+    if (isPlaying) {
+      player.pause();
+    } else {
+      player.play();
+    }
+    setIsPlaying(!isPlaying); // Toggle play/pause state
+  };
+
+  const handleVideoClick = (videoUrl: string) => {
+    console.log('Received video URL:', videoUrl);  // Log the video URL passed to the function
+    setSelectedVideoUrl(videoUrl);
+    setIsVideoModalVisible(true); // Show the video modal
+  };
+
+  const closeVideoModal = () => {
+    setIsVideoModalVisible(false); // Close the modal
+    setSelectedVideoUrl(null); // Clear the video URL
+  };
+
+  // Handle touch start (show controls)
+  const handleTouchStart = () => {
+    setShowControls(true);
+  };
+
+  // Handle touch end (hide controls)
+  const handleTouchEnd = () => {
+    setTimeout(() => {
+      setShowControls(false); // Hide controls after 1 second
+    }, 1000);
+  };
+
   const handleCopyText = async () => {
     try {
       await Clipboard.setStringAsync(item.content); // Copy post content to clipboard
@@ -324,19 +380,73 @@ const PostCard: React.FC<PostCardProps> = ({
         />
       </Modal>
 
-      {/* Video Preview */}
+      {/* Post content */}
       {item.videoUrl && (
-        <View style={styles.videoPreviewContainer}>
-          <Video
-            source={{ uri: item.videoUrl }}  // Use videoUrl from item
-            rate={1.0}
-            volume={1.0}
-            isMuted={false}
-            shouldPlay
-            isLooping
-            style={styles.videoPreview}
+        <View style={styles.videoWrapper}>
+          <VideoView
+            player={player}
+            style={styles.video}
+            allowsFullscreen
+            allowsPictureInPicture
           />
+          
+          {/* Play/Pause button */}
+          <TouchableOpacity
+            onPress={togglePlayPause}
+            style={styles.playPauseButton}
+          >
+            <Text style={styles.playPauseText}>{isPlaying ? 'Pause' : 'Play'}</Text>
+          </TouchableOpacity>
+
+          {/* Expand/Contract Icon */}
+          <TouchableOpacity 
+            onPress={() => item.videoUrl && handleVideoClick(item.videoUrl)} // Ensure it's not null
+            style={styles.expandButton}
+          >
+            <Ionicons 
+              name={isFullScreen ? 'contract' : 'expand'}  // Toggle icon between expand and contract
+              size={20} 
+              color="white" 
+            />
+          </TouchableOpacity>
         </View>
+      )}
+
+      {/* Video Modal */}
+      {isVideoModalVisible && selectedVideoUrl  && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isVideoModalVisible}
+          onRequestClose={closeVideoModal}
+        >
+          <TouchableOpacity style={styles.fullScreenModal} onPress={closeVideoModal}>
+            {/* <View style={styles.videoContainer}> */}
+              <VideoView
+                player={player}
+                style={styles.fullScreenVideo}
+                allowsFullscreen
+                allowsPictureInPicture
+              />
+              <TouchableOpacity
+                onPress={togglePlayPause}
+                style={styles.playPauseButton}
+              >
+                <Text style={styles.playPauseText}>{isPlaying ? "Pause" : "Play"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={closeVideoModal}
+                style={styles.expandButton}
+              >
+                <Ionicons
+                  name="close-circle-outline"
+                  size={30}
+                  color="white"
+                />
+              </TouchableOpacity>
+            {/* </View> */}
+          </TouchableOpacity>
+        </Modal>
       )}
 
       <View style={styles.likeButtonWrapper}>
@@ -705,13 +815,64 @@ const styles = StyleSheet.create({
   },
 
 
-  videoPreviewContainer: {
-    marginTop: 10,
-    alignItems: 'center', // Center the video preview
+  fullScreenModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
   },
-  videoPreview: {
+  videoContainer: {
+    // flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Shady background for the modal
+  },
+  videoWrapper: {
+    position: 'relative',
+    width: '100%',  // Make it take up the full width
+    height: 200,  // Default height for video container when not in full-screen mode
+    backgroundColor: 'black',  // Optionally, add a background color to make it stand out
+  },
+  video: {
     width: '100%',
-    height: 200,  // You can adjust the height as needed
-    marginTop: 10,
+    height: '100%',
   },
+  fullScreenVideo: {
+    width: '90%',
+    height: '90%',  // Full-screen video size
+  },
+  playPauseButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: '40%',
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+  },
+  playPauseText: {
+    color: 'white',
+    fontSize: 15,
+  },  
+  fullScreenButton: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+  },
+  // Expand/Contract Button Style
+  expandButton: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent background
+    padding: 10,
+    borderRadius: 50,
+    zIndex: 999,  // Ensure it appears on top of the video
+  },
+  fullScreenText: {
+    color: 'white',
+    fontSize: 14,
+  }
 });
