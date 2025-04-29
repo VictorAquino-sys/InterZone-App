@@ -120,6 +120,13 @@ export default {
         }
       ],
       [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      [
         "expo-asset",
         {
           "assets": ["./assets"]
