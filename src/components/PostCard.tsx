@@ -72,6 +72,8 @@ const PostCard: React.FC<PostCardProps> = ({
   const [showControls, setShowControls] = useState(false); // To control visibility of the play/pause button
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false); // Modal visibility state
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null); // State for selected video URL
+  const ref = useRef(null);
+
 
   // Fetch comment count on mount
   useEffect(() => {
@@ -214,7 +216,7 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   // Create video player instance
-  const player = useVideoPlayer(item.videoUrl, (player) => {
+  const player = useVideoPlayer(item.videoUrl, player => {
     player.loop = true;
     player.play();
   });
@@ -222,9 +224,9 @@ const PostCard: React.FC<PostCardProps> = ({
   // Handle video play/pause
   const togglePlayPause = () => {
     if (isPlaying) {
-      player.pause();
+        player.pause();
     } else {
-      player.play();
+        player.play();
     }
     setIsPlaying(!isPlaying); // Toggle play/pause state
   };
@@ -384,10 +386,11 @@ const PostCard: React.FC<PostCardProps> = ({
       {item.videoUrl && (
         <View style={styles.videoWrapper}>
           <VideoView
+            ref={ref}
             player={player}
             style={styles.video}
             allowsFullscreen
-            allowsPictureInPicture
+            allowsPictureInPicture={false}
           />
           
           {/* Play/Pause button */}

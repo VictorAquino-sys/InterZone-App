@@ -510,9 +510,9 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   };
 
   // Video container styles (adjusting based on full-screen mode)
-  const videoContainerStyles = isFullScreen
-  ? [styles.videoWrapper, styles.fullScreen] // Full-screen styles
-  : styles.videoWrapper;
+  // const videoContainerStyles = isFullScreen
+  // ? [styles.videoWrapper, styles.fullScreen] // Full-screen styles
+  // : styles.videoWrapper;
 
   const bounceStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bounceValue.value }],
@@ -1024,15 +1024,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'black', // Optionally, add a background color for full-screen
   },
   // Regular video style
-  video: {
-    width: '100%',
-    height: '100%',  // Make the video fill the container
-  },
+  // video: {
+  //   width: '100%',
+  //   height: '100%',  // Make the video fill the container
+  // },
 
   // Full-screen video style
-  fullScreenVideo: {
-    width: '90%',
-    height: '90%',  // Full-screen video size
-  },
+  // fullScreenVideo: {
+  //   width: '90%',
+  //   height: '90%',  // Full-screen video size
+  // },
   
 });

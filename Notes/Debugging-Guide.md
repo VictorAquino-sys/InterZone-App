@@ -50,7 +50,7 @@
 
 * For production:
     Android
-    npx eas build --platform android --profile production
+    npx eas build --platform android --profile production 
     IOS/Submit
     npx eas build --platform ios 
     (OR)
@@ -74,6 +74,10 @@ Terminal (for Windos use 'set')
 - npx expo start --clear
 * If updating dependecies doesn't reflect the changes use:
  npm cache clean --force
+
+ * Check for outdated packages:
+ npm outdated
+
 
  * To check Node.js version
  TERMINAL
