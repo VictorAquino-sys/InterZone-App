@@ -3,8 +3,8 @@
 ### 04-28
     Expo Audio playback and recording in apps.
     npx expo install expo-av
-    Install expo-video:
-    npx expo install expo-video
+    Install react-native-video:
+    npm install react-native-video
 
 
 ### 04-26

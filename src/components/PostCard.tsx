@@ -14,7 +14,7 @@ import CommentsModal from './commentsModal';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
 // import { Video, ResizeMode } from 'expo-av';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
 
 
 interface PostCardProps {
@@ -67,7 +67,9 @@ const PostCard: React.FC<PostCardProps> = ({
   const [copyMessage, setCopyMessage] = useState('');
 
   const [isPlaying, setIsPlaying] = useState(false); // State to track play/pause
-  const videoRef = useRef<VideoView | null>(null); // Now it can hold a reference to the Video component
+
+  const videoRef = useRef<VideoRef | null>(null); // Use VideoRef for the reference type
+
   const [status, setStatus] = useState<any>({}); // Update state with appropriate type for Video status
   const [showControls, setShowControls] = useState(false); // To control visibility of the play/pause button
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false); // Modal visibility state
@@ -215,19 +217,14 @@ const PostCard: React.FC<PostCardProps> = ({
     setZoomModalVisible(false); // Close zoom modal
   };
 
-  // Create video player instance
-  const player = useVideoPlayer(item.videoUrl, player => {
-    player.loop = true;
-    player.play();
-  });
+  // // Create video player instance
+  // const player = useVideoPlayer(item.videoUrl, player => {
+  //   player.loop = true;
+  //   player.play();
+  // });
 
   // Handle video play/pause
   const togglePlayPause = () => {
-    if (isPlaying) {
-        player.pause();
-    } else {
-        player.play();
-    }
     setIsPlaying(!isPlaying); // Toggle play/pause state
   };
 
@@ -385,12 +382,15 @@ const PostCard: React.FC<PostCardProps> = ({
       {/* Post content */}
       {item.videoUrl && (
         <View style={styles.videoWrapper}>
-          <VideoView
-            ref={ref}
-            player={player}
+          <Video
+            ref={videoRef}
+            source={{ uri: item.videoUrl }}
             style={styles.video}
-            allowsFullscreen
-            allowsPictureInPicture={false}
+            controls={true} // Enables default video controls
+            paused={!isPlaying} // Play or pause video
+            onError={(e) => console.log('Error loading video', e)}
+            onBuffer={(e) => console.log('Buffering video', e)}
+            onEnd={() => console.log('Video ended')}
           />
           
           {/* Play/Pause button */}
@@ -425,11 +425,12 @@ const PostCard: React.FC<PostCardProps> = ({
         >
           <TouchableOpacity style={styles.fullScreenModal} onPress={closeVideoModal}>
             {/* <View style={styles.videoContainer}> */}
-              <VideoView
-                player={player}
+              <Video
+                ref={videoRef}
+                source={{ uri: selectedVideoUrl }}
                 style={styles.fullScreenVideo}
-                allowsFullscreen
-                allowsPictureInPicture
+                controls={true}
+                paused={!isPlaying}
               />
               <TouchableOpacity
                 onPress={togglePlayPause}
