@@ -392,26 +392,6 @@ const PostCard: React.FC<PostCardProps> = ({
             onBuffer={(e) => console.log('Buffering video', e)}
             onEnd={() => console.log('Video ended')}
           />
-          
-          {/* Play/Pause button */}
-          <TouchableOpacity
-            onPress={togglePlayPause}
-            style={styles.playPauseButton}
-          >
-            <Text style={styles.playPauseText}>{isPlaying ? 'Pause' : 'Play'}</Text>
-          </TouchableOpacity>
-
-          {/* Expand/Contract Icon */}
-          <TouchableOpacity 
-            onPress={() => item.videoUrl && handleVideoClick(item.videoUrl)} // Ensure it's not null
-            style={styles.expandButton}
-          >
-            <Ionicons 
-              name={isFullScreen ? 'contract' : 'expand'}  // Toggle icon between expand and contract
-              size={20} 
-              color="white" 
-            />
-          </TouchableOpacity>
         </View>
       )}
 
@@ -425,30 +405,15 @@ const PostCard: React.FC<PostCardProps> = ({
         >
           <TouchableOpacity style={styles.fullScreenModal} onPress={closeVideoModal}>
             {/* <View style={styles.videoContainer}> */}
-              <Video
-                ref={videoRef}
-                source={{ uri: selectedVideoUrl }}
-                style={styles.fullScreenVideo}
-                controls={true}
-                paused={!isPlaying}
-              />
-              <TouchableOpacity
-                onPress={togglePlayPause}
-                style={styles.playPauseButton}
-              >
-                <Text style={styles.playPauseText}>{isPlaying ? "Pause" : "Play"}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={closeVideoModal}
-                style={styles.expandButton}
-              >
-                <Ionicons
-                  name="close-circle-outline"
-                  size={30}
-                  color="white"
-                />
-              </TouchableOpacity>
-            {/* </View> */}
+            <Video
+              ref={videoRef}
+              source={{ uri: selectedVideoUrl }}
+              style={styles.fullScreenVideo}
+              controls={true} // Use the default video controls
+              onError={(e) => console.log('Error loading video', e)}
+              onBuffer={(e) => console.log('Buffering video', e)}
+              onEnd={() => console.log('Video ended')}
+            />
           </TouchableOpacity>
         </Modal>
       )}

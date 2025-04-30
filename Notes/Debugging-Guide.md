@@ -24,6 +24,7 @@
 * to test the app in dev, run:
     android
     npx eas build --platform android --profile development
+    
     to test on IOS
     First update pods by:
     npx pod-install

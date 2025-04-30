@@ -5,6 +5,10 @@
     npx expo install expo-av
     Install react-native-video:
     npm install react-native-video
+    expo screen orientation:
+    npm i expo-screen-orientation
+    expo FileSystem for internal video uploads:
+    npx expo install expo-file-system
 
 
 ### 04-26

@@ -7,7 +7,7 @@ import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
 import { db } from '../../src/config/firebase';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '@/i18n';
 import { Accuracy } from 'expo-location';
@@ -53,6 +53,9 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   // Disable the image and video picker if no category is selected or location is still loading
   const isCategorySelected = selectedCategory !== '';
   const isLocationReady = !locationLoading;
+
+  // Define your max video size limit (in bytes)
+  const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
 
   const { user } = useUser(); // Use the useUser hook
   const { setPosts } = usePosts();
@@ -114,6 +117,30 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
+  const validateVideoSize = async (uri: string) => {
+    const fileInfo = await FileSystem.getInfoAsync(uri);
+  
+    // Check if the file exists before checking its size
+    if (fileInfo.exists) {
+      if (fileInfo.size > MAX_VIDEO_SIZE) { // MAX_VIDEO_SIZE in bytes
+        Alert.alert('File too large', 'Please choose a smaller video file.');
+        return false;
+      }
+    } else {
+      console.error('File does not exist at the specified URI:', uri);
+      Alert.alert('Error', 'The selected file does not exist.');
+      return false;
+    }
+  
+    return true;
+  };
+
+  // Progress callback to track the upload progress
+  const uploadProgress = (snapshot: UploadTaskSnapshot) => {
+    const percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    console.log(`Upload Progress: ${percentage.toFixed(2)}%`);
+  };
+
   const clearCache = async () => {
     try {
       const cacheUri = videoUri;
@@ -126,38 +153,60 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
-  const uploadVideoToStorage = async (uri:string): Promise<string | null> => {
-    if(!uri) {
-      console.error("No URI provided for upload");
+  // Step 1: Convert `file://` URI to a valid file path
+  const getFileSystemUri = async (uri: string) => {
+    try {
+      // Remove the 'file://' part to access the file
+      const path = uri.replace('file://', '');
+      const fileInfo = await FileSystem.getInfoAsync(path);
+
+      if (fileInfo.exists) {
+        return path; // Return the actual file path if it's valid
+      } else {
+        console.error("File doesn't exist at the specified path.");
+        return null;
+      }
+    } catch (error) {
+      console.error('Error converting URI to file path:', error);
       return null;
+    }
+  };
+
+  // Step 2: Upload the video to Firebase with progress tracking
+  const uploadVideoToStorage = async (uri: string): Promise<string | null> => {
+    const filePath = await getFileSystemUri(uri); // Ensure we get a valid file path
+    if (!filePath) {
+      console.error("Failed to get file path.");
+      return null;  // Return null if file path is not found
+    }
+
+    if (!uri) {
+      console.error("No URI provided for upload");
+      return null;  // Return null if URI is not provided
+    }
+
+    // Step 1: Validate the video size before uploading
+    const isValidSize = await validateVideoSize(uri);
+    if (!isValidSize) {
+      return null; // If the video size is too large, stop the upload
     }
 
     try {
       setUploading(true);
-      console.log("Preparing the fetch the video blob from URI");
-
-      console.log("Before fetch");
+      console.log("Preparing to fetch the video blob from URI");
 
       const response = await fetch(uri);
       const blob = await response.blob();
-
-      console.log("After fetch");
 
       if (!response.ok) {
         console.error("Failed to fetch the video from URI:", uri);
         throw new Error("Failed to fetch video");
       }
 
-
-      if(!blob || blob.size === 0) {
+      if (!blob || blob.size === 0) {
         console.error("Blob is empty or failed to create blob from URI:", uri);
-        return null;
+        return null;  // Return null if the blob is invalid
       }
-
-      console.log("setting timeout to 5000");
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log("Video blob created successfully, preparing upload...");
 
       // Extract the file extension and set MIME type for video
       const fileExtension = uri.split('.').pop() ?? 'mp4';
@@ -165,33 +214,98 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
       if (!authUser) {
         console.error("Authentication required for uploading videos.");
-        return null;
+        return null;  // Return null if user is not authenticated
       }
 
-      // Generate a unique path for the video upload in FIrebase Storage
+      // Generate a unique path for the video upload in Firebase Storage
       const videoName = `postVideos/${authUser.uid}/${Date.now()}.${fileExtension}`;
       const videoRef = ref(storage, videoName);
 
       console.log("Starting video upload for:", videoName, "with MIME type", mimeType);
 
-      // Upload the video blob to Firebase Storage
-      await uploadBytes(videoRef, blob, { contentType: mimeType });
-      setVideoPath(videoRef.fullPath); // Store video path for future use or deletion
+      // Use uploadBytesResumable to track progress
+      const uploadTask = uploadBytesResumable(videoRef, blob, { contentType: mimeType });
 
-      // Get the download URL of the uploaded video
-      const downloadUrl = await getDownloadURL(videoRef);
-      console.log("Video uploaded successfully:", downloadUrl);
+      // Monitor upload progress
+      uploadTask.on(
+        'state_changed', uploadProgress,
+        (error) => {
+          console.error("Error uploading video:", error);
+          Alert.alert("Upload Error", error.message || "Unknown error occurred");
+        },
+        async () => {
+          // Once the upload completes, get the download URL
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log("Video uploaded successfully:", downloadUrl);
+          setVideoPath(uploadTask.snapshot.ref.fullPath); // Store video path for future use or deletion
+          setUploading(false);  // Stop the uploading flag
+          // Call clearCache after the video is uploaded
+          await clearCache(); // Clear the cache
 
-      return downloadUrl; // Return the download URL of the video
+          return downloadUrl;  // Return the download URL of the video
+        }
+      );
+
+      return null; // Ensure we return `null` in case the upload task is asynchronous
     } catch (error: any) {
       console.error("Error uploading video:", error);
-      if (error.code) {
-        console.error("Firebase error code:", error.code);
+      setUploading(false);  // Stop the uploading flag
+      Alert.alert("Upload Error", error.message || "Unknown error occurred");
+      return null;  // Return null if there was an error
+    }
+  };
+
+  // Step 3: Video picker
+  const pickVideo = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+  
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+
+    if (!authUser || !authUser.uid) {
+      console.error("User is not authenticated!");
+      return;
+    }
+
+    console.log("User UID:", authUser.uid);
+    console.log("Uploading to path: postVideos/" + authUser.uid + "/..." );
+
+    if (!result.canceled) {
+      const videoUri = result.assets[0].uri;
+      let videoDurationInMillis = result.assets[0].duration ?? 0; // Duration in milliseconds
+  
+      // Ensure duration is a valid number and convert to seconds
+      if (typeof videoDurationInMillis === 'number') {
+        const videoDurationInSeconds = videoDurationInMillis / 1000; // Convert from milliseconds to seconds
+        console.log('Video Duration (seconds):', videoDurationInSeconds);
+  
+        // Check if the video duration is greater than 4 minutes (240 seconds)
+        if (videoDurationInSeconds > 240) {
+          Alert.alert('Video too long', 'Please select a video that is no longer than 4 minutes.');
+          return; // Prevent further actions if the video is too long
+        }
+  
+        setVideoUri(videoUri); // Store the selected video URI
+        setMediaType('video'); // Set media type to video
+        setImageUri(null); // Clear image URI if video is selected
+        console.log('Video selected:', videoUri);
+  
+        // Proceed with video upload
+        // const videoUrl = await handleVideoUpload(videoUri);
+        // console.log('Video uploaded to Firebase:', videoUrl);
+      } else {
+        Alert.alert('Error', 'The video duration is invalid.');
       }
-      Alert.alert("Upload Error", (error as Error).message || "Unknown error occurred");
-      return null;
-    } finally {
-      setUploading(false);
+    } else {
+      console.log('Video picker was canceled or no video was selected');
     }
   };
 
@@ -328,59 +442,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       console.log("📍 Coordinates submitted to Firebase");
     } catch (error) {
       console.error("🔥 Failed to send coordinates:", error);
-    }
-  };
-
-  const pickVideo = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Sorry, we need camera roll permissions to make this work!');
-      return;
-    }
-  
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-
-    if (!authUser || !authUser.uid) {
-      console.error("User is not authenticated!");
-      return;
-    }
-
-    console.log("User UID:", authUser.uid);
-    console.log("Uploading to path: postVideos/" + authUser.uid + "/..." );
-
-    if (!result.canceled) {
-      const videoUri = result.assets[0].uri;
-      let videoDurationInMillis = result.assets[0].duration ?? 0; // Duration in milliseconds
-  
-      // Ensure duration is a valid number and convert to seconds
-      if (typeof videoDurationInMillis === 'number') {
-        const videoDurationInSeconds = videoDurationInMillis / 1000; // Convert from milliseconds to seconds
-        console.log('Video Duration (seconds):', videoDurationInSeconds);
-  
-        // Check if the video duration is greater than 4 minutes (240 seconds)
-        if (videoDurationInSeconds > 240) {
-          Alert.alert('Video too long', 'Please select a video that is no longer than 4 minutes.');
-          return; // Prevent further actions if the video is too long
-        }
-  
-        setVideoUri(videoUri); // Store the selected video URI
-        setMediaType('video'); // Set media type to video
-        setImageUri(null); // Clear image URI if video is selected
-        console.log('Video selected:', videoUri);
-  
-        // Proceed with video upload
-        // const videoUrl = await handleVideoUpload(videoUri);
-        // console.log('Video uploaded to Firebase:', videoUrl);
-      } else {
-        Alert.alert('Error', 'The video duration is invalid.');
-      }
-    } else {
-      console.log('Video picker was canceled or no video was selected');
     }
   };
 

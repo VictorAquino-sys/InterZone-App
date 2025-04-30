@@ -51,6 +51,7 @@
     "expo-localization": "~15.0.3",
     "expo-location": "~17.0.1",
     "expo-notifications": "~0.28.19",
+    "expo-screen-orientation": "^8.0.4",
     "expo-splash-screen": "~0.27.7",
     "expo-status-bar": "~1.12.1",
     "expo-updates": "^0.25.28",
@@ -85,7 +86,8 @@
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
     "undici": "^5.29.0",
-    "uuid": "^7.0.3"
+    "uuid": "^7.0.3",
+    "expo-file-system": "~17.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
