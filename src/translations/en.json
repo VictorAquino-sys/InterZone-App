@@ -101,6 +101,7 @@
     "locationRequiredMessage": "Please click in the location icon to include your current city.",
     "locationAddedTitle": "Location Added",
     "locationAddedMessage": "You location has been attached to your current message.",
+    "uploadingMessage": "Uploading your post...",
 
     "home": "Home",
     "updateAvailable": "🔄 A new version of InterZone is available. Tap here to update!",

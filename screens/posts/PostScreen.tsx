@@ -7,7 +7,8 @@ import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
 import { db } from '../../src/config/firebase';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
+// import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
+import storage from '@react-native-firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '@/i18n';
 import { Accuracy } from 'expo-location';
@@ -23,6 +24,7 @@ import { Video } from 'expo-av';
 import * as FileSystem from 'expo-file-system';  // Import FileSystem from expo-file-system
 import * as MediaLibrary from 'expo-media-library';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { Base64 } from 'js-base64';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -30,6 +32,7 @@ type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 // Convert any content:// or file:// URI into a readable file:// path
 async function getReadableVideoPath(rawUri: string): Promise<string> {
   // 1. If it’s already a file:// URI, nothing to do
+  console.log("Checking rawUri: ", rawUri);
   if (rawUri.startsWith('file://')) return rawUri;
 
   // 2. Ask for granular “video” permission (Android 13+)
@@ -48,8 +51,6 @@ async function getReadableVideoPath(rawUri: string): Promise<string> {
   return dest;
 }
 // ——————————————————————————————————————————————————————————————
-
-
 
 
 const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
@@ -88,7 +89,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
   const { user } = useUser(); // Use the useUser hook
   const { setPosts } = usePosts();
-  const storage = getStorage();
+  // const storage = getStorage();
 
   console.log("PostScreen");
 
@@ -123,14 +124,14 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           return null; // or handle it by showing an error message
         }
         const imageName = `postImages/${authUser.uid}/${Date.now()}.${fileExtension}`;
-        const imageRef = ref(storage, imageName);
+        const imageRef = storage().ref(imageName);
 
         console.log("Starting upload for image:", imageName, "with MIME type", mimeType);
 
-        await uploadBytes(imageRef, blob, { contentType: mimeType });
+        await imageRef.put(blob, { contentType: mimeType });
         setImagePath(imageRef.fullPath); // ✅ Store full path for cleanup
 
-        const downloadUrl = await getDownloadURL(imageRef);
+        const downloadUrl = await imageRef.getDownloadURL();
         console.log("Image uploaded successfully:", downloadUrl);
 
         return downloadUrl;
@@ -146,26 +147,50 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
-  const validateVideoSize = async (uri: string) => {
-    const fileInfo = await FileSystem.getInfoAsync(uri);
-  
-    // Check if the file exists before checking its size
-    if (fileInfo.exists) {
-      if (fileInfo.size > MAX_VIDEO_SIZE) { // MAX_VIDEO_SIZE in bytes
-        Alert.alert('File too large', 'Please choose a smaller video file.');
-        return false;
-      }
-    } else {
-      console.error('File does not exist at the specified URI:', uri);
-      Alert.alert('Error', 'The selected file does not exist.');
-      return false;
+  const ensureVideoDirExists = async () => {
+    const videoDir = FileSystem.documentDirectory + 'postVideos/';
+    const dirInfo = await FileSystem.getInfoAsync(videoDir);
+    if (!dirInfo.exists) {
+      console.log("📁 Video directory doesn't exist, creating…");
+      await FileSystem.makeDirectoryAsync(videoDir, { intermediates: true });
     }
-  
-    return true;
+    return videoDir;
   };
 
+
+  const validateVideo = async (asset: ImagePicker.ImagePickerAsset): Promise<string | null> => {
+    const rawUri = asset.uri;
+    console.log("Validating video:", rawUri);
+
+    const readableUri = await getReadableVideoPath(rawUri);
+
+    let videoDurationInMillis = asset.duration ?? 0;
+    if (typeof videoDurationInMillis === 'number') {
+      const videoDurationInSeconds = videoDurationInMillis / 1000;
+      console.log('Video Duration (seconds):', videoDurationInSeconds);
+      if (videoDurationInSeconds > 240) {
+        Alert.alert('Video too long', 'Please select a video that is no longer than 4 minutes.');
+        return null;
+      }
+    } else {
+      console.error("Video Duration is not a valid number");
+    }
+
+    const fileInfo = await FileSystem.getInfoAsync(readableUri);
+    if (!fileInfo.exists || fileInfo.size > MAX_VIDEO_SIZE) {
+      Alert.alert('File too large or missing', 'Please choose a valid smaller video file.');
+      return null;
+    }
+
+    return readableUri;
+  };
+
+
   // Progress callback to track the upload progress
-  const uploadProgress = (snapshot: UploadTaskSnapshot) => {
+  const uploadProgress = (snapshot: {
+    bytesTransferred: number;
+    totalBytes: number;
+  }) => {
     const percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
     console.log(`Upload Progress: ${percentage.toFixed(2)}%`);
   };
@@ -174,7 +199,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     try {
       const cacheUri = videoUri;
       if (cacheUri) {
-        await FileSystem.deleteAsync(cacheUri);  // Remove the cached file
+        await FileSystem.deleteAsync(cacheUri);
         console.log("Cache cleared for file:", cacheUri);
       }
     } catch (error) {
@@ -182,218 +207,124 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
-  // Step 1: Convert `file://` URI to a content URI
-  const getContentUri = async (uri: string) => {
-    try {
-      const contentUri = await FileSystem.getContentUriAsync(uri);
-      console.log("Content URI:", contentUri);
-      return contentUri;  // Return the content URI
-    } catch (error) {
-      console.error("Error converting URI to content URI:", error);
-      return null;
-    }
-  };
-
-  const getFileSystemUri = async (uri: string) => {
-    try {
-      // Check if the URI is a content URI or file URI
-      if (uri.startsWith('file://')) {
-        // Directly return file URI as it's valid
-        console.log("Valid file URI:", uri);
-        return uri; // No need to modify if it's a valid file URI
-      }
-  
-      if (uri.startsWith('content://')) {
-        // Handle content URI (videos from gallery, etc.)
-        console.log("Handling content URI:", uri);
-        return uri;  // Return content URI directly for processing
-      }
-  
-      // Otherwise, remove 'file://' and process the path
-      const path = uri.replace('file://', '');
-      const fileInfo = await FileSystem.getInfoAsync(path);
-      
-      if (fileInfo.exists) {
-        console.log("File exists at path:", path);
-        return path;
-      } else {
-        console.error("File doesn't exist at the specified path:", path);
-        return null;
-      }
-    } catch (error) {
-      console.error("Error processing URI:", error);
-      return null;
-    }
-  };
-
   const saveVideoToDocumentDirectory = async (uri: string) => {
     try {
-      const fileName = uri.split('/').pop();  // Extract file name from URI
-      const targetPath = `${FileSystem.documentDirectory}${fileName}`;
-  
-      // Check if the file already exists in the document directory
+      const videoDir = await ensureVideoDirExists();
+      const fileName = `video_${authUser?.uid}_${Date.now()}.mp4`;
+      const targetPath = `${videoDir}${fileName}`;
       const fileInfo = await FileSystem.getInfoAsync(targetPath);
-  
+
       if (fileInfo.exists) {
         console.log("Video already exists in document directory:", targetPath);
-        return targetPath; // Return the existing path if the file already exists
+        return targetPath;
       }
-  
-      // If not, copy the video to the document directory
+
       await FileSystem.copyAsync({ from: uri, to: targetPath });
-  
-      console.log("Video saved to document directory:", targetPath);
-      return targetPath;
+
+      const verify = await FileSystem.getInfoAsync(targetPath);
+      if (verify.exists && verify.size > 0) {
+        console.log("✅ Video successfully copied to:", targetPath);
+        return targetPath;
+      } else {
+        console.error("❌ Copy failed or resulted in empty file:", targetPath);
+        return null;
+      }
     } catch (error) {
       console.error("Error saving video to document directory:", error);
       return null;
     }
-  };
+  }; 
 
   // Step 2: Upload the video to Firebase with progress tracking
   const uploadVideoToStorage = async (uri: string): Promise<string | null> => {
-    const filePath = await getFileSystemUri(uri); // Ensure we get a valid file path
-    if (!filePath) {
-      console.error("Failed to get file path.");
-      return null;  // Return null if file path is not found
+    if (!authUser) {
+      Alert.alert("Auth Error", "You must be logged in to upload videos.");
+      return null;
     }
   
-    console.log("Checking filePath", filePath);
+    setUploading(true);
   
     try {
-      setUploading(true);
-      console.log("Preparing to fetch the video blob from URI");
-  
-      const response = await fetch(filePath);
-      const blob = await response.blob();
-  
-      if (!response.ok) {
-        console.error("Failed to fetch the video from URI:", uri);
-        throw new Error("Failed to fetch video");
-      }
-  
-      if (!blob || blob.size === 0) {
-        console.error("Blob is empty or failed to create blob from URI:", uri);
-        return null;  // Return null if the blob is invalid
-      }
-  
       const fileExtension = uri.split('.').pop() ?? 'mp4';
-      const mimeType = mime.getType(fileExtension) || 'application/octet-stream';
+      const mimeType = mime.getType(fileExtension) || 'video/mp4';
   
-      if (!authUser) {
-        console.error("Authentication required for uploading videos.");
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists || fileInfo.size === 0) {
+        console.error("❌ File missing or empty at:", uri);
+        Alert.alert("Upload Error", "The selected video file is not available.");
         return null;
       }
+
+      console.log(`📦 File size: ${(fileInfo.size / 1024 / 1024).toFixed(2)} MB`);
   
       const videoName = `postVideos/${authUser.uid}/${Date.now()}.${fileExtension}`;
-      const videoRef = ref(storage, videoName);
+      const videoRef = storage().ref(videoName);
   
-      console.log("Starting video upload for:", videoName, "with MIME type", mimeType);
+      console.log("📤 Uploading via putFile to Firebase:", videoName);
   
-      const uploadTask = uploadBytesResumable(videoRef, blob, { contentType: mimeType });
+      const uploadTask = videoRef.putFile(uri, { contentType: mimeType });
   
-      uploadTask.on(
-        'state_changed',
-        uploadProgress,
-        (error) => {
-          console.error("Error uploading video:", error);
-          Alert.alert("Upload Error", error.message || "Unknown error occurred");
-        },
-        async () => {
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log("Video uploaded successfully:", downloadUrl);
-          setVideoPath(uploadTask.snapshot.ref.fullPath);
-          setUploading(false);
-          await clearCache(); // Clear cache after upload
-          return downloadUrl;
-        }
-      );
-  
-      return null;
+      return new Promise((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          snapshot => uploadProgress(snapshot),
+          error => {
+            console.error("❌ Upload failed:", error);
+            Alert.alert("Upload Error", error.message || "An unknown error occurred");
+            setUploading(false);
+            reject(null);
+          },
+          async () => {
+            const downloadUrl = await videoRef.getDownloadURL();
+            console.log("✅ Video uploaded. Download URL:", downloadUrl);
+            setVideoPath(videoRef.fullPath);
+            await clearCache();
+            setUploading(false);
+            resolve(downloadUrl);
+          }
+        );
+      });
     } catch (error: any) {
-      console.error("Error uploading video:", error);
+      console.error("❌ Unexpected upload error:", error);
+      Alert.alert("Upload Error", error.message || "Unexpected error occurred");
       setUploading(false);
-      Alert.alert("Upload Error", error.message || "Unknown error occurred");
       return null;
     }
   };
 
   // Step 3: Video picker
   const pickVideo = async () => {
-    // 1) Ask for gallery permission (unchanged)
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Sorry, we need camera roll permissions to make this work!');
       return;
     }
-  
-    // 2) Launch picker
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
       quality: 1,
     });
 
-
     if (!authUser || !authUser.uid) {
       console.error("User is not authenticated!");
       return;
     }
 
-    console.log("User UID:", authUser.uid);
-    console.log("Uploading to path: postVideos/" + authUser.uid + "/..." );
-
     if (!result.canceled) {
-      // 3) Turn ANY URI into a real file:// path
-      let readableUri: string;
-      try {
-        readableUri = await getReadableVideoPath(result.assets[0].uri);
-      } catch (err) {
-        Alert.alert('Permission needed', 'We need access to your videos.');
+      const validatedPath = await validateVideo(result.assets[0]);
+      if (!validatedPath) return;
+
+      const savedFilePath = await saveVideoToDocumentDirectory(validatedPath);
+      if (!savedFilePath) {
+        Alert.alert('Error', 'Unable to save video to a permanent location.');
         return;
       }
 
-      // 4) Duration check (unchanged)
-      // const videoUri = result.assets[0].uri;
-      let videoDurationInMillis = result.assets[0].duration ?? 0; // Duration in milliseconds
-  
-      // Ensure duration is a valid number and convert to seconds
-      if (typeof videoDurationInMillis === 'number') {
-        const videoDurationInSeconds = videoDurationInMillis / 1000; // Convert from milliseconds to seconds
-        console.log('Video Duration (seconds):', videoDurationInSeconds);
-  
-        // Check if the video duration is greater than 4 minutes (240 seconds)
-        if (videoDurationInSeconds > 240) {
-          Alert.alert('Video too long', 'Please select a video that is no longer than 4 minutes.');
-          return; // Prevent further actions if the video is too long
-        }
-
-
-
-
-        // 5) Size check against a real file:// path
-        const isValidSize = await validateVideoSize(readableUri);
-        if (!isValidSize) {
-          return;  // Exit if the video is too large
-        }
-
-        // 6) Optionally persist into DocumentDirectory
-        const savedFilePath = await saveVideoToDocumentDirectory(readableUri);
-        if (!savedFilePath) {
-          Alert.alert('Error', 'Unable to save video to a permanent location.');
-          return;
-        }
-
-        // 7) Finally, update state
-        setVideoUri(savedFilePath); // Store the selected video URI
-        setMediaType('video'); // Set media type to video
-        setImageUri(null); // Clear image URI if video is selected
-        console.log('Video selected:', savedFilePath);
-  
-
-      } else {
-        Alert.alert('Error', 'The video duration is invalid.');
-      }
+      setVideoUri(savedFilePath);
+      setMediaType('video');
+      setImageUri(null);
+      console.log('Video selected:', savedFilePath);
     } else {
       console.log('Video picker was canceled or no video was selected');
     }
@@ -586,14 +517,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         console.log("Resizing and uploading image...");
         imageUrl = await uploadImageToStorage(imageUri) || '';
       } else if (mediaType === 'video' && videoUri) {
-        const savedFilePath = await saveVideoToDocumentDirectory(videoUri);
-
-        console.log("checking savedFilePath before upload:", savedFilePath)
-        if (!savedFilePath) {
-          Alert.alert("Error", "Unable to save the video file.");
-          return;
-        }
-        videoUrl = await uploadVideoToStorage(savedFilePath) || '';
+        videoUrl = await uploadVideoToStorage(videoUri) || '';
         console.log("Uploading video...");
 
       }
@@ -626,11 +550,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
       // Wait for the upload to complete before navigating
       setTimeout(() => {
-        navigation.goBack();  // Delay before navigating back to the previous screen
+        // navigation.goBack();  // Delay before navigating back to the previous screen
       }, 5000);  // Adjust the delay as needed (2000ms = 2 seconds)
 
       // Reset UI state
-      // navigation.goBack();
+      navigation.goBack();
       setPostText(''); // Clear the input field
       setLocation(null);
       setImageUri(null);
@@ -774,6 +698,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
     </ScrollView>
+
+        {/* ✅ Add this overlay here */}
+    {uploading && (
+      <View style={styles.loadingOverlay}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={{ marginTop: 10, color: 'gray' }}>
+          {i18n.t('uploadingMessage') || 'Uploading your post...'}
+        </Text>
+      </View>
+    )}
   </KeyboardAvoidingView>
   );
 };
@@ -884,5 +818,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,  // Adjust based on your layout
     marginTop: 10,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
   },
 });

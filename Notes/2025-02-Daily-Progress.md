@@ -11,6 +11,10 @@
     npx expo install expo-file-system
     install Expo Media Library:
     npx expo install expo-media-library
+    install base 64 package:
+    npm install js-base64
+    install Firebase Storage:
+    npx expo install @react-native-firebase/storage
 
 ### 04-26
     react-native-image-zoom-viewer:
