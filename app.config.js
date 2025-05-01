@@ -54,6 +54,8 @@ export default {
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.READ_EXTERNAL_STORAGE", 
         "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_IMAGES",
         "android.permission.CAMERA",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SCHEDULE_EXACT_ALARM"

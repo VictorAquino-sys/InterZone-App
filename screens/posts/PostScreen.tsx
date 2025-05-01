@@ -7,8 +7,9 @@ import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
 import { db } from '../../src/config/firebase';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
-// import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
-import storage from '@react-native-firebase/storage';
+import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
+// import { putFile } from '@react-native-firebase/storage';
+// import { ref, uploadBytesResumable, getDownloadURL, uploadBytes } from 'firebase/storage'; // Modular helpers
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '@/i18n';
 import { Accuracy } from 'expo-location';
@@ -21,6 +22,7 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../../src/navigationTypes';
 import { ContentType } from 'expo-clipboard';
 import { Video } from 'expo-av';
+import { app } from '../../src/config/firebase';
 import * as FileSystem from 'expo-file-system';  // Import FileSystem from expo-file-system
 import * as MediaLibrary from 'expo-media-library';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -89,7 +91,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
   const { user } = useUser(); // Use the useUser hook
   const { setPosts } = usePosts();
-  // const storage = getStorage();
+  const storage = getStorage(app);
 
   console.log("PostScreen");
 
@@ -124,15 +126,15 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           return null; // or handle it by showing an error message
         }
         const imageName = `postImages/${authUser.uid}/${Date.now()}.${fileExtension}`;
-        const imageRef = storage().ref(imageName);
+        const imageRef = ref(storage, imageName);
 
         console.log("Starting upload for image:", imageName, "with MIME type", mimeType);
 
-        await imageRef.put(blob, { contentType: mimeType });
-        setImagePath(imageRef.fullPath); // ✅ Store full path for cleanup
-
-        const downloadUrl = await imageRef.getDownloadURL();
-        console.log("Image uploaded successfully:", downloadUrl);
+        await uploadBytes(imageRef, blob, { contentType: mimeType });
+        setImagePath(imageRef.fullPath); // you can keep this if needed for deletion later
+        
+        const downloadUrl = await getDownloadURL(imageRef);
+        console.log("✅ Image uploaded successfully:", downloadUrl);
 
         return downloadUrl;
     } catch (error: any) {
@@ -254,30 +256,37 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         Alert.alert("Upload Error", "The selected video file is not available.");
         return null;
       }
+  
+      // const response = await fetch(uri);
+      // const videoBlob = await response.blob();
 
-      console.log(`📦 File size: ${(fileInfo.size / 1024 / 1024).toFixed(2)} MB`);
-  
       const videoName = `postVideos/${authUser.uid}/${Date.now()}.${fileExtension}`;
-      const videoRef = storage().ref(videoName);
+      const videoRef = ref(storage, videoName);
   
-      console.log("📤 Uploading via putFile to Firebase:", videoName);
+      console.log("📤 Uploading via uploadBytesResumable to Firebase:", videoName);
   
-      const uploadTask = videoRef.putFile(uri, { contentType: mimeType });
-  
+      const response = await fetch(uri);
+      const videoBlob = await response.blob();
+      
+      const uploadTask = uploadBytesResumable(videoRef, videoBlob, {
+        contentType: mimeType,
+      });
+        
       return new Promise((resolve, reject) => {
         uploadTask.on(
           'state_changed',
-          snapshot => uploadProgress(snapshot),
-          error => {
-            console.error("❌ Upload failed:", error);
-            Alert.alert("Upload Error", error.message || "An unknown error occurred");
+          (snapshot: any) => uploadProgress(snapshot),
+          (error: any) => {
+            const message = (error && error.message) ? error.message : "An unknown error occurred";
+            Alert.alert("Upload Error", message);
+  
             setUploading(false);
             reject(null);
           },
           async () => {
-            const downloadUrl = await videoRef.getDownloadURL();
+            const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
             console.log("✅ Video uploaded. Download URL:", downloadUrl);
-            setVideoPath(videoRef.fullPath);
+            setVideoPath(uploadTask.snapshot.ref.fullPath);
             await clearCache();
             setUploading(false);
             resolve(downloadUrl);
