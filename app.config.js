@@ -18,6 +18,7 @@ export default {
     assetBundlePatterns: ["**/*"],
     ios: {
       supportsTablet: false,
+      "requireFullScreen": true,
       sdkVersion: "19.0",
       deploymentTarget: "18.0",
       buildNumber: "1.0.16",
@@ -123,6 +124,20 @@ export default {
         "expo-asset",
         {
           "assets": ["./assets"]
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "isAccessMediaLocationEnabled": true,
+          "photosPermission": "Allow InterZone to access your photos and videos.",
+          "savePhotosPermission": "Allow InterZone to save new media."
         }
       ],
     ],

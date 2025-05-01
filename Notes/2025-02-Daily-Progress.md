@@ -9,7 +9,8 @@
     npm i expo-screen-orientation
     expo FileSystem for internal video uploads:
     npx expo install expo-file-system
-
+    install Expo Media Library:
+    npx expo install expo-media-library
 
 ### 04-26
     react-native-image-zoom-viewer:

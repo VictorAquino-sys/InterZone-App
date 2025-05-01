@@ -87,7 +87,8 @@
     "sp-react-native-in-app-updates": "^1.4.1",
     "undici": "^5.29.0",
     "uuid": "^7.0.3",
-    "expo-file-system": "~17.0.1"
+    "expo-file-system": "~17.0.1",
+    "expo-media-library": "~16.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
