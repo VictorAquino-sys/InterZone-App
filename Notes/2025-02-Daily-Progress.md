@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 05-01
+    React Native Video Trim
+    npm i react-native-video-trim
+
 ### 04-28
     Expo Audio playback and recording in apps.
     npx expo install expo-av
@@ -13,8 +17,8 @@
     npx expo install expo-media-library
     install base 64 package:
     npm install js-base64
-    install Firebase Storage:
-    npx expo install @react-native-firebase/storage
+    install video compressor:
+    npx expo install react-native-compressor
 
 ### 04-26
     react-native-image-zoom-viewer:

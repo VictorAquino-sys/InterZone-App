@@ -135,6 +135,9 @@ export default {
         }
       ],
       [
+        "react-native-compressor"
+      ],
+      [
         "expo-media-library",
         {
           "isAccessMediaLocationEnabled": true,

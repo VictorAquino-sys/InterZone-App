@@ -1,5 +1,16 @@
 (Fixes & Solutions for issues)
 
+5-1
+ if:
+  Kotlin compilation error in the expo-modules-core plugin
+
+  run:
+  cd android
+    ./gradlew clean
+    cd ..
+
+
+
 3-31
     For github, when divergent branches occurs, do the following:
     1.
