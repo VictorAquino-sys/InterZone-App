@@ -140,6 +140,9 @@
     "shareCoordinates": "Share Coordinates",
     "thankYou": "Thank you!",
     "coordinatesShared": "Your coordinates have been shared.",
+    "videoTrimmedTitle": "Video Trimmed!",
+    "videoTrimmedMessage": "Your trimmed video has been saved. Please select it from your gallery to continue.",
+    "openGallery": "Open Gallery",
 
     "unknown": "Unknown",
     "confirmDeleteTitle": "Confirm Delete",

@@ -101,6 +101,9 @@
     "locationAddedTitle": "Ubicación Añadida",
     "locationAddedMessage": "Tu ubicación ha sido adjuntada a tu mensaje actual.",
     "uploadingMessage": "Subiendo tu publicación...",
+    "videoTrimmedTitle": "¡Video recortado!",
+    "videoTrimmedMessage": "Tu video recortado ha sido guardado. Por favor, selecciónalo desde tu galería para continuar.",
+    "openGallery": "Abrir galería",
 
     "home": "Inicio",
     "post": "Publicar",

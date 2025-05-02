@@ -3,7 +3,8 @@
 ### 05-01
     React Native Video Trim
     npm i react-native-video-trim
-
+    auto-delete videoPath from Firebase Storage on post deletion too
+    
 ### 04-28
     Expo Audio playback and recording in apps.
     npx expo install expo-av

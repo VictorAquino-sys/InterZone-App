@@ -251,27 +251,42 @@ exports.cleanUpReportsOnCommentDelete = onDocumentDeleted("posts/{postId}/commen
 });
 
 
-// Clean up Storage image when post is deleted
-exports.cleanUpPostImageOnDelete = onDocumentDeleted("posts/{postId}", async (event) => {
+exports.cleanUpPostMediaOnDelete = onDocumentDeleted("posts/{postId}", async (event) => {
   const post = event.data?.data();
   const postId = event.params.postId;
 
-  if (!post?.imagePath) {
-    console.log(`🫼 Post ${postId} deleted without image — nothing to clean.`);
+  if (!post) {
+    console.log(`🫥 Post ${postId} deleted but no data found.`);
     return;
   }
 
   const bucket = storage.bucket();
-  const file = bucket.file(post.imagePath);
 
-  try {
-    await file.delete();
-    console.log(`🗑️ Deleted image: ${post.imagePath} for post ${postId}`);
-  } catch (error) {
-    if (error.code === 404) {
-      console.warn(`⚠️ Image not found: ${post.imagePath}`);
-    } else {
-      console.error(`❌ Failed to delete image ${post.imagePath}:`, error);
+  // 🧹 Delete image if it exists
+  if (post.imagePath) {
+    try {
+      await bucket.file(post.imagePath).delete();
+      console.log(`🗑️ Deleted image: ${post.imagePath} for post ${postId}`);
+    } catch (error) {
+      if (error.code === 404) {
+        console.warn(`⚠️ Image not found: ${post.imagePath}`);
+      } else {
+        console.error(`❌ Failed to delete image ${post.imagePath}:`, error);
+      }
+    }
+  }
+
+  // 🧹 Delete video if it exists
+  if (post.videoPath) {
+    try {
+      await bucket.file(post.videoPath).delete();
+      console.log(`🗑️ Deleted video: ${post.videoPath} for post ${postId}`);
+    } catch (error) {
+      if (error.code === 404) {
+        console.warn(`⚠️ Video not found: ${post.videoPath}`);
+      } else {
+        console.error(`❌ Failed to delete video ${post.videoPath}:`, error);
+      }
     }
   }
 });

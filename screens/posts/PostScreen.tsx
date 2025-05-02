@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useRef, FunctionComponent } from 'react';
-import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform, NativeEventEmitter, NativeModules } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { usePosts } from '../../src/contexts/PostsContext';
@@ -26,6 +26,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Video as VideoCompressor } from 'react-native-compressor';
 import { getReadableVideoPath, saveVideoToAppStorage, validateVideoFile, uploadVideoWithCompression } from '@/utils/videoUtils';
 import { isValidFile, showEditor } from 'react-native-video-trim';
+import * as MediaLibrary from 'expo-media-library';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -41,18 +42,18 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [videoPath, setVideoPath] = useState<string | null>(null); // Video path state
   const [videoUri, setVideoUri] = useState<string | null>(null); // Store video URI
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
+  const [isTrimming, setIsTrimming] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null); // New state to track media type
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
 
   const [locationIconVisible, setLocationIconVisible] = useState(true);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>('');
+  const [trimmedAssetId, setTrimmedAssetId] = useState<string | null>(null);
 
   // Check if the category supports video posts
   const isVideoCategory = selectedCategory === 'business' || selectedCategory === 'music' || selectedCategory === "tutors";
 
-  // Disable the icons if no category is selected
-  // const isVideoCategorySelected = selectedCategory !== '';
 
   // Disable the image and video picker if no category is selected or location is still loading
   const isCategorySelected = selectedCategory !== '';
@@ -118,6 +119,56 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
+  useEffect(() => {
+    const eventEmitter = new NativeEventEmitter(NativeModules.VideoTrim);
+    const subscription = eventEmitter.addListener('VideoTrim', async (event) => {
+      if (event.name === 'onFinishTrimming') {
+        console.log('🎬 Finished trimming:', event);
+        
+        Alert.alert(
+          i18n.t('videoTrimmedTitle'),
+          i18n.t('videoTrimmedMessage'),
+          [
+            {
+              text: i18n.t('openGallery'),
+              onPress: async () => {
+                try {
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                    allowsEditing: false,
+                    quality: 1,
+                  });
+  
+                  if (!result.canceled && result.assets?.length > 0) {
+                    const uri = result.assets[0].uri;
+                    const savedPath = await saveVideoToAppStorage(uri, authUser?.uid || 'anon');
+                    if (savedPath) {
+                      setVideoUri(savedPath);
+                      setVideoPath(savedPath);
+                      setMediaType('video');
+                      setImageUri(null);
+                      console.log("✅ Trimmed video manually selected and saved.");
+                    } else {
+                      Alert.alert("Error", "Failed to save the trimmed video.");
+                    }
+                  } else {
+                    console.log("❌ User cancelled video picking.");
+                  }
+                } catch (e) {
+                  console.error("🚨 Failed to handle trimmed video:", e);
+                  Alert.alert("Error", "An issue occurred while picking the trimmed video.");
+                }
+              },
+            },
+          ]
+        );
+      }
+    });
+  
+    return () => subscription.remove();
+  }, []);
+  
+
   // Step 3: Video picker
   const pickVideo = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -153,14 +204,14 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           console.log("🎬 Video too long — opening trimmer...");
           showEditor(rawUri, {
             maxDuration: 60,
-            saveToPhoto: false,
+            saveToPhoto: true,
           });
         } else {
           Alert.alert("Invalid File", "The selected video cannot be edited.");
         }
         return;
       }
-  
+      // If under limit, continue as normal
       const readableUri = await getReadableVideoPath(rawUri);
       const isValid = await validateVideoFile(readableUri, duration / 1000);
       if (!isValid) return;
@@ -169,7 +220,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       if (!savedPath) return;
 
       setVideoUri(savedPath);
-      // setVideoPath(downloadUrl);
+      setVideoPath(savedPath);
       setMediaType('video');
       setImageUri(null);
         // console.log('✅ Video successfully uploaded:', downloadUrl);
@@ -422,6 +473,38 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       // Update local state
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
 
+      // ✅ Clean up trimmed video from MediaLibrary
+      if (typeof trimmedAssetId === 'string' && trimmedAssetId.length > 0) {
+        try {
+          await MediaLibrary.deleteAssetsAsync([trimmedAssetId]);
+          console.log('🧹 Cleaned up trimmed video from MediaLibrary');
+          setTrimmedAssetId(null);
+        } catch (e) {
+          console.warn('⚠️ Failed to delete MediaLibrary asset:', e);
+        }
+      }
+
+      // ✅ Delete actual file from internal storage
+      if (videoUri?.startsWith("file://") || videoUri?.startsWith("/data/")) {
+        try {
+          await FileSystem.deleteAsync(videoUri, { idempotent: true });
+          console.log("🧼 Deleted trimmed video file from internal storage");
+        } catch (e) {
+          console.warn("⚠️ Failed to delete internal file:", e);
+        }
+      }
+
+      if (videoPath?.startsWith("file://") || videoPath?.startsWith("/data/")) {
+        try {
+          await FileSystem.deleteAsync(videoPath, { idempotent: true });
+          console.log("🧼 Deleted video file from internal storage (videoPath)");
+        } catch (e) {
+          console.warn("⚠️ Failed to delete videoPath file:", e);
+        }
+      }
+
+      setVideoUri(null); // Clear stored video URI
+      setVideoPath(null); // Clear video path
       // Wait for the upload to complete before navigating
       setTimeout(() => {
         // navigation.goBack();  // Delay before navigating back to the previous screen
@@ -433,7 +516,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       setLocation(null);
       setImageUri(null);
       setImagePath(null);      // ✅ Clear stored image path
-      setVideoUri(null); // Clear stored video URI
       setVideoPath(null); // Clear video path
       setSelectedCategory(''); // ✅ Reset selected category
       setMediaType(null); // Reset media type
