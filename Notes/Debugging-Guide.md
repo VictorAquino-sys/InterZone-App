@@ -1,5 +1,9 @@
 (Fixes & Solutions for issues)
 
+4-02
+    Push to Github on iOS:
+    git push origin ios-rollback-working
+
 3-31
     For github, when divergent branches occurs, do the following:
     1.
