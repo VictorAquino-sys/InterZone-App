@@ -34,8 +34,9 @@ export default {
         NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you will see local meetups and concerts happening in your city.",
         NSMicrophoneUsageDescription: "We need access to your microphone to record videos.",
         NSPhotoLibraryAddUsageDescription: "Give InterZone permission to save photos",
-        NSPhotoLibraryUsageDescription: "InterZone needs access to your photo library to upload and share media.",
         NSCameraUsageDescription: "InterZone needs access to your camera to record and upload videos or photos.",
+        NSPhotoLibraryUsageDescription:
+        'This app requires access to your photo library to save trimmed videos.',
         ITSAppUsesNonExemptEncryption: false,
         EXUpdatesRuntimeVersion: "1.0.0",
         EXDefaultScreenOrientationMask: 'UIInterfaceOrientationMaskAllButUpsideDown',
@@ -95,6 +96,7 @@ export default {
           "enableBackgroundRemoteNotifications": false
         }
       ],
+      ["react-native-compressor"],
       "@react-native-google-signin/google-signin",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
