@@ -30,13 +30,22 @@ self.define_singleton_method(use_autolinking_method_symbol) do |*args|
   end
 end
 
-platform :ios, podfile_properties['ios.deploymentTarget'] || '13.4'
+platform :ios, podfile_properties['ios.deploymentTarget'] || '15'
 install! 'cocoapods',
   :deterministic_uuids => false
 
 prepare_react_native_project!
 
 target 'InterZone' do
+
+  $FirebaseSDKVersion = '11.12.0'
+
+  pod 'Firebase/Core', $FirebaseSDKVersion
+  pod 'Firebase/Auth', $FirebaseSDKVersion
+  pod 'Firebase/Crashlytics', $FirebaseSDKVersion
+  pod 'Firebase/Analytics', $FirebaseSDKVersion
+  pod 'FirebaseCore', $FirebaseSDKVersion
+  pod 'FirebaseCoreExtension', $FirebaseSDKVersion
   use_expo_modules!
   config = use_native_modules!
 
