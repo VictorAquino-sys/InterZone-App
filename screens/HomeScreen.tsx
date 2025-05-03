@@ -24,10 +24,14 @@ import { RootStackParamList } from '../src/navigationTypes';
 import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import UpdateBanner from '@/components/UpdateBanner';
+import UpdateChecker from '../src/components/UpdateChecker';
+import { NativeUpdateChecker } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
 import PostCard from '@/components/PostCard';
+import { Video, ResizeMode } from 'expo-av';
+
+// import { forceCrash } from '@/utils/crashlytics';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -40,7 +44,6 @@ import Animated, {
   useDerivedValue,
   runOnJS,
 } from 'react-native-reanimated';
-
 
 type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
 
@@ -75,7 +78,33 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const prevHasUnread = useRef(false);
 
+  const [fallbackUpdate, setFallbackUpdate] = useState(false);
+
+  const [isFullScreen, setIsFullScreen] = useState(false); // State to control full-screen mode
+
+  const toggleFullScreen = () => {
+    console.log('Toggling full-screen state');
+    setIsFullScreen(prev => !prev);
+  };
+
   console.log("HomeScreen");
+
+  // Check native update first
+  useEffect(() => {
+    const checkNativeUpdate = async () => {
+      try {
+        const NativeModule = await NativeUpdateChecker();
+        if (NativeModule === false) {
+          setFallbackUpdate(true);
+        }
+      } catch (e) {
+        console.warn('Native update check failed, showing fallback.');
+        setFallbackUpdate(true);
+      }
+    };
+
+    checkNativeUpdate();
+  }, []);
 
   useEffect(() => {
 
@@ -117,7 +146,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         setLoading(false); // Always called explicitly here
       }
     }
-  
+    
     handleCityOrUserChange();
   }, [user?.uid, city]);
 
@@ -166,7 +195,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     React.useCallback(() => {
       const onFocus = async () => {
         await logScreen('HomeScreen');
-
+  
         if (city) {
           setLoading(true);
           console.log("🔄 Fetching latest posts on screen focus for city:", city);
@@ -345,6 +374,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           content: data.content,
           timestamp: data.timestamp,
           imageUrl: data.imageUrl,
+          videoUrl: data.videoUrl || "", // Provide default value if not available
           user: {
             uid: data.user.uid,
             name: data.user.name,
@@ -467,6 +497,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     }
   };
 
+
   // Function to handle opening the modal
   const openImageModal = (imageUrl: string | null) => {
     setSelectedImageUrl(imageUrl);
@@ -477,6 +508,11 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   const closeImageModal = () => {
     setModalVisible(false);
   };
+
+  // Video container styles (adjusting based on full-screen mode)
+  // const videoContainerStyles = isFullScreen
+  // ? [styles.videoWrapper, styles.fullScreen] // Full-screen styles
+  // : styles.videoWrapper;
 
   const bounceStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bounceValue.value }],
@@ -529,13 +565,18 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       onOpenImage={openImageModal}
       onUserProfile={(userId) => navigation.navigate('UserProfile', { userId })}
       formatDate={formatDate}
+
+      isFullScreen={isFullScreen} // Pass full-screen state
+      toggleFullScreen={toggleFullScreen} // Pass the function to toggle full-screen mode
+      // onVideoClick={handleVideoClick} // Pass the function to handle video click
+
+
     />
   );
   
 
   return (
     <SafeAreaView style={styles.safeArea}>
-
       <View style={styles.container}>
       {/* Top Bar with Profile Icon and Search Bar */}
         <View style={styles.topBar}>
@@ -577,9 +618,8 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* 🔔 Expo Updates Banner */}
-        <UpdateBanner />
-
+        {/* 🔔 Version update checker */}
+        {fallbackUpdate && <UpdateChecker />}
 
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -618,6 +658,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
           />
         )}
+
         <Modal
           animationType="slide"
           transparent={true}
@@ -628,6 +669,26 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} resizeMode='contain'/>
           </TouchableOpacity>
         </Modal>
+
+        {/* Video Modal */}
+        {/* {isVideoModalVisible && selectedVideoUrl && (
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isVideoModalVisible}
+            onRequestClose={closeVideoModal}
+          >
+            <TouchableOpacity style={styles.fullScreenModal} onPress={closeVideoModal}>
+              <Video
+                style={styles.fullScreenVideo}
+                source={{ uri: selectedVideoUrl }}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                isLooping
+              />
+            </TouchableOpacity>
+          </Modal>
+        )} */}
 
         <Modal animationType="slide" transparent visible={reportModalVisible}>
           <TouchableOpacity
@@ -725,6 +786,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  fullScreenModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
   },
   categoryIcon: {
     width: 40,
@@ -902,12 +969,6 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 12,
   },
-  fullScreenModal: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)'
-  },
   fullScreenImage: {
     width: '90%',
     height: '90%',
@@ -947,5 +1008,31 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'white',
     zIndex: 999,
-  }  
+  },
+  videoWrapper: {
+    position: 'relative',
+    width: '100%',
+    height: 200,
+  },
+  fullScreen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
+    backgroundColor: 'black', // Optionally, add a background color for full-screen
+  },
+  // Regular video style
+  // video: {
+  //   width: '100%',
+  //   height: '100%',  // Make the video fill the container
+  // },
+
+  // Full-screen video style
+  // fullScreenVideo: {
+  //   width: '90%',
+  //   height: '90%',  // Full-screen video size
+  // },
+  
 });

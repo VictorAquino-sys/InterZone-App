@@ -37,6 +37,7 @@
     "expo": "~51.0.39",
     "expo-apple-authentication": "~6.4.2",
     "expo-asset": "~10.0.10",
+    "expo-av": "~14.0.7",
     "expo-build-properties": "~0.12.5",
     "expo-clipboard": "~6.0.3",
     "expo-constants": "~16.0.2",
@@ -50,9 +51,11 @@
     "expo-localization": "~15.0.3",
     "expo-location": "~17.0.1",
     "expo-notifications": "~0.28.19",
+    "expo-screen-orientation": "^8.1.5",
     "expo-splash-screen": "~0.27.7",
     "expo-status-bar": "~1.12.1",
     "expo-updates": "^0.25.28",
+    "expo-video": "^2.1.8",
     "expo-web-browser": "~13.0.3",
     "fast-xml-parser": "^5.2.0",
     "firebase": "^10.12.5",
@@ -80,9 +83,11 @@
     "react-native-tab-view": "^3.5.2",
     "react-native-toast-message": "^2.3.0",
     "react-native-vector-icons": "^10.1.0",
+    "react-native-video": "^6.13.0",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
-    "uuid": "^7.0.3"
+    "uuid": "^7.0.3",
+    "expo-media-library": "~16.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

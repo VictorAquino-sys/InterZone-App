@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from 'react';
+import React, { useEffect, useState, useRef} from 'react';
 import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button, Modal } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Avatar from './Avatar';
@@ -13,6 +13,9 @@ import { getCategoryByKey } from '@/config/categoryData';
 import CommentsModal from './commentsModal';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
+// import { Video, ResizeMode } from 'expo-av';
+import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
+
 
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
@@ -27,6 +30,10 @@ interface PostCardProps {
     onOpenImage: (imageUrl: string) => void;
     onUserProfile: (userId: string) => void;
     formatDate: (timestamp: Timestamp | null | undefined) => string;
+
+    // onVideoClick: (videoUrl: string) => void; // Pass the full-screen state
+    isFullScreen: boolean;
+    toggleFullScreen: () => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -37,7 +44,11 @@ const PostCard: React.FC<PostCardProps> = ({
   onReport,
   onOpenImage,
   onUserProfile,
-  formatDate
+  formatDate,
+  
+  // onVideoClick, // Add this prop
+  isFullScreen,  // Full-screen state passed from HomeScreen
+  toggleFullScreen,  // Full-screen toggle passed from HomeScreen
 }) => {
   const category = getCategoryByKey(item.categoryKey);
 
@@ -54,6 +65,17 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const [zoomModalVisible, setZoomModalVisible] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
+
+  const [isPlaying, setIsPlaying] = useState(false); // State to track play/pause
+
+  const videoRef = useRef<VideoRef | null>(null); // Use VideoRef for the reference type
+
+  const [status, setStatus] = useState<any>({}); // Update state with appropriate type for Video status
+  const [showControls, setShowControls] = useState(false); // To control visibility of the play/pause button
+  const [isVideoModalVisible, setIsVideoModalVisible] = useState(false); // Modal visibility state
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null); // State for selected video URL
+  const ref = useRef(null);
+
 
   // Fetch comment count on mount
   useEffect(() => {
@@ -195,6 +217,40 @@ const PostCard: React.FC<PostCardProps> = ({
     setZoomModalVisible(false); // Close zoom modal
   };
 
+  // // Create video player instance
+  // const player = useVideoPlayer(item.videoUrl, player => {
+  //   player.loop = true;
+  //   player.play();
+  // });
+
+  // Handle video play/pause
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying); // Toggle play/pause state
+  };
+
+  const handleVideoClick = (videoUrl: string) => {
+    console.log('Received video URL:', videoUrl);  // Log the video URL passed to the function
+    setSelectedVideoUrl(videoUrl);
+    setIsVideoModalVisible(true); // Show the video modal
+  };
+
+  const closeVideoModal = () => {
+    setIsVideoModalVisible(false); // Close the modal
+    setSelectedVideoUrl(null); // Clear the video URL
+  };
+
+  // Handle touch start (show controls)
+  const handleTouchStart = () => {
+    setShowControls(true);
+  };
+
+  // Handle touch end (hide controls)
+  const handleTouchEnd = () => {
+    setTimeout(() => {
+      setShowControls(false); // Hide controls after 1 second
+    }, 1000);
+  };
+
   const handleCopyText = async () => {
     try {
       await Clipboard.setStringAsync(item.content); // Copy post content to clipboard
@@ -322,6 +378,45 @@ const PostCard: React.FC<PostCardProps> = ({
         enableSwipeDown={true} // Allow swipe down to close
         />
       </Modal>
+
+      {/* Post content */}
+      {item.videoUrl && (
+        <View style={styles.videoWrapper}>
+          <Video
+            ref={videoRef}
+            source={{ uri: item.videoUrl }}
+            style={styles.video}
+            controls={true} // Enables default video controls
+            paused={!isPlaying} // Play or pause video
+            onError={(e) => console.log('Error loading video', e)}
+            onBuffer={(e) => console.log('Buffering video', e)}
+            onEnd={() => console.log('Video ended')}
+          />
+        </View>
+      )}
+
+      {/* Video Modal */}
+      {isVideoModalVisible && selectedVideoUrl  && (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isVideoModalVisible}
+          onRequestClose={closeVideoModal}
+        >
+          <TouchableOpacity style={styles.fullScreenModal} onPress={closeVideoModal}>
+            {/* <View style={styles.videoContainer}> */}
+            <Video
+              ref={videoRef}
+              source={{ uri: selectedVideoUrl }}
+              style={styles.fullScreenVideo}
+              controls={true} // Use the default video controls
+              onError={(e) => console.log('Error loading video', e)}
+              onBuffer={(e) => console.log('Buffering video', e)}
+              onEnd={() => console.log('Video ended')}
+            />
+          </TouchableOpacity>
+        </Modal>
+      )}
 
       <View style={styles.likeButtonWrapper}>
         <LikeButton postId={item.id} userId={userId} />
@@ -687,4 +782,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
+
+
+  fullScreenModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+  },
+  videoContainer: {
+    // flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Shady background for the modal
+  },
+  videoWrapper: {
+    position: 'relative',
+    width: '100%',  // Make it take up the full width
+    height: 200,  // Default height for video container when not in full-screen mode
+    backgroundColor: 'black',  // Optionally, add a background color to make it stand out
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  fullScreenVideo: {
+    width: '90%',
+    height: '90%',  // Full-screen video size
+  },
+  playPauseButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: '40%',
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+  },
+  playPauseText: {
+    color: 'white',
+    fontSize: 15,
+  },  
+  fullScreenButton: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+  },
+  // Expand/Contract Button Style
+  expandButton: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Semi-transparent background
+    padding: 10,
+    borderRadius: 50,
+    zIndex: 999,  // Ensure it appears on top of the video
+  },
+  fullScreenText: {
+    color: 'white',
+    fontSize: 14,
+  }
 });

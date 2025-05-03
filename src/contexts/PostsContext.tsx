@@ -8,6 +8,7 @@ export interface Post {
     content: string;
     timestamp: Timestamp | null; // Conside using a speficic type like Date or firebase.firestore.Timestamp
     imageUrl: string;
+    videoUrl: string | null; // Add videoUrl to Post interface
     user: {
         uid: string;
         name: string;

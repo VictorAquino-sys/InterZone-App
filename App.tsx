@@ -39,6 +39,7 @@ import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
 import { logScreen } from '@/utils/analytics';
 import Toast from 'react-native-toast-message';
+import { cleanOldCacheFiles } from '@/utils/cacheManager';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -240,6 +241,9 @@ function AuthenticatedApp() {
 export default function App() {
   const navigationRef = useNavigationContainerRef();
 
+  useEffect(() => {
+    cleanOldCacheFiles(); // ⬅️ Clean video cache on startup
+  }, []);
 
   return (
     <UserProvider> 
