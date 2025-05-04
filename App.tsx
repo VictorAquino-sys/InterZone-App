@@ -40,6 +40,7 @@ import PostDetailScreen from 'screens/posts/PostDetailScreen';
 import { logScreen } from '@/utils/analytics';
 import Toast from 'react-native-toast-message';
 import { cleanOldCacheFiles } from '@/utils/cacheManager';
+import { LogBox } from 'react-native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -152,10 +153,15 @@ function AuthenticatedApp() {
   const { activeConversationId } = useChatContext();
 
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: '239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com',
-      offlineAccess: true,
-    });
+    try {
+        GoogleSignin.configure({
+          webClientId: '239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com',
+          offlineAccess: true,
+        });
+        console.log('✅ Google Sign-In configured');
+      } catch (e) {
+        console.error('❌ Failed to configure Google Sign-In:', e);
+    }
 
     (i18n as any).locale = getLocales()[0].languageCode;
 
@@ -177,6 +183,13 @@ function AuthenticatedApp() {
         }
       }
     };
+
+    ErrorUtils.setGlobalHandler((error, isFatal) => {
+      console.log('💥 Global Error:', error.message);
+      if (isFatal) {
+        // Optionally show a fallback screen or report to Sentry
+      }
+    });
   
     setupNotifications();
   

@@ -473,8 +473,9 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       // Update local state
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
 
-      // ✅ Clean up trimmed video from MediaLibrary
-      if (typeof trimmedAssetId === 'string' && trimmedAssetId.length > 0) {
+      // ✅ Safe MediaLibrary asset deletion
+      const permission = await MediaLibrary.requestPermissionsAsync();
+      if (permission.granted && trimmedAssetId) {
         try {
           await MediaLibrary.deleteAssetsAsync([trimmedAssetId]);
           console.log('🧹 Cleaned up trimmed video from MediaLibrary');
@@ -482,7 +483,10 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         } catch (e) {
           console.warn('⚠️ Failed to delete MediaLibrary asset:', e);
         }
+      } else {
+        console.warn("⚠️ MediaLibrary permission not granted, skipping cleanup.");
       }
+
 
       // ✅ Delete actual file from internal storage
       if (videoUri?.startsWith("file://") || videoUri?.startsWith("/data/")) {

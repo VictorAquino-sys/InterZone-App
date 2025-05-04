@@ -1,5 +1,5 @@
 
-$RNVideoUseVideoCaching = true
+
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
 
@@ -46,11 +46,18 @@ target 'InterZone' do
   pod 'Firebase/Analytics', $FirebaseSDKVersion
   pod 'FirebaseCore', $FirebaseSDKVersion
   pod 'FirebaseCoreExtension', $FirebaseSDKVersion
+
+  $RNFirebaseAnalyticsWithoutAdIdSupport = true
+  $RNVideoUseVideoCaching = true
+
   use_expo_modules!
   config = use_native_modules!
 
+  pod 'react-native-compressor', :path => '../node_modules/react-native-compressor'
+
   use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
   use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
+
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -66,6 +73,15 @@ target 'InterZone' do
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['OTHER_CFLAGS'] = '$(inherited)'
+      end
+    end
+
+
+    # 💥 Fix for unsupported '-G' build flag on iOS
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['OTHER_CFLAGS'] = '$(inherited)'
+        config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'  # Add this line here
       end
     end
 

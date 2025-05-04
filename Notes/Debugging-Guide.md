@@ -43,7 +43,12 @@
     npx expo prebuild --clean
 
     IOS
+    if app.config.js has been modified run:
     npx expo prebuild --platform ios
+
+    if not:
+    npx expo run:ios
+    
     to open xcode project:
     open ios/InterZone.xcworkspace
 

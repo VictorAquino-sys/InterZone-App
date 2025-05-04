@@ -360,7 +360,6 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
       console.log('User signed in with Google:', authUser.email);
     
-      // await checkAndCreateFirestoreDocument(userCredential.user); 
       const userRef = doc(db, "users", authUser.uid);
       const docSnap = await getDoc(userRef);
     

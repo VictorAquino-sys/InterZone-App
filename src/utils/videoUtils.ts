@@ -26,14 +26,11 @@ export async function getReadableVideoPath(rawUri: string): Promise<string> {
     console.log("Checking rawUri:", rawUri);
     if (rawUri.startsWith('file://')) return rawUri;
   
-    const { status } = await MediaLibrary.requestPermissionsAsync(
-      false,
-      ['video']
-    );
+    const { status } = await MediaLibrary.requestPermissionsAsync();
     if (status !== 'granted') {
-      throw new Error('Video permission denied');
+      Alert.alert('Permission required', 'Please enable media access in settings.');
     }
-  
+    
     const ext = mime.getExtension(mime.getType(rawUri) ?? 'video/mp4') || 'mp4';
     const dest = `${FileSystem.cacheDirectory}${Date.now()}.${ext}`;
     await FileSystem.copyAsync({ from: rawUri, to: dest });
