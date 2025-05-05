@@ -27,6 +27,7 @@ import { Video as VideoCompressor } from 'react-native-compressor';
 import { getReadableVideoPath, saveVideoToAppStorage, validateVideoFile, uploadVideoWithCompression } from '@/utils/videoUtils';
 import { isValidFile, showEditor } from 'react-native-video-trim';
 import * as MediaLibrary from 'expo-media-library';
+import {Filter} from 'glin-profanity';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -50,6 +51,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>('');
   const [trimmedAssetId, setTrimmedAssetId] = useState<string | null>(null);
+
+  const [commentsEnabled, setcommentsEnabled] = useState<boolean>(true);
 
   // Check if the category supports video posts
   const isVideoCategory = selectedCategory === 'business' || selectedCategory === 'music' || selectedCategory === "tutors";
@@ -373,25 +376,29 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }, [])
   );  
 
-  const uploadWithRetry = async (
-    fn: () => Promise<string | null>,
+  function uploadWithRetry<T>(
+    fn: () => Promise<T | null>,
     maxRetries = 2
-  ): Promise<string | null> => {
-    let attempt = 0;
-    while (attempt < maxRetries) {
-      try {
-        const result = await fn();
-        if (result) return result;
-        throw new Error('Empty result');
-      } catch (err) {
-        console.warn(`Retry ${attempt + 1} failed:`, err);
-        attempt += 1;
-        await new Promise((res) => setTimeout(res, 2000)); // wait before retry
+  ): Promise<T | null> {
+    return (async () => {
+      let attempt = 0;
+      while (attempt < maxRetries) {
+        try {
+          const result = await fn();
+          if (result) return result;
+          throw new Error('Empty result');
+        } catch (err) {
+          console.warn(`Retry ${attempt + 1} failed:`, err);
+          attempt += 1;
+          await new Promise((res) => setTimeout(res, 2000)); // wait before retry
+        }
       }
-    }
-    Alert.alert('Upload Failed', 'Video could not be uploaded after multiple attempts.');
-    return null;
-  };  
+      Alert.alert('Upload Failed', 'Video could not be uploaded after multiple attempts.');
+      return null;
+    })();
+  }
+  
+  
 
   // Handle Creating a Post button
   const handleDone = async () => {
@@ -405,6 +412,21 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       return;
     }
 
+    const filter = new Filter({
+      allLanguages: true,
+      replaceWith: '*',
+    });
+
+    const profanityResult = filter.checkProfanity(postText);
+
+    if (profanityResult.containsProfanity) {
+      Alert.alert(
+        "Inappropriate Content",
+        `Please remove offensive language before posting.\nDetected: ${profanityResult.profaneWords.join(', ')}`
+      );
+      return;
+    }
+
     if (!location) {
       Alert.alert(i18n.t('locationRequiredTitle'), i18n.t('locationRequiredMessage'));
       return;
@@ -415,10 +437,10 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       return;
     }
 
-    if (mediaType === null) {
-      Alert.alert("Media Error", "Please select either an image or a video, not both.");
-      return;
-    }
+    // if (mediaType === null) {
+    //   Alert.alert("Media Error", "Please select either an image or a video, not both.");
+    //   return;
+    // }
 
     setUploading(true);
 
@@ -432,6 +454,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       // Upload image if provided
       let imageUrl = "";
       let videoUrl = "";
+      let videoStoragePath = "";
 
       if (mediaType === 'image' && imageUri) {
         console.log("Resizing and uploading image...");
@@ -441,11 +464,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           Alert.alert("Upload Error", "User context is missing.");
           return;
         }
-        videoUrl = await uploadWithRetry(() =>
+        const result = await uploadWithRetry(() =>
           uploadVideoWithCompression(videoUri!, user, (progress) => {
             console.log(`Upload Progress: ${(progress * 100).toFixed(2)}%`);
           })
-        ) || '';
+        );
+      
+        if (!result) return;
+      
+        videoUrl = result.downloadUrl;
+        videoStoragePath = result.storagePath;
       }
 
       // Create post with latest user data
@@ -456,14 +484,15 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         imageUrl: imageUrl || "", // Attach uploaded image URL
         imagePath: imagePath || "",
         videoUrl: videoUrl || "", // Attach uploaded video URL
-        videoPath: videoUri || "", // Store video path for later use
+        videoPath: videoStoragePath || "", // Store video path for later use
         user: {
           uid: authUser.uid,
           name: latestUserData.name || "Anonymous", // Use updated name
           avatar: latestUserData.avatar || "", 
         },
         categoryKey: selectedCategory,
-        commentCount: 0
+        commentCount: 0,
+        commentsEnabled: commentsEnabled
       };
 
       // Add post to Firestore
@@ -652,6 +681,29 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           >
             <Text style={styles.buttonText}>{uploading ? "Uploading..." : i18n.t('doneButton')}</Text>
           </TouchableOpacity>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, paddingHorizontal: 10 }}>
+             <TouchableOpacity
+               onPress={() => setcommentsEnabled(prev => !prev)}
+               style={{ 
+                 flexDirection: 'row',
+                 alignItems: 'center',
+                 gap: 8,
+                 marginRight:10, 
+               }}
+               hitSlop={{ top:10, bottom: 10, left: 10, right: 10 }} // Increase touch area
+             >
+               <Ionicons
+                 name={commentsEnabled ? 'checkbox' : 'square-outline'}
+                 size={24}
+                 color="#4A90E2"
+               />
+             </TouchableOpacity>
+             <Text style={{ fontSize: 16, color: '#333' }}>
+               {commentsEnabled ? i18n.t('allowComments') : i18n.t('noComments')}
+             </Text>
+          </View>
+ 
         </View>
     </ScrollView>
 

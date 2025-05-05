@@ -252,6 +252,9 @@
         "copyMessage": "¡El texto de la publicación ha sido copiado!",
         "copyError": "Error al copiar el texto"
     },
+
+    "allowComments": "Permitir comentarios",
+    "noComments": "Sin comentarios",
     "error": "Error",
     
     "messages": {

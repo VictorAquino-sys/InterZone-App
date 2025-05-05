@@ -255,6 +255,8 @@
       "copyError": "Failed to copy the text"
     },
 
+    "allowComments": "Allow comments",
+    "noComments": "No comments",
     "error": "Error",
 
     "messages": {
