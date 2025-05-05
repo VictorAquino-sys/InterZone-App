@@ -420,10 +420,13 @@ const PostCard: React.FC<PostCardProps> = ({
 
       <View style={styles.likeButtonWrapper}>
         <LikeButton postId={item.id} userId={userId} />
-        <TouchableOpacity onPress={handleToggleComments} style={styles.commentButton}>
-          <Ionicons name="chatbubble-outline" size={20} color= "#888" />
-          <Text style={styles.commentCount}>{commentCount}</Text>
-        </TouchableOpacity>
+
+        {item.commentsEnabled !== false && (    
+          <TouchableOpacity onPress={handleToggleComments} style={styles.commentButton}>
+            <Ionicons name="chatbubble-outline" size={20} color= "#888" />
+            <Text style={styles.commentCount}>{commentCount}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 🔽 Expanded Comments Section */}

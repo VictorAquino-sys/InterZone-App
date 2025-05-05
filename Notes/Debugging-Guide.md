@@ -1,5 +1,11 @@
 (Fixes & Solutions for issues)
 
+4-5
+
+If ios emulator crashes at start up, do the following to fix it:
+
+Open the simulator first through Xcode, this mounts the new simulator bundle, then you will be able to open in simulator from Expo by pressing I after expo start, or through the web console window
+
 4-02
     Push to Github on iOS:
     git push origin ios-rollback-working

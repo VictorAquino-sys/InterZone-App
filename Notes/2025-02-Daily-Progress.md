@@ -1,5 +1,10 @@
 (Daily logs of what have been worked on)
 
+
+### 05-05
+    Install bad words profanity:
+    npm install glin-profanity
+
 ### 04-26
      react-native-image-zoom-viewer:
      npm i react-native-image-zoom-viewer --save

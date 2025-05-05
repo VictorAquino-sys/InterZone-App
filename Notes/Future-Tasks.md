@@ -2,6 +2,9 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+### 5-5
+    Add a tooltip or small (i) icon with explanation: “If checked, others won’t be able to comment.”
+
 ### 4-17
     - Fix the following:
      LOG  VirtualizedList: You have a large list that is slow to update - make sure your renderItem function renders components that follow React performance best practices like 

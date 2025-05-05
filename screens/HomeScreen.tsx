@@ -381,7 +381,8 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             avatar: avatarUrl || "", // fallback to empty string
           },
           categoryKey: data.categoryKey,
-          commentCount: data.commentCount ?? 0
+          commentCount: data.commentCount ?? 0,
+          commentsEnabled: data.commentsEnabled
         };
       }));
 

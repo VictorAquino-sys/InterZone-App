@@ -52,6 +52,7 @@
     "expo-localization": "~15.0.3",
     "expo-location": "~17.0.1",
     "expo-media-library": "~16.0.5",
+    "expo-network": "~6.0.1",
     "expo-notifications": "~0.28.19",
     "expo-screen-orientation": "~7.0.5",
     "expo-splash-screen": "~0.27.7",
@@ -62,6 +63,7 @@
     "firebase": "^10.12.5",
     "firebase-admin": "^13.2.0",
     "firebase-functions": "^6.3.2",
+    "glin-profanity": "^2.0.0",
     "i18n-js": "^3.9.2",
     "js-base64": "^3.7.7",
     "lru-cache": "^11.1.0",
@@ -90,8 +92,7 @@
     "react-native-video-trim": "^3.0.9",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
-    "uuid": "^7.0.3",
-    "expo-network": "~6.0.1"
+    "uuid": "^7.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

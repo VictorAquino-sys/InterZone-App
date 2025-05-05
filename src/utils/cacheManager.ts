@@ -4,6 +4,13 @@ const CACHE_DIR = FileSystem.cacheDirectory + 'AV/';
 
 export async function cleanOldCacheFiles() {
   try {
+    const dirInfo = await FileSystem.getInfoAsync(CACHE_DIR);
+
+    if (!dirInfo.exists) {
+      console.log('📁 AV cache folder not found. Skipping cleanup.');
+      return;
+    }
+
     const files = await FileSystem.readDirectoryAsync(CACHE_DIR);
     const now = Date.now();
 

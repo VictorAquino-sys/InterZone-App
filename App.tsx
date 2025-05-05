@@ -42,6 +42,7 @@ import Toast from 'react-native-toast-message';
 import { cleanOldCacheFiles } from '@/utils/cacheManager';
 import { LogBox } from 'react-native';
 import * as Network from 'expo-network';
+import { Platform } from 'react-native'; // Make sure this is imported at the top
 
 
 Notifications.setNotificationHandler({
@@ -221,13 +222,18 @@ function AuthenticatedApp() {
       try {
         const ip = await Network.getIpAddressAsync();
         const state = await Network.getNetworkStateAsync();
-        const airplaneMode = await Network.isAirplaneModeEnabledAsync();
-  
+        
         console.log('🌐 IP Address:', ip);
         console.log('📶 Network Type:', state.type);
         console.log('🔌 Is Connected:', state.isConnected);
         console.log('🌍 Internet Reachable:', state.isInternetReachable);
-        console.log('✈️ Airplane Mode Enabled:', airplaneMode);
+  
+        if (Platform.OS === 'android') {
+          const airplaneMode = await Network.isAirplaneModeEnabledAsync();
+          console.log('✈️ Airplane Mode Enabled:', airplaneMode);
+        } else {
+          console.log('✈️ Airplane Mode status: Not available on iOS');
+        }
       } catch (err) {
         console.error('❌ Failed to fetch network info:', err);
       }
