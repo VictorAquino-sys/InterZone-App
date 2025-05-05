@@ -377,25 +377,27 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }, [])
   );  
 
-  const uploadWithRetry = async (
-    fn: () => Promise<string | null>,
+  function uploadWithRetry<T>(
+    fn: () => Promise<T | null>,
     maxRetries = 2
-  ): Promise<string | null> => {
-    let attempt = 0;
-    while (attempt < maxRetries) {
-      try {
-        const result = await fn();
-        if (result) return result;
-        throw new Error('Empty result');
-      } catch (err) {
-        console.warn(`Retry ${attempt + 1} failed:`, err);
-        attempt += 1;
-        await new Promise((res) => setTimeout(res, 2000)); // wait before retry
+  ): Promise<T | null> {
+    return (async () => {
+      let attempt = 0;
+      while (attempt < maxRetries) {
+        try {
+          const result = await fn();
+          if (result) return result;
+          throw new Error('Empty result');
+        } catch (err) {
+          console.warn(`Retry ${attempt + 1} failed:`, err);
+          attempt += 1;
+          await new Promise((res) => setTimeout(res, 2000)); // wait before retry
+        }
       }
-    }
-    Alert.alert('Upload Failed', 'Video could not be uploaded after multiple attempts.');
-    return null;
-  };  
+      Alert.alert('Upload Failed', 'Video could not be uploaded after multiple attempts.');
+      return null;
+    })();
+  }  
 
   // Handle Creating a Post button
   const handleDone = async () => {
@@ -448,6 +450,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       // Upload image if provided
       let imageUrl = "";
       let videoUrl = "";
+      let videoStoragePath = "";
 
       if (mediaType === 'image' && imageUri) {
         console.log("Resizing and uploading image...");
@@ -457,11 +460,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           Alert.alert("Upload Error", "User context is missing.");
           return;
         }
-        videoUrl = await uploadWithRetry(() =>
+        const result = await uploadWithRetry(() =>
           uploadVideoWithCompression(videoUri!, user, (progress) => {
             console.log(`Upload Progress: ${(progress * 100).toFixed(2)}%`);
           })
-        ) || '';
+        );
+
+        if (!result) return;
+
+        videoUrl = result.downloadUrl;
+        videoStoragePath = result.storagePath;
       }
 
       // Create post with latest user data
@@ -472,7 +480,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         imageUrl: imageUrl || "", // Attach uploaded image URL
         imagePath: imagePath || "",
         videoUrl: videoUrl || "", // Attach uploaded video URL
-        videoPath: videoUri || "", // Store video path for later use
+        videoPath: videoStoragePath || "", // Store video path for later use
         user: {
           uid: authUser.uid,
           name: latestUserData.name || "Anonymous", // Use updated name

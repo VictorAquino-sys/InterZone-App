@@ -77,7 +77,7 @@ export const uploadVideoWithCompression = async (
     localUri: string,
     user: User,
     onProgress: (progress: number) => void
-  ): Promise<string | null> => {
+  ): Promise<{ downloadUrl: string; storagePath: string} | null> => {
     try {
       const originalInfo = await FileSystem.getInfoAsync(localUri);
       if (!originalInfo.exists || originalInfo.size == null) {
@@ -126,8 +126,11 @@ export const uploadVideoWithCompression = async (
       );
   
       const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/interzone-production.firebasestorage.app/o/${encodeURIComponent(path)}?alt=media`;
-      return downloadUrl;
-  
+      
+      return {
+        downloadUrl,
+        storagePath: path
+      };
     } catch (err: any) {
       console.error('❌ Background upload failed:', err);
       Alert.alert('Upload Error', err.message || 'Background upload failed');
