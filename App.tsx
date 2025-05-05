@@ -41,6 +41,8 @@ import { logScreen } from '@/utils/analytics';
 import Toast from 'react-native-toast-message';
 import { cleanOldCacheFiles } from '@/utils/cacheManager';
 import { LogBox } from 'react-native';
+import * as Network from 'expo-network';
+
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -213,6 +215,27 @@ function AuthenticatedApp() {
     return () => subscription.remove();
 
   }, [user?.uid, activeConversationId]); // Depend on activeConversationId
+
+  useEffect(() => {
+    const debugNetworkInfo = async () => {
+      try {
+        const ip = await Network.getIpAddressAsync();
+        const state = await Network.getNetworkStateAsync();
+        const airplaneMode = await Network.isAirplaneModeEnabledAsync();
+  
+        console.log('🌐 IP Address:', ip);
+        console.log('📶 Network Type:', state.type);
+        console.log('🔌 Is Connected:', state.isConnected);
+        console.log('🌍 Internet Reachable:', state.isInternetReachable);
+        console.log('✈️ Airplane Mode Enabled:', airplaneMode);
+      } catch (err) {
+        console.error('❌ Failed to fetch network info:', err);
+      }
+    };
+  
+    debugNetworkInfo();
+  }, []);
+  
 
   if (loading) {
     console.log("🔄 Waiting for Firebase and User data...");

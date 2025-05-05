@@ -38,6 +38,18 @@
         "simulator": true
       }
     },
+    "device-debug": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "credentialsSource": "remote",
+        "simulator": false,          
+        "image": "macos-sonoma-14.6-xcode-16.1"
+      },
+      "env": {
+        "APP_VARIANT": "device-debug"
+      }
+    },
     "preview": {
       "channel": "staging",
       "distribution": "internal",

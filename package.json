@@ -90,7 +90,8 @@
     "react-native-video-trim": "^3.0.9",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
-    "uuid": "^7.0.3"
+    "uuid": "^7.0.3",
+    "expo-network": "~6.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
