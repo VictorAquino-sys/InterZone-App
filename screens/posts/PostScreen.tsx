@@ -503,15 +503,15 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
 
       // ✅ Clean up trimmed video from MediaLibrary
-      if (typeof trimmedAssetId === 'string' && trimmedAssetId.length > 0) {
-        try {
-          await MediaLibrary.deleteAssetsAsync([trimmedAssetId]);
-          console.log('🧹 Cleaned up trimmed video from MediaLibrary');
-          setTrimmedAssetId(null);
-        } catch (e) {
-          console.warn('⚠️ Failed to delete MediaLibrary asset:', e);
-        }
-      }
+      // if (typeof trimmedAssetId === 'string' && trimmedAssetId.length > 0) {
+      //   try {
+      //     await MediaLibrary.deleteAssetsAsync([trimmedAssetId]);
+      //     console.log('🧹 Cleaned up trimmed video from MediaLibrary');
+      //     setTrimmedAssetId(null);
+      //   } catch (e) {
+      //     console.warn('⚠️ Failed to delete MediaLibrary asset:', e);
+      //   }
+      // }
 
       // ✅ Delete actual file from internal storage
       if (videoUri?.startsWith("file://") || videoUri?.startsWith("/data/")) {

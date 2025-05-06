@@ -71,6 +71,14 @@ export default {
     },
     plugins: [
       [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "InterZone needs access to your camera to verify businesses.",
+          "enableMicrophonePermission": false,
+          "enableCodeScanner": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           ios: {

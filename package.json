@@ -91,6 +91,7 @@
     "react-native-vector-icons": "^10.1.0",
     "react-native-video": "^6.13.0",
     "react-native-video-trim": "^3.0.9",
+    "react-native-vision-camera": "^4.6.4",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
     "undici": "^5.29.0",

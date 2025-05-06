@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 05-6
+    Install Barcode scanner:
+    npx expo install react-native-vision-camera
+
 ### 05-01
     React Native Video Trim
     npm i react-native-video-trim
