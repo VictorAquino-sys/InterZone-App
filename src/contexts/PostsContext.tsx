@@ -18,6 +18,11 @@ export interface Post {
     categoryKey: string;
     commentCount?: number;
     commentsEnabled: boolean;
+    verifications?: {
+        business?: boolean;
+        musician?: boolean;
+        tutor?: boolean;
+    };
 }
 
 // Define the type for the posts and the context structure

@@ -492,7 +492,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         },
         categoryKey: selectedCategory,
         commentCount: 0,
-        commentsEnabled: commentsEnabled
+        commentsEnabled: commentsEnabled,
+        verifications: user?.verifications || {},
       };
 
       // Add post to Firestore

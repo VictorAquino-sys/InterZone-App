@@ -2,6 +2,8 @@ const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { Expo } = require('expo-server-sdk');
+const functions = require("firebase-functions");
+const crypto = require("crypto");
 const { getStorage } = require('firebase-admin/storage'); // Add this line to import Firebase Storage
 
 initializeApp();
@@ -291,4 +293,42 @@ exports.cleanUpPostMediaOnDelete = onDocumentDeleted("posts/{postId}", async (ev
       }
     }
   }
+});
+
+// \ud83d\udd10 Generate QR Code Verification
+exports.generateVerificationCode = functions.https.onCall(async (data, context) => {
+  const uid = context.auth?.uid;
+  const isQrDistributor = context.auth?.token?.isQrDistributor;
+
+  if (!uid || !isQrDistributor) {
+    throw new functions.https.HttpsError('permission-denied', 'Only authorized users can generate verification codes.');
+  }
+
+  const validTypes = ['business', 'musician', 'tutor'];
+  const type = data.type;
+
+  if (!validTypes.includes(type)) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid verification type.');
+  }
+
+  const code = crypto.randomBytes(5).toString('hex');
+  const createdAt = Timestamp.now();
+  const expiresAt = Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+
+  await db.collection('verifications').doc(code).set({
+    createdAt,
+    expiresAt,
+    used: false,
+    usedBy: null,
+    generatedBy: uid,
+    type, // 🟢 Store the type
+  });
+
+  const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(code)}`;
+
+  return {
+    code,
+    qrUrl,
+    expiresAt: expiresAt.toDate().toISOString(),
+  };
 });

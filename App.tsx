@@ -39,6 +39,7 @@ import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
 import Toast from 'react-native-toast-message';
 import { logScreen } from '@/utils/analytics';
+import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -231,6 +232,9 @@ function AuthenticatedApp() {
             options={{ title: i18n.t('block.manage'), headerShown: true }}
           />
           <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post' }} />
+
+          <Stack.Screen name="DistributeQr" component={DistributeQrScreen} options={{ title: 'QR Distribution' }} />
+
         </>
       )}
     </Stack.Navigator>

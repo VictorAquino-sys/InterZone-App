@@ -3,6 +3,10 @@
 ### 05-6
     Install Barcode scanner:
     npx expo install react-native-vision-camera
+    install Qr barcode creation:
+    npm i qrcode
+    install expo-clipboard
+    npx expo install expo-clipboard
 
 ### 05-01
     React Native Video Trim

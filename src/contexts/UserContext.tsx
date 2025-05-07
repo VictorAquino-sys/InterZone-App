@@ -21,7 +21,13 @@ export interface User {
   description?: string;
   blocked?: string[];
   termsAccepted?: boolean;
-  emailVerified?: boolean; // ✅ ADD THIS LINE
+  emailVerified?: boolean;
+  isQrDistributor?: boolean;
+  verifications?: {
+    business?: boolean;
+    musician?: boolean;
+    tutor?: boolean;
+  };
 }
 
 // Define a separate interface for the full Firestore user document
@@ -34,6 +40,12 @@ export interface UserData {
   country?: string;
   blocked?: string[];
   termsAccepted?: boolean;
+  isQrDistributor?: boolean;
+  verifications?: {
+    business?: boolean;
+    musician?: boolean;
+    tutor?: boolean;
+  };
 }
 
 // Define Typescript for context value.
@@ -60,9 +72,6 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
   // State hook to manage user data, with TypeScript types.
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // Initialize loading as true
-  // const [termsAccepted, setTermsAccepted] = useState(false);
-  // Get the Firebase authentication object.
-  // const auth = getAuth();
 
   // Effect hook to manage authentication state changes.
   useEffect(() => {
@@ -95,6 +104,8 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               language: RNLocalize.getLocales()[0].languageCode,
               termsAccepted: userData.termsAccepted || false, // 👈 Include termsAccepted
               emailVerified: firebaseUser.emailVerified, // ✅ ADD THIS LINE
+              isQrDistributor: userData.isQrDistributor ?? false,
+              verifications: userData.verifications || {},
             };
             console.log("User logged in with updated data:", updatedUser);
             setUser(updatedUser);
@@ -155,6 +166,8 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             language: RNLocalize.getLocales()[0].languageCode,
             termsAccepted: userData.termsAccepted ?? false,
             emailVerified: firebaseUser.emailVerified, // ✅ ADD HERE TOO
+            isQrDistributor: userData.isQrDistributor ?? false,
+            verifications: userData.verifications || {},
           };
 
           console.log("🔄 User manually refreshed:", updatedUser);

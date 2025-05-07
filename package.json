@@ -69,6 +69,7 @@
     "js-base64": "^3.7.7",
     "lru-cache": "^11.1.0",
     "mime": "^4.0.6",
+    "qrcode": "^1.5.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-intl": "^6.6.8",

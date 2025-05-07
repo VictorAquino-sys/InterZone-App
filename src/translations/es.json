@@ -253,6 +253,10 @@
         "copyError": "Error al copiar el texto"
     },
 
+    "businessVerified": "Empresa Calificada",
+    "musicianVerified": "Músico Profesional",
+    "tutorVerified": "Tutor Profesional",
+
     "allowComments": "Permitir comentarios",
     "noComments": "Sin comentarios",
     "error": "Error",
@@ -261,7 +265,30 @@
         "noConversations": "💬 Aún no tienes conversaciones.",
         "findFriends": "Buscar amigos",
         "startChatting": "Comienza a chatear..."
-      }
-      
-      
+    },
+
+    "qr": {
+        "invalidTitle": "Inválido",
+        "invalidMessage": "Este código QR no es válido.",
+        "noTypeAssigned": "Este código QR no tiene un tipo de verificación asignado.",
+        "expiredOrUsed": "Caducado o Usado",
+        "codeAlreadyUsed": "El código ya fue usado o está vencido.",
+        "userNotFound": "Usuario no encontrado. Por favor, inicia sesión nuevamente.",
+        "verifiedTitle": "¡Verificado!",
+        "verifiedMessage": {
+          "business": "Tu cuenta ha sido verificada como Negocio.",
+          "musician": "Tu cuenta ha sido verificada como Músico.",
+          "tutor": "Tu cuenta ha sido verificada como Tutor."
+        },
+        "verificationError": "No se pudo verificar. Intenta más tarde.",
+        "requestingCamera": "Solicitando permiso para usar la cámara...",
+        "noCamera": "No se encontró cámara",
+        "scanInstruction": "Escanea tu código QR de InterZone",
+        "verifiedBanner": {
+          "business": "Verificado como Negocio",
+          "musician": "Verificado como Músico",
+          "tutor": "Verificado como Tutor"
+        }
+    }
+       
 } 
