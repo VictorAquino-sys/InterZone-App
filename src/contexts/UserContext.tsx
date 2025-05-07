@@ -4,6 +4,7 @@
 
 // Import necessary hooks and functions from React and Firebase
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Alert } from 'react-native';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
 import { auth, db } from '../../src/config/firebase';
@@ -88,6 +89,10 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         }
 
         try {
+          const idTokenResult = await firebaseUser.getIdTokenResult(true);
+          const claims = idTokenResult.claims;
+          const isQrDistributorClaim = Boolean(claims.isQrDistributor); // ✅ Type-safe boolean
+
           const userRef = doc(db, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
           const locale = RNLocalize.getLocales()[0].languageCode;
@@ -95,6 +100,19 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
 
           if(userSnap.exists()) {
             const userData = userSnap.data() as UserData;
+
+            if (userData.isQrDistributor && !claims.isQrDistributor) {
+              console.warn('⚠️ Firestore shows isQrDistributor: true, but Auth claims do not.');
+            
+              // Optional: notify user
+              Alert.alert(
+                'QR Access Issue',
+                'Your access is currently limited. Please sign out and sign in again or contact support.'
+              );
+            
+              // Optional: you could also trigger a refresh or even log this to analytics
+            }
+
             // If a user is authenticated, format and set user data in state.
             const updatedUser: User = {
               uid: firebaseUser.uid,
@@ -104,7 +122,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               language: RNLocalize.getLocales()[0].languageCode,
               termsAccepted: userData.termsAccepted || false, // 👈 Include termsAccepted
               emailVerified: firebaseUser.emailVerified, // ✅ ADD THIS LINE
-              isQrDistributor: userData.isQrDistributor ?? false,
+              isQrDistributor: isQrDistributorClaim,
               verifications: userData.verifications || {},
             };
             console.log("User logged in with updated data:", updatedUser);
@@ -152,6 +170,10 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         return;
       }
       try {
+        const idTokenResult = await firebaseUser.getIdTokenResult(true);
+        const claims = idTokenResult.claims;
+        const isQrDistributorClaim = Boolean(claims.isQrDistributor);
+
         const userRef = doc(db, "users", firebaseUser.uid);
         const userSnap = await getDoc(userRef);
     
@@ -166,7 +188,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             language: RNLocalize.getLocales()[0].languageCode,
             termsAccepted: userData.termsAccepted ?? false,
             emailVerified: firebaseUser.emailVerified, // ✅ ADD HERE TOO
-            isQrDistributor: userData.isQrDistributor ?? false,
+            isQrDistributor: isQrDistributorClaim,
             verifications: userData.verifications || {},
           };
 

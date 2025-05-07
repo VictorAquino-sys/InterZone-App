@@ -1,15 +1,19 @@
 const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const { Expo } = require('expo-server-sdk');
-const functions = require("firebase-functions");
 const crypto = require("crypto");
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { getAuth } = require('firebase-admin/auth');
+
+
 const { getStorage } = require('firebase-admin/storage'); // Add this line to import Firebase Storage
 
 initializeApp();
 const db = getFirestore();
 const storage = getStorage(); // Initialize Firebase Storage
 const expo = new Expo();
+const auth = getAuth();
 
 const i18n = {
   en: {
@@ -295,20 +299,25 @@ exports.cleanUpPostMediaOnDelete = onDocumentDeleted("posts/{postId}", async (ev
   }
 });
 
+
 // \ud83d\udd10 Generate QR Code Verification
-exports.generateVerificationCode = functions.https.onCall(async (data, context) => {
-  const uid = context.auth?.uid;
-  const isQrDistributor = context.auth?.token?.isQrDistributor;
+exports.generateVerificationCode = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  const isQrDistributor = request.auth?.token?.isQrDistributor === true;
+
+  console.log('🛂 Auth UID:', uid);
+  console.log('🛂 Token claims:', request.auth?.token);
 
   if (!uid || !isQrDistributor) {
-    throw new functions.https.HttpsError('permission-denied', 'Only authorized users can generate verification codes.');
+    console.warn('❌ Unauthorized attempt:', { uid, isQrDistributor });
+    throw new HttpsError('permission-denied', 'Only authorized users can generate verification codes.');
   }
 
   const validTypes = ['business', 'musician', 'tutor'];
-  const type = data.type;
+  const type = request.data.type;
 
   if (!validTypes.includes(type)) {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid verification type.');
+    throw new HttpsError('invalid-argument', 'Invalid verification type.');
   }
 
   const code = crypto.randomBytes(5).toString('hex');

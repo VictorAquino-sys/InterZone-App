@@ -269,6 +269,7 @@
 
     "qr": {
         "invalidTitle": "Inválido",
+        "error": "Solo los usuarios autorizados pueden generar códigos de verificación.",
         "invalidMessage": "Este código QR no es válido.",
         "noTypeAssigned": "Este código QR no tiene un tipo de verificación asignado.",
         "expiredOrUsed": "Caducado o Usado",
@@ -283,12 +284,37 @@
         "verificationError": "No se pudo verificar. Intenta más tarde.",
         "requestingCamera": "Solicitando permiso para usar la cámara...",
         "noCamera": "No se encontró cámara",
+        "imageNotAvailable": "La imagen del código QR no está disponible",
         "scanInstruction": "Escanea tu código QR de InterZone",
         "verifiedBanner": {
           "business": "Verificado como Negocio",
           "musician": "Verificado como Músico",
           "tutor": "Verificado como Tutor"
+        },
+        "accessDenied": "Acceso denegado",
+        "noPermission": "No tienes permiso para ver esta pantalla.",
+        "success": "Éxito",
+        "created": "¡Código QR creado!",
+        "loadFail": "No se pudieron cargar los códigos QR.",
+        "generationFail": "No se pudo generar el código QR.",
+        "copied": "Copiado",
+        "copiedMessage": "Enlace del código QR copiado al portapapeles.",
+        "shareMessage": "Aquí está tu código QR de verificación de InterZone:",
+        "shareFail": "No se pudo compartir el código QR.",
+        "unclaimedTitle": "Códigos QR de verificación sin reclamar",
+        "generateButton": "Generar nuevo código QR",
+        "code": "Código",
+        "expires": "Expira",
+        "copyLink": "Copiar enlace QR",
+        "shareLink": "Compartir enlace QR",
+        "types": {
+        "business": "Negocio",
+        "musician": "Músico",
+        "tutor": "Tutor"
         }
-    }
+    },
+
+    "distributeQrButton": "Distribuir códigos QR"
+
        
 } 

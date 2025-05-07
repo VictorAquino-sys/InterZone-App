@@ -64,3 +64,5 @@ android/
 
 # cache.js
 # utils/
+
+scripts/*.json

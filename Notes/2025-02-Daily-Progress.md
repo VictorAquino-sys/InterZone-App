@@ -7,7 +7,10 @@
     npm i qrcode
     install expo-clipboard
     npx expo install expo-clipboard
-
+    Install a proper QR:
+    npx expo install react-native-svg
+    npm install react-native-qrcode-svg
+    
 ### 05-01
     React Native Video Trim
     npm i react-native-video-trim

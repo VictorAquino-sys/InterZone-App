@@ -274,8 +274,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                 {user?.verifications?.business && (
                                     <View style={styles.verifiedBadge}>
                                         <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
-                                        <Text style={styles.verifiedText}>{i18n.t('businessVerified')}
-</Text>
+                                        <Text style={styles.verifiedText}>{i18n.t('businessVerified')}</Text>
                                     </View>
                                 )}
 
@@ -303,8 +302,6 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                     {isEditing && (
                         <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
                     )}
-
-
 
                 </View>
                 
@@ -358,6 +355,17 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                     <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 46, alignItems: 'center' }}>
                         <Ionicons name="settings-outline" size={26} color="#555" />
                     </TouchableOpacity>
+
+                    {/* ✅ Add this block below the settings icon */}
+                    {user?.isQrDistributor && (
+                        <TouchableOpacity
+                        style={[styles.buttonContainer, { backgroundColor: '#007aff', marginTop: 36 }]}
+                        onPress={() => navigation.navigate('DistributeQr')}
+                        >
+                        <Text style={styles.buttonText}>{i18n.t('distributeQrButton')}</Text>
+                        </TouchableOpacity>
+                    )}
+
                     <Modal transparent visible={showSettings} animationType="slide">
                         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
                             <View style={styles.modalBox}>
@@ -382,12 +390,6 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                     <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
                                 </TouchableOpacity>
 
-                                {user?.isQrDistributor && (
-                                    <Button
-                                        title="Distribute QR Codes"
-                                        onPress={() => navigation.navigate('DistributeQr')}
-                                    />
-                                )}
                             </View>
                         </TouchableOpacity>
                     </Modal>

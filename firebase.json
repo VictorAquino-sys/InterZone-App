@@ -16,5 +16,17 @@
     "crashlytics_debug_enabled": true,
     "crashlytics_javascript_exception_handler_chaining_enabled": false,
     "crashlytics_is_error_generation_on_js_crash_enabled": true
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
   }
 }
