@@ -1,11 +1,14 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Dimensions, Platform } from 'react-native';
 import { getLocales } from 'expo-localization';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/i18n';
 import { NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import homeIcon from './assets/home_icon_transparent.png'
+import magicIcon from './assets/magic_icon_transparent.png'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -41,6 +44,7 @@ import Toast from 'react-native-toast-message';
 import { logScreen } from '@/utils/analytics';
 import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
 import VerifyBusinessScreen from 'screens/business/VerifyBusinessScreen';
+import Animated, { BounceIn} from 'react-native-reanimated';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -124,24 +128,86 @@ function HomeStack(){
 }
 
 function BottomTabs() {
+  const windowWidth = Dimensions.get('window').width;
+  const postIconLeft = windowWidth - 120; // tune this value
+  const iconSpacing = windowWidth * 0.15;
+  const insets = useSafeAreaInsets(); // grabs bottom padding (e.g., iPhone notch)
+
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator 
+      screenOptions={{ 
+        headerShown: false,
+        tabBarStyle: {
+          height: 35,
+          backgroundColor: '#e8f5e9',
+        },
+      }}
+    >
       <Tab.Screen 
         name="Home" 
         component={HomeStack} 
         options={{ 
-          title: i18n.t('home'), // Localized title for the tab
-          tabBarIcon: ({ color, size }) => 
-            <Ionicons name="home-outline" color={color} size={size} />, 
+          title: '',
+          tabBarButton: (props) => (
+            <Animated.View entering={BounceIn.delay(100)}>
+              <TouchableOpacity
+                {...props}
+                style={{
+                  position: 'absolute',
+                  bottom: insets.bottom + 12,
+                  left: iconSpacing,
+                  backgroundColor: 'white',
+                  borderRadius: 20,
+                  padding: 6,
+                  shadowColor: '#4F46E5',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 10,
+                  elevation: 10,
+                }}
+              >
+                <Image
+                  source={homeIcon}
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          ),
         }} 
       />
+
       <Tab.Screen 
         name="PostScreen" 
         component={PostScreen}
         options={{ 
-          title: i18n.t('post'), // Localized title for the tab
-          tabBarIcon: ({ color, size }) => 
-            <Ionicons name="add-circle-outline" color={color} size={size} />, 
+          title: '',
+          tabBarButton: (props) => (
+            <Animated.View entering={BounceIn.delay(100)}>
+              <TouchableOpacity
+                {...props}
+                style={{
+                  position: 'absolute',
+                  bottom: insets.bottom + 12,
+                  left: postIconLeft,
+                  backgroundColor: 'white',
+                  borderRadius: 20,
+                  padding: 6,
+                  shadowColor: '#4F46E5',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 10,
+                  elevation: 10,
+                }}
+              >
+                <Image
+                  source={magicIcon}
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          ),
         }} 
       />
     </Tab.Navigator>
@@ -237,7 +303,7 @@ function AuthenticatedApp() {
           <Stack.Screen name="DistributeQr" component={DistributeQrScreen} options={{ title: 'QR Distribution' }} />
 
           <Stack.Screen name="VerifyBusiness" component={VerifyBusinessScreen} options={{ title: 'Verify Account' }}/>
-          
+
         </>
       )}
     </Stack.Navigator>

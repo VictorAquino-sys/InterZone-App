@@ -14,7 +14,7 @@ interface Props {
 export default function QrCard({ code, expiresAt, type, onShare }: Props) {
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const link = `https://interzone.app/claim/${code}`;
+  const link = code;
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(link);

@@ -575,7 +575,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     />
   );
   
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -670,26 +669,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} resizeMode='contain'/>
           </TouchableOpacity>
         </Modal>
-
-        {/* Video Modal */}
-        {/* {isVideoModalVisible && selectedVideoUrl && (
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={isVideoModalVisible}
-            onRequestClose={closeVideoModal}
-          >
-            <TouchableOpacity style={styles.fullScreenModal} onPress={closeVideoModal}>
-              <Video
-                style={styles.fullScreenVideo}
-                source={{ uri: selectedVideoUrl }}
-                useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
-                isLooping
-              />
-            </TouchableOpacity>
-          </Modal>
-        )} */}
 
         <Modal animationType="slide" transparent visible={reportModalVisible}>
           <TouchableOpacity
@@ -977,8 +956,8 @@ const styles = StyleSheet.create({
   },
   chatButton: {
     position: 'absolute',
-    bottom: 15, // Push it up a bit above the tab bar
-    right: 30,
+    bottom: 45, // Push it up a bit above the tab bar
+    right: 15,
     backgroundColor: '#eeeeee',
     borderRadius: 30,
     width: 60,

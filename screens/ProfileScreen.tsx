@@ -269,7 +269,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                     <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
                 
                     <TouchableOpacity onPress={pickImageProfile}>
-                        <Avatar key={profilePic} name={newName} imageUri={profilePic} size={100} />
+                        <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150} />
                     </TouchableOpacity>
                     
                     {loading && <ActivityIndicator size="large" color="#0000ff" />} 
@@ -382,12 +382,14 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         </TouchableOpacity>
                     )}
 
-                    {nextType && (
-                    <VerifyBusinessButton
-                        type={nextType}
-                        onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
-                    />
-                    )}
+                    <View style={styles.verificationButtonWrapper}>
+                        {nextType && (
+                        <VerifyBusinessButton
+                            type={nextType}
+                            onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
+                        />
+                        )}
+                    </View>
 
                     <Modal transparent visible={showSettings} animationType="slide">
                         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
@@ -429,7 +431,7 @@ const styles = StyleSheet.create({
         // flex: 1,
         // justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 10,
         backgroundColor: 'aliceblue',
     },
     topSection: {
@@ -452,7 +454,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 34,
         fontWeight: 'bold',
-        marginBottom: 40,   // Corrected from 'marginButtom
+        marginBottom: 15,   // Corrected from 'marginButtom
     },
     nameContainer: {
         marginBottom: 20,
@@ -490,7 +492,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 10,
-        marginBottom: 40,
+        marginBottom: 10,
         width: '60%',
     },
     buttonText: {
@@ -500,8 +502,10 @@ const styles = StyleSheet.create({
     },
     descriptionWrapper: {
         width: '100%',
-        marginTop: 30,
+        marginTop: 25,
         marginBottom: 20,
+        paddingLeft: 20,
+        paddingRight: 20,
     },
     noteRow: {
         flexDirection: 'row',
@@ -583,43 +587,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 20,
-    },
-    verifyButton: {
-        backgroundColor: '#0D9E6A',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 24,
-        alignSelf: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 5,
-        minWidth: 260,
-    },
-      
-    verifyButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-        letterSpacing: 0.5,
-      },
-      
-    verifiedTag: {
-        marginTop: 20,
-        backgroundColor: '#E6F4EA',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    
+    },      
     verifiedText: {
         color: '#2E7D32',
         fontWeight: '600',
         fontSize: 15,
+    },
+    verificationButtonWrapper: {
+        marginTop: 20,
+        alignItems: 'center',
+        width: '100%',
     },
 });

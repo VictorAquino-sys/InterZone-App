@@ -3,7 +3,9 @@
       "title": "Terms of Use",
       "agree": "I agree to the Terms of Use. (Click Here)",
       "continue": "Continue",
-      "text": "Welcome to InterZone!\n\nBy using this app, you agree to the following terms:\n\n• You will not post or share any abusive, threatening, offensive, or hateful content.\n\n• You will not harass or bully others.\n\n• You agree to our zero-tolerance policy for objectionable content.\n\n• You may report inappropriate content via the flag feature.\n\n• You may block users that are offensive to you.\n\n• We reserve the right to remove content and suspend accounts that violate these terms.\n\n• For support, contact us at interzone.devs@gmail.com\n\nYour data is handled in accordance with our Privacy Policy.\n\n(Scroll down to accept)"
+      "text": "Welcome to InterZone!\n\nBy using this app, you agree to the following terms:\n\n• You will not post or share any abusive, threatening, offensive, or hateful content.\n\n• You will not harass or bully others.\n\n• You agree to our zero-tolerance policy for objectionable content.\n\n• You may report inappropriate content via the flag feature.\n\n• You may block users that are offensive to you.\n\n• We reserve the right to remove content and suspend accounts that violate these terms.\n\n• For support, contact us at interzone.devs@gmail.com\n\nYour data is handled in accordance with our Privacy Policy.\n\n(Scroll down to accept)",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfUse": "Terms of Use"
     },
 
     "loginButton": "Login",
