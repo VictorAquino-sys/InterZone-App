@@ -27,8 +27,7 @@ import { Video as VideoCompressor } from 'react-native-compressor';
 import { getReadableVideoPath, saveVideoToAppStorage, validateVideoFile, uploadVideoWithCompression } from '@/utils/videoUtils';
 import { isValidFile, showEditor } from 'react-native-video-trim';
 import * as MediaLibrary from 'expo-media-library';
-import { Filter, Language } from 'glin-profanity';
-
+import { getProfaneWords } from '@/utils/profanityFilter';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -55,8 +54,10 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
   const [commentsEnabled, setcommentsEnabled] = useState<boolean>(true);
 
+  const profaneWords = getProfaneWords(postText);
+
   // Check if the category supports video posts
-  const isVideoCategory = selectedCategory === 'business' || selectedCategory === 'restaurants' || selectedCategory === 'music' || selectedCategory === "tutors";
+  const isVideoCategory = selectedCategory === 'business' || selectedCategory === 'music' || selectedCategory === "tutors";
 
 
   // Disable the image and video picker if no category is selected or location is still loading
@@ -397,7 +398,9 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       Alert.alert('Upload Failed', 'Video could not be uploaded after multiple attempts.');
       return null;
     })();
-  }  
+  }
+  
+  
 
   // Handle Creating a Post button
   const handleDone = async () => {
@@ -411,22 +414,13 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       return;
     }
 
-    // ✅ Profanity filter logic
-    const filter = new Filter({
-      allLanguages: true, // ✅ Guaranteed to load supported dictionaries
-      replaceWith: '*',
-    });
-
-    const profanityResult = filter.checkProfanity(postText);
-
-    if (profanityResult.containsProfanity) {
+    if (profaneWords.length > 0) {
       Alert.alert(
-        "Inappropriate Content",
-        `Please remove offensive language before posting.\nDetected: ${profanityResult.profaneWords.join(', ')}`
+        i18n.t('inappropriateContentTitle'),
+        `${i18n.t('inappropriateContentMessage')}\n\n${i18n.t('detectedWords')}: ${profaneWords.join(', ')}`
       );
       return;
     }
-
 
     if (!location) {
       Alert.alert(i18n.t('locationRequiredTitle'), i18n.t('locationRequiredMessage'));
@@ -437,6 +431,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       Alert.alert(i18n.t('categoryRequired'), i18n.t('selectCategory'));
       return;
     }
+
+    // if (mediaType === null) {
+    //   Alert.alert("Media Error", "Please select either an image or a video, not both.");
+    //   return;
+    // }
 
     setUploading(true);
 
@@ -465,9 +464,9 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             console.log(`Upload Progress: ${(progress * 100).toFixed(2)}%`);
           })
         );
-
+      
         if (!result) return;
-
+      
         videoUrl = result.downloadUrl;
         videoStoragePath = result.storagePath;
       }
@@ -498,21 +497,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
       // Update local state
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
-
-      // ✅ Safe MediaLibrary asset deletion
-      // const permission = await MediaLibrary.requestPermissionsAsync();
-      // if (permission.granted && trimmedAssetId) {
-      //   try {
-      //     await MediaLibrary.deleteAssetsAsync([trimmedAssetId]);
-      //     console.log('🧹 Cleaned up trimmed video from MediaLibrary');
-      //     setTrimmedAssetId(null);
-      //   } catch (e) {
-      //     console.warn('⚠️ Failed to delete MediaLibrary asset:', e);
-      //   }
-      // } else {
-      //   console.warn("⚠️ MediaLibrary permission not granted, skipping cleanup.");
-      // }
-
 
       // ✅ Delete actual file from internal storage
       if (videoUri?.startsWith("file://") || videoUri?.startsWith("/data/")) {
@@ -665,6 +649,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             </Picker>
           </View>
 
+          {/* Show prompts when category or location is not ready */}
+          {!isCategorySelected && (
+            <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
+          )}
+
           {locationLoading && (
             <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
           )}
@@ -679,29 +668,27 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, paddingHorizontal: 10 }}>
-            <TouchableOpacity
-              onPress={() => setcommentsEnabled(prev => !prev)}
-              style={{ 
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-                marginRight:10, 
-              }}
-              hitSlop={{ top:10, bottom: 10, left: 10, right: 10 }} // Increase touch area
-            >
-              <Ionicons
-                name={commentsEnabled ? 'checkbox' : 'square-outline'}
-                size={24}
-                color="#4A90E2"
-              />
-            </TouchableOpacity>
-            <Text style={{ fontSize: 16, color: '#333' }}>
-              {commentsEnabled ? i18n.t('allowComments') : i18n.t('noComments')}
-            </Text>
+             <TouchableOpacity
+               onPress={() => setcommentsEnabled(prev => !prev)}
+               style={{ 
+                 flexDirection: 'row',
+                 alignItems: 'center',
+                 gap: 8,
+                 marginRight:10, 
+               }}
+               hitSlop={{ top:10, bottom: 10, left: 10, right: 10 }} // Increase touch area
+             >
+               <Ionicons
+                 name={commentsEnabled ? 'checkbox' : 'square-outline'}
+                 size={24}
+                 color="#4A90E2"
+               />
+             </TouchableOpacity>
+             <Text style={{ fontSize: 16, color: '#333' }}>
+               {commentsEnabled ? i18n.t('allowComments') : i18n.t('noComments')}
+             </Text>
           </View>
-
-
-
+ 
         </View>
     </ScrollView>
 
