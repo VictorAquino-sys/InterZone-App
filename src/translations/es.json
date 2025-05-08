@@ -270,9 +270,9 @@
         "copyError": "Error al copiar el texto"
     },
 
-    "businessVerified": "Empresa Calificada",
-    "musicianVerified": "Músico Profesional",
-    "tutorVerified": "Tutor Profesional",
+    "businessVerified": "Empresario",
+    "musicianVerified": "Músico",
+    "tutorVerified": "Mentor",
 
     "allowComments": "Permitir comentarios",
     "noComments": "Sin comentarios",
