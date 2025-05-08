@@ -209,6 +209,10 @@
     "enterPassword": "Confirme su contraseña",
     "privacyPolicy": "Política de privacidad",
 
+    "inappropriateContentTitle": "Contenido inapropiado",
+    "inappropriateContentMessage": "Por favor, elimina el lenguaje ofensivo antes de publicar.",
+    "detectedWords": "Detectado",
+
     "profile": {
         "becomeVerifiedBusiness": "Verifícate como Negocio",
         "verifiedBusiness": "Estás verificado como Negocio",

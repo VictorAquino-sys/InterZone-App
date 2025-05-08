@@ -27,7 +27,7 @@ import { Video as VideoCompressor } from 'react-native-compressor';
 import { getReadableVideoPath, saveVideoToAppStorage, validateVideoFile, uploadVideoWithCompression } from '@/utils/videoUtils';
 import { isValidFile, showEditor } from 'react-native-video-trim';
 import * as MediaLibrary from 'expo-media-library';
-import {Filter} from 'glin-profanity';
+import { getProfaneWords } from '@/utils/profanityFilter';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -53,6 +53,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [trimmedAssetId, setTrimmedAssetId] = useState<string | null>(null);
 
   const [commentsEnabled, setcommentsEnabled] = useState<boolean>(true);
+
+  const profaneWords = getProfaneWords(postText);
 
   // Check if the category supports video posts
   const isVideoCategory = selectedCategory === 'business' || selectedCategory === 'music' || selectedCategory === "tutors";
@@ -412,17 +414,10 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       return;
     }
 
-    const filter = new Filter({
-      allLanguages: true,
-      replaceWith: '*',
-    });
-
-    const profanityResult = filter.checkProfanity(postText);
-
-    if (profanityResult.containsProfanity) {
+    if (profaneWords.length > 0) {
       Alert.alert(
-        "Inappropriate Content",
-        `Please remove offensive language before posting.\nDetected: ${profanityResult.profaneWords.join(', ')}`
+        i18n.t('inappropriateContentTitle'),
+        `${i18n.t('inappropriateContentMessage')}\n\n${i18n.t('detectedWords')}: ${profaneWords.join(', ')}`
       );
       return;
     }
@@ -502,17 +497,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
       // Update local state
       setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
-
-      // ✅ Clean up trimmed video from MediaLibrary
-      // if (typeof trimmedAssetId === 'string' && trimmedAssetId.length > 0) {
-      //   try {
-      //     await MediaLibrary.deleteAssetsAsync([trimmedAssetId]);
-      //     console.log('🧹 Cleaned up trimmed video from MediaLibrary');
-      //     setTrimmedAssetId(null);
-      //   } catch (e) {
-      //     console.warn('⚠️ Failed to delete MediaLibrary asset:', e);
-      //   }
-      // }
 
       // ✅ Delete actual file from internal storage
       if (videoUri?.startsWith("file://") || videoUri?.startsWith("/data/")) {

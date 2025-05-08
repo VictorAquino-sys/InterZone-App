@@ -221,6 +221,10 @@
     "unknownError": "Something went wrong. Please try again later.",
 
     "privacyPolicy": "Privacy Policy",
+
+    "inappropriateContentTitle": "Inappropriate Content",
+  "inappropriateContentMessage": "Please remove offensive language before posting.",
+  "detectedWords": "Detected",
     
     "comments": {
       "title": "Comments",
