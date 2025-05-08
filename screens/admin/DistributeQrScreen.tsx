@@ -18,6 +18,7 @@ type QrCodeData = {
     expiresAt: Timestamp;
     used: boolean;
     generatedBy: string;
+    type: 'business' | 'musician' | 'tutor';
 };
 
 export default function DistributeQrScreen() {
@@ -95,11 +96,6 @@ export default function DistributeQrScreen() {
         }
     };
       
-      
-    const handleCopy = async (url: string) => {
-        await Clipboard.setStringAsync(url);
-        Alert.alert(i18n.t('qr.copied'), i18n.t('qr.copiedMessage'));
-    };
 
     const handleShare = async (url: string) => {
         try {
@@ -119,20 +115,14 @@ export default function DistributeQrScreen() {
 
   return (
     <View style={styles.container}>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 }}>
+        <View style={styles.selectorWrapper}>
         {['business', 'musician', 'tutor'].map(type => (
             <TouchableOpacity
             key={type}
-            style={{
-                padding: 10,
-                borderWidth: selectedType === type ? 2 : 1,
-                borderColor: selectedType === type ? '#4CAF50' : '#ccc',
-                borderRadius: 8,
-            }}
+            style={[styles.selectorButton, selectedType === type && styles.selectorSelected]}
             onPress={() => setSelectedType(type as any)}
             >
-            <Text style={{ color: selectedType === type ? '#4CAF50' : 'black' }}>
+            <Text style={selectedType === type ? styles.selectorTextSelected : styles.selectorText}>
                 {i18n.t(`qr.types.${type}`)}
             </Text>
             </TouchableOpacity>
@@ -141,15 +131,19 @@ export default function DistributeQrScreen() {
 
 
         <Text style={styles.title}>{i18n.t('qr.unclaimedTitle')}</Text>
-        <Button title={i18n.t('qr.generateButton')} onPress={generateQrCode} />
+        <View style={styles.buttonWrapper}>
+            <Button title={i18n.t('qr.generateButton')} onPress={generateQrCode} />
+        </View>
 
         <FlatList
             data={qrCodes}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 24 }}
             renderItem={({ item }) => (
                 <QrCard
                 code={item.code}
                 expiresAt={item.expiresAt.toDate()}
+                type={item.type}
                 onShare={handleShare}
                 />
             )}
@@ -159,9 +153,51 @@ export default function DistributeQrScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
-  card: { padding: 12, borderWidth: 1, borderRadius: 8, marginBottom: 12 },
-  codeLabel: { fontWeight: 'bold', marginBottom: 4 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    container: {
+        flex: 1,
+        padding: 16,
+        backgroundColor: '#fafafa',
+    },
+    title: {
+        fontSize: 22,
+        fontWeight: '600',
+        textAlign: 'center',
+        marginBottom: 20,
+        color: '#333',
+    },
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    selectorWrapper: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 20,
+    },
+    selectorButton: {
+        padding: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        minWidth: 90,
+        alignItems: 'center',
+        borderColor: '#ccc',
+        backgroundColor: '#fff',
+    },
+    selectorSelected: {
+        borderColor: '#4CAF50',
+        backgroundColor: '#eaffea',
+    },
+    selectorText: {
+        color: '#333',
+    },
+    selectorTextSelected: {
+        color: '#4CAF50',
+        fontWeight: '600',
+    },
+    buttonWrapper: {
+        marginBottom: 60,
+        alignSelf: 'center',
+        width: '100%',
+    },
 });

@@ -40,6 +40,7 @@ import PostDetailScreen from 'screens/posts/PostDetailScreen';
 import Toast from 'react-native-toast-message';
 import { logScreen } from '@/utils/analytics';
 import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
+import VerifyBusinessScreen from 'screens/business/VerifyBusinessScreen';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -235,6 +236,8 @@ function AuthenticatedApp() {
 
           <Stack.Screen name="DistributeQr" component={DistributeQrScreen} options={{ title: 'QR Distribution' }} />
 
+          <Stack.Screen name="VerifyBusiness" component={VerifyBusinessScreen} options={{ title: 'Verify Account' }}/>
+          
         </>
       )}
     </Stack.Navigator>

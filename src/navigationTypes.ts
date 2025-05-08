@@ -20,6 +20,7 @@ export type RootStackParamList = {
     ChatScreen: { friendId: string; friendName: string };
     MessagesScreen: undefined;
     DistributeQr: undefined;
+    VerifyBusiness: { type: 'business' | 'musician' | 'tutor' }; // ✅ Add this
 
   };
 

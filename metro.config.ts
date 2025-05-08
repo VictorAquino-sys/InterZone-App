@@ -6,6 +6,7 @@ config.resolver.assetExts.push('png', 'jpg', 'jpeg'); // Make sure 'png' is incl
 
 config.transformer = {
     ...config.transformer,
+    babelTransformerPath: require.resolve("react-native-qrcode-svg/textEncodingTransformation"),
     _expoRelativeProjectRoot: __dirname
 }
 

@@ -178,6 +178,17 @@
     }
   },
 
+  "profile": {
+    "becomeVerifiedBusiness": "Become a Verified Business",
+    "verifiedBusiness": "You’re Verified as a Business",
+    "becomeVerifiedGeneric": "Become a Verified {{type}}",
+    "becomeVerified": {
+      "business": "Become a Verified Business",
+      "musician": "Become a Verified Musician",
+      "tutor": "Become a Verified Tutor"
+    }
+  },
+
   "block": {
     "blockUser": "Block this user",
     "unblock": "Unblock",
@@ -272,6 +283,14 @@
 "qr": {
   "invalidTitle": "Invalid",
   "invalidMessage": "This QR is not valid.",
+
+  "alreadyVerified": "Already Verified",
+  "alreadyVerifiedTitle": "Already Verified",
+  "alreadyVerifiedMessage": {
+    "business": "You’ve already verified as a Business.",
+    "musician": "You’ve already verified as a Musician.",
+    "tutor": "You’ve already verified as a Tutor."
+  },
   "noTypeAssigned": "This QR code has no verification type assigned.",
   "expiredOrUsed": "Expired or Used",
   "codeAlreadyUsed": "Code already used or expired.",

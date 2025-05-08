@@ -37,26 +37,26 @@ const CategoryScreen = () => {
 
     useFocusEffect(
         React.useCallback(() => {
-            const checkUserCountry = async () => {
-                if (user?.uid) {
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
-                    if (userSnap.exists()) {
-                        const userData = userSnap.data();
-                        console.log("Fetched user data on focus:", userData);
-                        setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
-                    }
+          const checkUserCountry = async () => {
+            if (user?.uid) {
+              const userRef = doc(db, "users", user.uid);
+              const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    console.log("Fetched user data on focus:", userData);
+                    setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
                 }
+            }
 
-                if (user?.uid && categoryKey) {
-                    await logEvent('category_viewed', {
-                        category: categoryKey,
-                        user_id: user.uid,
-                    });
-                }
-            };
-         
-            checkUserCountry();
+            if (user?.uid && categoryKey) {
+                 await logEvent('category_viewed', {
+                  category: categoryKey,
+                  user_id: user.uid,
+                });
+            }
+          };
+      
+          checkUserCountry();
         }, [user?.uid, categoryKey])
     );
 
@@ -207,7 +207,7 @@ const CategoryScreen = () => {
                     renderItem={({ item }) => (
                         <View style={styles.postItem}>
                             <View style={styles.userContainer}>
-                                <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
+                                <TouchableOpacity onPress={() => openImageModal(item.user?.avatar ?? null)}>
                                     {/* <Image source={{ uri: item.user.avatar || undefined }} style={styles.avatar} /> */}
                                     <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
                                 </TouchableOpacity>
