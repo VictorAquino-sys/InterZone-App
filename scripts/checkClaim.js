@@ -12,7 +12,7 @@ initializeApp({
 });
 
 const auth = getAuth();
-const uid = 'EOedrEXbw2WHl0WVRQiIwBlUO6o1'; // Replace with the UID you want to check
+const uid = '3q4gfcQ7YdftSMrlshKGoN7J4QO2'; // Replace with the UID you want to check
 
 auth.getUser(uid)
   .then(userRecord => {

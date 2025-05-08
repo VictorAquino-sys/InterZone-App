@@ -1,4 +1,6 @@
 // scripts/setMultipleCustomClaims.js
+// run as:
+// node setMultipleCustomClaims.js
 
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
@@ -20,6 +22,7 @@ const uids = [
   'EOedrEXbw2WHl0WVRQiIwBlUO6o1',  // Victor Aquino
   'WonrTPp5mvdQkNLNF8uh7KKUkJG3',  // Hector Aquino
   'KBGirGICA6hPOx3fspzCZtZ6Q092',  // Diana Aquino
+  '3q4gfcQ7YdftSMrlshKGoN7J4QO2'  // Kay Rojas
   // Add more UIDs as needed
 ];
 
