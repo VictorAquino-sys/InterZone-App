@@ -290,7 +290,30 @@
     "business": "Verified as Business",
     "musician": "Verified as Musician",
     "tutor": "Verified as Tutor"
+  },
+  "accessDenied": "Access Denied",
+  "noPermission": "You do not have permission to view this screen.",
+  "imageNotAvailable": "The QR image is not available",
+  "success": "Success",
+  "created": "QR Code created!",
+  "loadFail": "Could not load QR codes.",
+  "generationFail": "Could not generate QR code.",
+  "copied": "Copied",
+  "copiedMessage": "QR code link copied to clipboard.",
+  "shareMessage": "Here's your InterZone Verification QR Code:",
+  "shareFail": "Unable to share the QR code.",
+  "unclaimedTitle": "Unclaimed Verification QR Codes",
+  "generateButton": "Generate New QR Code",
+  "code": "Code",
+  "expires": "Expires",
+  "copyLink": "Copy QR Link",
+  "shareLink": "Share QR Link",
+  "types": {
+    "business": "Business",
+    "musician": "Musician",
+    "tutor": "Tutor"
   }
-}
+},
 
+"distributeQrButton": "Distribute QR Codes"
 }  

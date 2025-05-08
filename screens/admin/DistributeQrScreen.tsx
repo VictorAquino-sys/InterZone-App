@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, Share, Button, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { db, auth, functions } from '@/config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '@/contexts/UserContext';
 import { httpsCallable } from 'firebase/functions';
 import { Timestamp } from 'firebase/firestore';
+import QrCard from '@/components/QrCard'; // adjust path if needed
 import * as Clipboard from 'expo-clipboard';
-
-import { functions } from '@/config/firebase';
+import i18n from '@/i18n';
 
 
 type QrCodeData = {
@@ -23,6 +23,7 @@ type QrCodeData = {
 export default function DistributeQrScreen() {
     const [qrCodes, setQrCodes] = useState<QrCodeData[]>([]);
     const [loading, setLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
     const navigation = useNavigation();
     const { user } = useUser();
     const [selectedType, setSelectedType] = useState<'business' | 'musician' | 'tutor'>('business');
@@ -49,7 +50,7 @@ export default function DistributeQrScreen() {
         setQrCodes(results);
         } catch (error) {
         console.error('Failed to fetch QR codes:', error);
-        Alert.alert('Error', 'Could not load QR codes.');
+        Alert.alert(i18n.t('qr.error'), i18n.t('qr.loadFail'));
         } finally {
         setLoading(false);
         }
@@ -57,9 +58,9 @@ export default function DistributeQrScreen() {
 
     useEffect(() => {
         if (!user?.isQrDistributor) {
-        Alert.alert('Access Denied', 'You do not have permission to view this screen.');
-        navigation.goBack();
-        return;
+            Alert.alert(i18n.t('qr.accessDenied'), i18n.t('qr.noPermission'));
+            navigation.goBack();
+            return;
         }
 
         refreshQrCodes();
@@ -67,31 +68,47 @@ export default function DistributeQrScreen() {
 
     const generateQrCode = async () => {
         try {
-          const callable = httpsCallable(functions, 'generateVerificationCode');
-          const response: any = await callable({ type: selectedType }); // pass type
+          const user = auth.currentUser;
+          if (!user) throw new Error("User not signed in");
       
-          Alert.alert('Success', `QR Code created!\n\n${response.data.qrUrl}`);
+          console.log('🔐 Current user UID:', user.uid);
+      
+          // 🔄 Force refresh the ID token to ensure custom claims are up-to-date
+          const idToken = await user.getIdToken(true);
+          console.log("🔑 Fresh ID token:", idToken);
+      
+          const idTokenResult = await user.getIdTokenResult();
+          console.log('📋 Token claims:', idTokenResult.claims);
+      
+          // ✅ Call the Cloud Function with user's context
+          const callable = httpsCallable(functions, 'generateVerificationCode');
+          console.log(`🚀 Calling function generateVerificationCode with type: ${selectedType}`);
+      
+          const response: any = await callable({ type: selectedType });
+          console.log('✅ Cloud Function response:', response);
+      
+          Alert.alert(i18n.t('qr.success'), `${i18n.t('qr.created')}\n\n${response.data.qrUrl}`);
           refreshQrCodes();
         } catch (error: any) {
-          console.error('QR generation failed:', error);
-          Alert.alert('Error', error.message || 'Could not generate QR code.');
+          console.error('❌ QR generation failed:', error);
+          Alert.alert(i18n.t('qr.error'), error.message || i18n.t('qr.generationFail'));
         }
     };
       
-
+      
     const handleCopy = async (url: string) => {
         await Clipboard.setStringAsync(url);
-        Alert.alert('Copied', 'QR code link copied to clipboard.');
+        Alert.alert(i18n.t('qr.copied'), i18n.t('qr.copiedMessage'));
     };
 
     const handleShare = async (url: string) => {
         try {
           await Share.share({
-            message: `Here's your InterZone Business Verification QR Code: ${url}`,
-          });
+            message: `${i18n.t('qr.shareMessage')} ${url}`,
+        });
         } catch (error) {
           console.error('Sharing failed:', error);
-          Alert.alert('Error', 'Unable to share the QR code.');
+          Alert.alert(i18n.t('qr.error'), i18n.t('qr.shareFail'));
         }
       };      
     
@@ -116,37 +133,27 @@ export default function DistributeQrScreen() {
             onPress={() => setSelectedType(type as any)}
             >
             <Text style={{ color: selectedType === type ? '#4CAF50' : 'black' }}>
-                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {i18n.t(`qr.types.${type}`)}
             </Text>
             </TouchableOpacity>
         ))}
         </View>
 
 
-      <Text style={styles.title}>Unclaimed Business QR Codes</Text>
-      <Button title="Generate New QR Code" onPress={generateQrCode} />
-      <FlatList
-        data={qrCodes}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-            <View style={styles.card}>
-                <Text style={styles.codeLabel}>Code: {item.code}</Text>
-                <Text>Expires: {new Date(item.expiresAt.toDate()).toLocaleDateString()}</Text>
+        <Text style={styles.title}>{i18n.t('qr.unclaimedTitle')}</Text>
+        <Button title={i18n.t('qr.generateButton')} onPress={generateQrCode} />
 
-            {/* QR Code Image */}
-            <Image source={{ uri: item.qrUrl }} style={styles.qrImage} resizeMode="contain" />
-
-            <TouchableOpacity onPress={() => handleCopy(item.qrUrl)}>
-                <Text style={styles.link}>Copy QR Link</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => handleShare(item.qrUrl)}>
-                <Text style={styles.link}>Share QR Link</Text>
-            </TouchableOpacity>
-
-            </View>
-        )}
-      />
+        <FlatList
+            data={qrCodes}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+                <QrCard
+                code={item.code}
+                expiresAt={item.expiresAt.toDate()}
+                onShare={handleShare}
+                />
+            )}
+        />
     </View>
   );
 }
@@ -157,16 +164,4 @@ const styles = StyleSheet.create({
   card: { padding: 12, borderWidth: 1, borderRadius: 8, marginBottom: 12 },
   codeLabel: { fontWeight: 'bold', marginBottom: 4 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  qrImage: {
-    width: 120,
-    height: 120,
-    marginTop: 8,
-    alignSelf: 'center',
-  },
-  link: {
-    color: 'blue',
-    marginTop: 8,
-    textDecorationLine: 'underline',
-  },
-  
 });
