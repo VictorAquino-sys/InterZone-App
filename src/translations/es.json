@@ -50,6 +50,16 @@
     "resetFailedTitle": "Error al restablecer",
     "resetFailedMessage": "No se pudo enviar el correo de restablecimiento.",
 
+    "imageTooltip": {
+        "selectCategory": "Selecciona una categoría para habilitar",
+        "waitLocation": "Espera a que se determine tu ubicación",
+        "alertTitleCategory": "Selecciona una categoría",
+        "alertMsgCategory": "Por favor selecciona una categoría antes de subir una imagen.",
+        "alertTitleLocation": "Ubicación no lista",
+        "alertMsgLocation": "Por favor espera hasta que se determine tu ubicación.",
+        "alertTitleMedia": "Imagen deshabilitada",
+        "alertMsgMedia": "Ya seleccionaste un video. Solo se permite un tipo de medio."
+    },
 
     "nameInputTitle": "Ingresa tu nombre",
     "nameInputPrompt": "Tu nombre",

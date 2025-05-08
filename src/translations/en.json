@@ -280,6 +280,17 @@
   "noComments": "No comments",
   "error": "Error",
 
+  "imageTooltip": {
+    "selectCategory": "Select category to enable",
+    "waitLocation": "Wait for location access",
+    "alertTitleCategory": "Select a Category",
+    "alertMsgCategory": "Please select a category before uploading an image.",
+    "alertTitleLocation": "Location Not Ready",
+    "alertMsgLocation": "Please wait until your location is determined.",
+    "alertTitleMedia": "Image Disabled",
+    "alertMsgMedia": "You’ve already selected a video. Only one media type is allowed."
+  },
+
   "messages": {
     "noConversations": "💬 You don’t have any conversations yet.",
     "findFriends": "Find Friends",

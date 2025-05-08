@@ -31,12 +31,11 @@ export default {
       infoPlist: {
         LSApplicationQueriesSchemes: ['itms-apps'],
         // NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events while you are using the app. For example, you might get alerts about a concert or food truck gathering near you.",        
-        NSLocationWhenInUseUsageDescription: "InterZone uses your location while using the app to show community posts and events near you, such as local meetups and concerts in your city.",
-        NSMicrophoneUsageDescription: "We need access to your microphone to record videos.",
-        NSPhotoLibraryAddUsageDescription: "Give InterZone permission to save photos",
-        NSCameraUsageDescription: "InterZone needs access to your camera to record and upload videos or photos.",
-        NSPhotoLibraryUsageDescription:
-        'This app requires access to your photo library to save trimmed videos.',
+        NSLocationWhenInUseUsageDescription: "InterZone uses your location to show nearby posts, events, and updates in your city. This helps you discover what's happening around you and connect with your community.",
+        NSMicrophoneUsageDescription: "InterZone uses your microphone to record audio while capturing videos for your posts.",
+        NSPhotoLibraryAddUsageDescription: "InterZone saves your photos and videos to your library so you can keep a copy of your shared content.",
+        NSCameraUsageDescription: "InterZone uses your camera to capture photos and videos for your posts, helping you share moments with your local community.",
+        NSPhotoLibraryUsageDescription: "InterZone needs access to your photo library to allow you to upload and save media for your posts, including trimmed videos.",
         ITSAppUsesNonExemptEncryption: false,
         EXUpdatesRuntimeVersion: "1.0.0",
         EXDefaultScreenOrientationMask: 'UIInterfaceOrientationMaskAllButUpsideDown',
@@ -148,11 +147,6 @@ export default {
         }
       ],
     ],
-    updates: {
-      url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6", //production URL
-      fallbackToCacheTimeout: 0, // Launch as fast as possible
-      checkAutomatically: "ON_LOAD", // Check for updates every time app starts
-    },
     extra: {
       eas: {
         projectId: "02152cf1-073f-43da-8d04-f06d2948bde6"
@@ -160,6 +154,8 @@ export default {
     },
     updates: {
       url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6",
+      fallbackToCacheTimeout: 0,
+      checkAutomatically: "ON_LOAD",
       runtimeVersion: "1.0.0"
     }
   }

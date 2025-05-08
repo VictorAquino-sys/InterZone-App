@@ -138,6 +138,7 @@ function BottomTabs() {
       screenOptions={{ 
         headerShown: false,
         tabBarStyle: {
+          position: 'absolute',
           height: 35,
           backgroundColor: '#e8f5e9',
         },
@@ -154,7 +155,7 @@ function BottomTabs() {
                 {...props}
                 style={{
                   position: 'absolute',
-                  bottom: insets.bottom + 12,
+                  bottom: insets.bottom - 40,
                   left: iconSpacing,
                   backgroundColor: 'white',
                   borderRadius: 20,
@@ -188,7 +189,7 @@ function BottomTabs() {
                 {...props}
                 style={{
                   position: 'absolute',
-                  bottom: insets.bottom + 12,
+                  bottom: insets.bottom - 40,
                   left: postIconLeft,
                   backgroundColor: 'white',
                   borderRadius: 20,
