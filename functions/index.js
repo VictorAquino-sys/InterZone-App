@@ -2,9 +2,12 @@ const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { Expo } = require('expo-server-sdk');
+const { getStorage } = require('firebase-admin/storage'); // Add this line to import Firebase Storage
+
 
 initializeApp();
 const db = getFirestore();
+const storage = getStorage(); // Initialize Firebase Storage
 const expo = new Expo();
 
 const i18n = {

@@ -19,6 +19,7 @@ export type RootStackParamList = {
     PostDetail: { postId: string};
     ChatScreen: { friendId: string; friendName: string };
     MessagesScreen: undefined;
+    DistributeQr: undefined;
 
   };
 

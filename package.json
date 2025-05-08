@@ -68,6 +68,7 @@
     "js-base64": "^3.7.7",
     "lru-cache": "^11.1.0",
     "mime": "^4.0.6",
+    "qrcode": "^1.5.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-intl": "^6.6.8",
@@ -90,6 +91,7 @@
     "react-native-vector-icons": "^10.1.0",
     "react-native-video": "^6.13.0",
     "react-native-video-trim": "^3.0.9",
+    "react-native-vision-camera": "^4.6.4",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
     "uuid": "^7.0.3"

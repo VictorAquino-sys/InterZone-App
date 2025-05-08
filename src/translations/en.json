@@ -255,14 +255,42 @@
     "copyError": "Failed to copy the text"
   },
 
+  "businessVerified": "Verified Business",
+  "musicianVerified": "Verified Musician",
+  "tutorVerified": "Verified Tutor",
+
   "allowComments": "Allow comments",
   "noComments": "No comments",
-
   "error": "Error",
 
   "messages": {
     "noConversations": "💬 You don’t have any conversations yet.",
     "findFriends": "Find Friends",
     "startChatting": "Start chatting..."
+},
+
+"qr": {
+  "invalidTitle": "Invalid",
+  "invalidMessage": "This QR is not valid.",
+  "noTypeAssigned": "This QR code has no verification type assigned.",
+  "expiredOrUsed": "Expired or Used",
+  "codeAlreadyUsed": "Code already used or expired.",
+  "userNotFound": "User not found. Please log in again.",
+  "verifiedTitle": "Verified!",
+  "verifiedMessage": {
+    "business": "Your account is now marked as a Verified Business.",
+    "musician": "Your account is now marked as a Verified Musician.",
+    "tutor": "Your account is now marked as a Verified Tutor."
+  },
+  "verificationError": "Could not verify. Try again later.",
+  "requestingCamera": "Requesting camera permission...",
+  "noCamera": "No camera found",
+  "scanInstruction": "Scan your InterZone QR code",
+  "verifiedBanner": {
+    "business": "Verified as Business",
+    "musician": "Verified as Musician",
+    "tutor": "Verified as Tutor"
+  }
 }
+
 }  

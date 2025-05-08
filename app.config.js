@@ -139,6 +139,14 @@ export default {
           isAccessMediaLocationEnabled: true
         }
       ],
+      [
+      "react-native-vision-camera",
+        {
+          "cameraPermissionText": "InterZone needs access to your camera to verify businesses.",
+          "enableMicrophonePermission": false,
+          "enableCodeScanner": true
+        }
+      ],
     ],
     updates: {
       url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6", //production URL

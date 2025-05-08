@@ -335,7 +335,38 @@ const PostCard: React.FC<PostCardProps> = ({
             <TouchableOpacity
               onPress={() => handleUserProfileNavigation(item.user?.uid || '')} // Use navigation for post owner profile
               >
-              <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+              {/* <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text> */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+
+                {item.verifications?.business && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+                    <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+                    <Text style={{ marginLeft: 4, fontSize: 11, color: '#4CAF50' }}>
+                      {i18n.t('businessVerified')}
+                    </Text>
+                  </View>
+                )}
+
+                {item.verifications?.musician && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+                    <Ionicons name="musical-notes" size={16} color="#3F51B5" />
+                    <Text style={{ marginLeft: 4, fontSize: 11, color: '#3F51B5' }}>
+                      {i18n.t('musicianVerified')}
+                    </Text>
+                  </View>
+                )}
+
+                {item.verifications?.tutor && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+                    <Ionicons name="school" size={16} color="#FF9800" />
+                    <Text style={{ marginLeft: 4, fontSize: 11, color: '#FF9800' }}>
+                      {i18n.t('tutorVerified')}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
             </TouchableOpacity>
             <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
             <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
@@ -421,7 +452,7 @@ const PostCard: React.FC<PostCardProps> = ({
       <View style={styles.likeButtonWrapper}>
         <LikeButton postId={item.id} userId={userId} />
 
-        {item.commentsEnabled !== false && (    
+        {item.commentsEnabled !== false && ( 
           <TouchableOpacity onPress={handleToggleComments} style={styles.commentButton}>
             <Ionicons name="chatbubble-outline" size={20} color= "#888" />
             <Text style={styles.commentCount}>{commentCount}</Text>

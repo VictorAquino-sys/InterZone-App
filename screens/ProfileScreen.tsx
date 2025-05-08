@@ -270,6 +270,29 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         ) : (
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                 <Text style={styles.newName}>{newName}</Text>
+
+                                {user?.verifications?.business && (
+                                    <View style={styles.verifiedBadge}>
+                                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                                        <Text style={styles.verifiedText}>{i18n.t('businessVerified')}
+</Text>
+                                    </View>
+                                )}
+
+                                {user?.verifications?.musician && (
+                                    <View style={styles.verifiedBadge}>
+                                        <Ionicons name="musical-notes" size={18} color="#3F51B5" />
+                                        <Text style={styles.verifiedText}>{i18n.t('musicianVerified')}</Text>
+                                    </View>
+                                )}
+
+                                {user?.verifications?.tutor && (
+                                    <View style={styles.verifiedBadge}>
+                                        <Ionicons name="school" size={18} color="#FF9800" />
+                                        <Text style={styles.verifiedText}>{i18n.t('tutorVerified')}</Text>
+                                    </View>
+                                )}
+
                                 <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
                                     <Ionicons name="pencil" size={24} color="gray"/>
                                 </TouchableOpacity>
@@ -280,6 +303,8 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                     {isEditing && (
                         <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
                     )}
+
+
 
                 </View>
                 
@@ -356,6 +381,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                 <TouchableOpacity onPress={() => setShowSettings(false)}>
                                     <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
                                 </TouchableOpacity>
+
+                                {user?.isQrDistributor && (
+                                    <Button
+                                        title="Distribute QR Codes"
+                                        onPress={() => navigation.navigate('DistributeQr')}
+                                    />
+                                )}
                             </View>
                         </TouchableOpacity>
                     </Modal>
@@ -517,5 +549,21 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
       },
+
+    verifiedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 8,
+        backgroundColor: '#e0f8e9',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+    verifiedText: {
+        marginLeft: 6,
+        fontSize: 14,
+        color: '#4CAF50',
+        fontWeight: '600',
+    },
       
 });

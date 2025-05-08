@@ -37,13 +37,9 @@ import { db } from '@/config/firebase'; // adjust path if needed
 import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
-import { logScreen } from '@/utils/analytics';
 import Toast from 'react-native-toast-message';
-import { cleanOldCacheFiles } from '@/utils/cacheManager';
-import { LogBox } from 'react-native';
-import * as Network from 'expo-network';
-import { Platform } from 'react-native'; // Make sure this is imported at the top
-
+import { logScreen } from '@/utils/analytics';
+import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -156,15 +152,10 @@ function AuthenticatedApp() {
   const { activeConversationId } = useChatContext();
 
   useEffect(() => {
-    try {
-        GoogleSignin.configure({
-          webClientId: '239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com',
-          offlineAccess: true,
-        });
-        console.log('✅ Google Sign-In configured');
-      } catch (e) {
-        console.error('❌ Failed to configure Google Sign-In:', e);
-    }
+    GoogleSignin.configure({
+      webClientId: '239395273948-bkj4h2vkfu6l4e5khs9u9kink87g168l.apps.googleusercontent.com',
+      offlineAccess: true,
+    });
 
     (i18n as any).locale = getLocales()[0].languageCode;
 
@@ -186,13 +177,6 @@ function AuthenticatedApp() {
         }
       }
     };
-
-    ErrorUtils.setGlobalHandler((error, isFatal) => {
-      console.log('💥 Global Error:', error.message);
-      if (isFatal) {
-        // Optionally show a fallback screen or report to Sentry
-      }
-    });
   
     setupNotifications();
   
@@ -216,32 +200,6 @@ function AuthenticatedApp() {
     return () => subscription.remove();
 
   }, [user?.uid, activeConversationId]); // Depend on activeConversationId
-
-  useEffect(() => {
-    const debugNetworkInfo = async () => {
-      try {
-        const ip = await Network.getIpAddressAsync();
-        const state = await Network.getNetworkStateAsync();
-        
-        console.log('🌐 IP Address:', ip);
-        console.log('📶 Network Type:', state.type);
-        console.log('🔌 Is Connected:', state.isConnected);
-        console.log('🌍 Internet Reachable:', state.isInternetReachable);
-  
-        if (Platform.OS === 'android') {
-          const airplaneMode = await Network.isAirplaneModeEnabledAsync();
-          console.log('✈️ Airplane Mode Enabled:', airplaneMode);
-        } else {
-          console.log('✈️ Airplane Mode status: Not available on iOS');
-        }
-      } catch (err) {
-        console.error('❌ Failed to fetch network info:', err);
-      }
-    };
-  
-    debugNetworkInfo();
-  }, []);
-  
 
   if (loading) {
     console.log("🔄 Waiting for Firebase and User data...");
@@ -274,6 +232,9 @@ function AuthenticatedApp() {
             options={{ title: i18n.t('block.manage'), headerShown: true }}
           />
           <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post' }} />
+
+          <Stack.Screen name="DistributeQr" component={DistributeQrScreen} options={{ title: 'QR Distribution' }} />
+
         </>
       )}
     </Stack.Navigator>
@@ -282,10 +243,6 @@ function AuthenticatedApp() {
 
 export default function App() {
   const navigationRef = useNavigationContainerRef();
-
-  useEffect(() => {
-    cleanOldCacheFiles(); // ⬅️ Clean video cache on startup
-  }, []);
 
   return (
     <UserProvider> 
@@ -304,7 +261,7 @@ export default function App() {
                   const route = navigationRef.getCurrentRoute();
                   if (route) logScreen(route.name);
                 }}
-              >  
+              >
                 <AuthenticatedApp />
               </NavigationContainer>
             </ChatProvider>
