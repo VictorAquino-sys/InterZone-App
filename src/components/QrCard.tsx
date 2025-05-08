@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import i18n from '@/i18n';
 import QRCode from 'react-native-qrcode-svg';
@@ -7,10 +7,11 @@ import QRCode from 'react-native-qrcode-svg';
 interface Props {
   code: string;
   expiresAt: Date;
+  type: 'business' | 'musician' | 'tutor';
   onShare: (url: string) => void;
 }
 
-export default function QrCard({ code, expiresAt, onShare }: Props) {
+export default function QrCard({ code, expiresAt, type, onShare }: Props) {
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const link = `https://interzone.app/claim/${code}`;
@@ -22,13 +23,14 @@ export default function QrCard({ code, expiresAt, onShare }: Props) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.codeLabel}>{i18n.t('qr.code')}: {code}</Text>
-      <Text>{i18n.t('qr.expires')}: {new Date(expiresAt).toLocaleDateString()}</Text>
+        <Text style={styles.typeLabel}>{i18n.t(`qr.types.${type}`)}</Text>
+        <Text style={styles.codeLabel}>{i18n.t('qr.code')}: {code}</Text>
+        <Text>{i18n.t('qr.expires')}: {new Date(expiresAt).toLocaleDateString()}</Text>
 
         <View style={styles.qrImageWrapper}>
             <QRCode
             value={code}
-            size={120}
+            size={180}
             backgroundColor="white"
             />
         </View>
@@ -45,13 +47,30 @@ export default function QrCard({ code, expiresAt, onShare }: Props) {
 }
 
 const styles = StyleSheet.create({
-    card: { padding: 12, borderWidth: 1, borderRadius: 8, marginBottom: 12 },
-    codeLabel: { fontWeight: 'bold', marginBottom: 4 },
+    card: { 
+        backgroundColor: '#f9f9f9',
+        padding: 16, 
+        borderWidth: 1, 
+        borderRadius: 16, 
+        marginBottom: 16,
+        borderColor: '#e0e0e0',
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 6,
+        elevation: 4,
+    },
+    codeLabel: { 
+        fontWeight: 'bold',
+        fontSize: 16,
+        marginBottom: 4,
+        color: '#333',
+    },
     qrImageWrapper: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: 120,
-      marginTop: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 30,
+        marginBottom: 30,
     },
     qrImage: {
         width: 120,
@@ -68,8 +87,16 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     link: {
-        color: 'blue',
+        color: '#007BFF',
         marginTop: 8,
         textDecorationLine: 'underline',
+        textAlign: 'center',
+    },
+    typeLabel: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#666',
+        marginBottom: 4,
+        textTransform: 'capitalize',
     },
 });

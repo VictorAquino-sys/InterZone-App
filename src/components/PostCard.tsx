@@ -15,16 +15,13 @@ import { KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
 // import { Video, ResizeMode } from 'expo-av';
 import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
+import { User } from '@/contexts/UserContext';
 
 
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
     userId: string;
-    user: {
-      uid: string;
-      name: string;
-      avatar: string;
-    };
+    user: User;
     onDelete: (postId: string, imageUrl: string | null) => void;
     onReport: (postId: string, userId: string) => void;
     onOpenImage: (imageUrl: string) => void;
@@ -77,6 +74,16 @@ const PostCard: React.FC<PostCardProps> = ({
   const ref = useRef(null);
 
 
+  const fetchRecentComments = async () => {
+    const q = query(
+      collection(db, 'posts', item.id, 'comments'),
+      orderBy('timestamp', 'desc'),
+      limit(3)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  };
+
   // Fetch comment count on mount
   useEffect(() => {
     setCommentCount(item.commentCount ?? 0);
@@ -89,13 +96,7 @@ const PostCard: React.FC<PostCardProps> = ({
     setShowComments(prev => !prev);
 
     if (!showComments) {
-      const q =query(
-        collection(db, 'posts', item.id, 'comments'),
-        orderBy('timestamp', 'desc'),
-        limit(3)
-      );
-      const snapshot = await getDocs(q);
-      const recent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const recent = await fetchRecentComments();
       setComments(recent.reverse()); //oldest to newest
     }
   };
@@ -145,7 +146,48 @@ const PostCard: React.FC<PostCardProps> = ({
       );
     }
   };
+
+  const getVerificationBadge = () => {
+    const verification = item.user?.verifications;
   
+    if (!verification) return null;
+  
+    if (verification.business) {
+      return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+          <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+          <Text style={{ marginLeft: 4, fontSize: 11, color: '#4CAF50' }}>
+            {i18n.t('businessVerified')}
+          </Text>
+        </View>
+      );
+    }
+  
+    if (verification.musician) {
+      return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+          <Ionicons name="musical-notes" size={16} color="#3F51B5" />
+          <Text style={{ marginLeft: 4, fontSize: 11, color: '#3F51B5' }}>
+            {i18n.t('musicianVerified')}
+          </Text>
+        </View>
+      );
+    }
+  
+    if (verification.tutor) {
+      return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+          <Ionicons name="school" size={16} color="#FF9800" />
+          <Text style={{ marginLeft: 4, fontSize: 11, color: '#FF9800' }}>
+            {i18n.t('tutorVerified')}
+          </Text>
+        </View>
+      );
+    }
+  
+    return null;
+  };
+    
   const handleCommentAction = async (selected: string, comment: any) => {
     if (selected === i18n.t('comments.report')) {
       await addDoc(collection(db, 'reports'), {
@@ -161,13 +203,8 @@ const PostCard: React.FC<PostCardProps> = ({
       await updateDoc(doc(db, 'posts', item.id), {
         commentCount: increment(-1)
       });
-      const q = query(
-        collection(db, 'posts', item.id, 'comments'),
-        orderBy('timestamp', 'desc'),
-        limit(3)
-      );
-      const snapshot = await getDocs(q);
-      const recent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      const recent = await fetchRecentComments();
       setComments(recent.reverse());
       setCommentCount(prev => Math.max(prev - 1, 0));
     } else if (selected === i18n.t('comments.edit')) {
@@ -216,12 +253,6 @@ const PostCard: React.FC<PostCardProps> = ({
   const handleCloseImage = () => {
     setZoomModalVisible(false); // Close zoom modal
   };
-
-  // // Create video player instance
-  // const player = useVideoPlayer(item.videoUrl, player => {
-  //   player.loop = true;
-  //   player.play();
-  // });
 
   // Handle video play/pause
   const togglePlayPause = () => {
@@ -337,34 +368,8 @@ const PostCard: React.FC<PostCardProps> = ({
               >
               {/* <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text> */}
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
-
-                {item.verifications?.business && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                    <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-                    <Text style={{ marginLeft: 4, fontSize: 11, color: '#4CAF50' }}>
-                      {i18n.t('businessVerified')}
-                    </Text>
-                  </View>
-                )}
-
-                {item.verifications?.musician && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                    <Ionicons name="musical-notes" size={16} color="#3F51B5" />
-                    <Text style={{ marginLeft: 4, fontSize: 11, color: '#3F51B5' }}>
-                      {i18n.t('musicianVerified')}
-                    </Text>
-                  </View>
-                )}
-
-                {item.verifications?.tutor && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                    <Ionicons name="school" size={16} color="#FF9800" />
-                    <Text style={{ marginLeft: 4, fontSize: 11, color: '#FF9800' }}>
-                      {i18n.t('tutorVerified')}
-                    </Text>
-                  </View>
-                )}
+              <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+              {getVerificationBadge()}
               </View>
 
             </TouchableOpacity>
@@ -589,7 +594,11 @@ const PostCard: React.FC<PostCardProps> = ({
               }
             }}
             postId={item.id}
-            currentUser={user}
+            currentUser={{
+              uid: user.uid,
+              name: user.name,
+              avatar: user.avatar || '', // fallback if somehow undefined
+            }}
             setCommentCount={setCommentCount}
             postOwnerId={item.user?.uid}
           />

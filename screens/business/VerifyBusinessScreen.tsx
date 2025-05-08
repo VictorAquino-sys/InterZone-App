@@ -60,26 +60,36 @@ export default function VerifyBusinessScreen() {
                     return;
                 }                  
 
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                const userData = userDocSnap.data();
+                
+                if (userData?.verifications?.[type]) {
+                  Alert.alert(i18n.t('qr.alreadyVerifiedTitle'), i18n.t(`qr.alreadyVerifiedMessage.${type}`));
+                  return;
+                }
+                
+                // Proceed with marking the code as used and updating user record
                 await updateDoc(ref, {
-                    used: true,
-                    usedAt: new Date(),
-                    usedBy: user.uid,
-                  });
-          
-                  await updateDoc(doc(db, 'users', user.uid), {
-                    [`verifications.${type}`]: true,
-                  });
+                  used: true,
+                  usedAt: new Date(),
+                  usedBy: user.uid,
+                });
+                
+                await updateDoc(userDocRef, {
+                  [`verifications.${type}`]: true,
+                });
           
                   refreshUser();
                   Alert.alert(i18n.t('qr.verifiedTitle'), i18n.t(`qr.verifiedMessage.${type}`));
-                } catch (e) {
-                  console.error(e);
-                  Alert.alert(i18n.t('error'), i18n.t('qr.verificationError'));
-                } finally {
-                    setTimeout(() => {
-                        setScanned(false);
-                        setScannedType(null);
-                      }, 3000);
+            } catch (e) {
+                console.error(e);
+                Alert.alert(i18n.t('error'), i18n.t('qr.verificationError'));
+            } finally {
+                setTimeout(() => {
+                    setScanned(false);
+                    setScannedType(null);
+                    }, 3000);
             }
         },
     });
@@ -97,8 +107,8 @@ return (
     />
     <Text style={styles.instructions}>
     {scannedType
-          ? i18n.t(`qr.verifiedBanner.${scannedType}`)
-          : i18n.t('qr.scanInstruction')}
+        ? `${i18n.t(`qr.verifiedBanner.${scannedType}`)} ✅`
+        : i18n.t('qr.scanInstruction')}
     </Text>
     </View>
 );

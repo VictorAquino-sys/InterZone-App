@@ -10,7 +10,8 @@
     Install a proper QR:
     npx expo install react-native-svg
     npm install react-native-qrcode-svg
-    
+    Implement variants for verified Business|Music|Tutor in ProfileScreen.tsx
+
 ### 05-01
     React Native Video Trim
     npm i react-native-video-trim

@@ -17,6 +17,7 @@ import mime from "mime";
 import { ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes';
+import VerifyBusinessButton from '@/components/VerifyBusinessButton';
 
 type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'ProfileScreen'>;
 
@@ -37,6 +38,9 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
 
+    const verificationTypes: Array<'business' | 'musician' | 'tutor'> = ['business', 'musician', 'tutor'];
+    const unverifiedTypes = verificationTypes.filter(type => !user?.verifications?.[type]);
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
         navigation.setOptions({
@@ -45,6 +49,18 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         });
         requestMediaLibraryPermissions();
     }, []);
+
+    useEffect(() => {
+        if (unverifiedTypes.length === 0) return;
+      
+        const interval = setInterval(() => {
+          setCurrentIndex(prev => (prev + 1) % unverifiedTypes.length);
+        }, 5000); // rotate every 5 seconds
+      
+        return () => clearInterval(interval);
+      }, [unverifiedTypes.length]);
+
+    const nextType = unverifiedTypes[currentIndex];
 
     useFocusEffect(
         useCallback(() => {
@@ -352,7 +368,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 46, alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 30, alignItems: 'center' }}>
                         <Ionicons name="settings-outline" size={26} color="#555" />
                     </TouchableOpacity>
 
@@ -364,6 +380,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         >
                         <Text style={styles.buttonText}>{i18n.t('distributeQrButton')}</Text>
                         </TouchableOpacity>
+                    )}
+
+                    {nextType && (
+                    <VerifyBusinessButton
+                        type={nextType}
+                        onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
+                    />
                     )}
 
                     <Modal transparent visible={showSettings} animationType="slide">
@@ -561,11 +584,42 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         borderRadius: 20,
     },
-    verifiedText: {
-        marginLeft: 6,
-        fontSize: 14,
-        color: '#4CAF50',
-        fontWeight: '600',
+    verifyButton: {
+        backgroundColor: '#0D9E6A',
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        borderRadius: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 24,
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 5,
+        minWidth: 260,
     },
       
+    verifyButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+      },
+      
+    verifiedTag: {
+        marginTop: 20,
+        backgroundColor: '#E6F4EA',
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    
+    verifiedText: {
+        color: '#2E7D32',
+        fontWeight: '600',
+        fontSize: 15,
+    },
 });

@@ -1,6 +1,7 @@
 // Import React and the necessary hooks from react, with TypeScript support.
 import React, { useContext, createContext, useState,  ReactNode } from 'react';
 import { Timestamp } from "firebase/firestore";
+import { User } from '@/contexts/UserContext';
 
 export interface Post {
     id:string;
@@ -9,20 +10,12 @@ export interface Post {
     timestamp: Timestamp | null; // Conside using a speficic type like Date or firebase.firestore.Timestamp
     imageUrl: string;
     videoUrl: string | null; // Add videoUrl to Post interface
-    user: {
-        uid: string;
-        name: string;
-        avatar: string;
-    };
+    user: User;
     likedBy?: string[];
     categoryKey: string;
     commentCount?: number;
     commentsEnabled: boolean;
-    verifications?: {
-        business?: boolean;
-        musician?: boolean;
-        tutor?: boolean;
-    };
+    verifications?: User['verifications'];
 }
 
 // Define the type for the posts and the context structure
