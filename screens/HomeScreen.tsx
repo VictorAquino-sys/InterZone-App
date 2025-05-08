@@ -25,7 +25,7 @@ import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
-import { NativeUpdateChecker } from '@/components/NativeUpdateChecker';
+import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
 import PostCard from '@/components/PostCard';
@@ -91,19 +91,17 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
   // Check native update first
   useEffect(() => {
-    const checkNativeUpdate = async () => {
-      try {
-        const NativeModule = await NativeUpdateChecker();
-        if (NativeModule === false) {
-          setFallbackUpdate(true);
+    const runUpdateCheck = async () => {
+      const updated = await checkNativeUpdate();
+      if (!updated) {
+        if (__DEV__) {
+          console.log('[HomeScreen] Falling back to JS update checker.');
         }
-      } catch (e) {
-        console.warn('Native update check failed, showing fallback.');
         setFallbackUpdate(true);
       }
     };
-
-    checkNativeUpdate();
+  
+    runUpdateCheck();
   }, []);
 
   useEffect(() => {
@@ -382,7 +380,8 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           },
           categoryKey: data.categoryKey,
           commentCount: data.commentCount ?? 0,
-          commentsEnabled: data.commentsEnabled
+          commentsEnabled: data.commentsEnabled,
+          verifications: data.verifications || {}
         };
       }));
 
@@ -423,7 +422,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             return updated;
           });
 
-          console.log("📦 Firestore user data:", userData);
+          // console.log("📦 Firestore user data:", userData);
           setProfileImageUrl(userData.avatar);
         }
       } else {
@@ -575,7 +574,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     />
   );
   
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -670,26 +668,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} resizeMode='contain'/>
           </TouchableOpacity>
         </Modal>
-
-        {/* Video Modal */}
-        {/* {isVideoModalVisible && selectedVideoUrl && (
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={isVideoModalVisible}
-            onRequestClose={closeVideoModal}
-          >
-            <TouchableOpacity style={styles.fullScreenModal} onPress={closeVideoModal}>
-              <Video
-                style={styles.fullScreenVideo}
-                source={{ uri: selectedVideoUrl }}
-                useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
-                isLooping
-              />
-            </TouchableOpacity>
-          </Modal>
-        )} */}
 
         <Modal animationType="slide" transparent visible={reportModalVisible}>
           <TouchableOpacity
@@ -977,8 +955,8 @@ const styles = StyleSheet.create({
   },
   chatButton: {
     position: 'absolute',
-    bottom: 15, // Push it up a bit above the tab bar
-    right: 30,
+    bottom: 45, // Push it up a bit above the tab bar
+    right: 15,
     backgroundColor: '#eeeeee',
     borderRadius: 30,
     width: 60,
@@ -1024,16 +1002,5 @@ const styles = StyleSheet.create({
     zIndex: 999,
     backgroundColor: 'black', // Optionally, add a background color for full-screen
   },
-  // Regular video style
-  // video: {
-  //   width: '100%',
-  //   height: '100%',  // Make the video fill the container
-  // },
-
-  // Full-screen video style
-  // fullScreenVideo: {
-  //   width: '90%',
-  //   height: '90%',  // Full-screen video size
-  // },
   
 });

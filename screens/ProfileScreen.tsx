@@ -30,7 +30,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [newName, setNewName] = useState<string>('');
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [profilePic, setProfilePic] = useState<string | null>(null);
-    const { user, setUser } = useUser();
+    const { user, setUser, refreshUser } = useUser();
     const [loading, setLoading] = useState<boolean>(false);
 
     const [description, setDescription] = useState('');
@@ -39,7 +39,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [showSettings, setShowSettings] = useState(false);
 
     const verificationTypes: Array<'business' | 'musician' | 'tutor'> = ['business', 'musician', 'tutor'];
-    const unverifiedTypes = verificationTypes.filter(type => !user?.verifications?.[type]);
+    const [unverifiedTypes, setUnverifiedTypes] = useState<Array<'business' | 'musician' | 'tutor'>>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
@@ -51,6 +51,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     }, []);
 
     useEffect(() => {
+        if (user?.verifications) {
+          const missing = verificationTypes.filter(type => !user.verifications?.[type]);
+          setUnverifiedTypes(missing);
+        }
+    }, [user]);
+
+    useEffect(() => {
         if (unverifiedTypes.length === 0) return;
       
         const interval = setInterval(() => {
@@ -60,10 +67,11 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         return () => clearInterval(interval);
       }, [unverifiedTypes.length]);
 
-    const nextType = unverifiedTypes[currentIndex];
+    const nextType = unverifiedTypes.length > 0 ? unverifiedTypes[currentIndex % unverifiedTypes.length] : null;
 
     useFocusEffect(
         useCallback(() => {
+            refreshUser();
             const fetchProfile = async () => {
                 try {// Ensure you have a valid user before proceeding
                     if (authUser) {
@@ -255,13 +263,17 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         }
     };
 
+    // console.log("👤 user.verifications:", user?.verifications);
+    // console.log("📉 unverifiedTypes:", unverifiedTypes);
+    // console.log("➡️ nextType:", nextType);
+
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             <ScrollView
-                contentContainerStyle={styles.container}
+                contentContainerStyle={[styles.container, { flexGrow: 1 }]}
                 keyboardShouldPersistTaps="handled"
             >
                 <View style={styles.topSection}>
@@ -269,7 +281,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                     <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
                 
                     <TouchableOpacity onPress={pickImageProfile}>
-                        <Avatar key={profilePic} name={newName} imageUri={profilePic} size={100} />
+                        <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150} />
                     </TouchableOpacity>
                     
                     {loading && <ActivityIndicator size="large" color="#0000ff" />} 
@@ -284,33 +296,35 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                 onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
                             />
                         ) : (
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={styles.newName}>{newName}</Text>
+                            <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={styles.newName}>{newName}</Text>
+                                    <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
+                                        <Ionicons name="pencil" size={20} color="gray"/>
+                                    </TouchableOpacity>
+                                </View>
 
                                 {user?.verifications?.business && (
                                     <View style={styles.verifiedBadge}>
-                                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" style={{ marginRight: 6 }}/>
                                         <Text style={styles.verifiedText}>{i18n.t('businessVerified')}</Text>
                                     </View>
                                 )}
 
                                 {user?.verifications?.musician && (
                                     <View style={styles.verifiedBadge}>
-                                        <Ionicons name="musical-notes" size={18} color="#3F51B5" />
+                                        <Ionicons name="musical-notes" size={18} color="#3F51B5" style={{ marginRight: 6 }}/>
                                         <Text style={styles.verifiedText}>{i18n.t('musicianVerified')}</Text>
                                     </View>
                                 )}
 
                                 {user?.verifications?.tutor && (
                                     <View style={styles.verifiedBadge}>
-                                        <Ionicons name="school" size={18} color="#FF9800" />
+                                        <Ionicons name="school" size={18} color="#FF9800" style={{ marginRight: 6 }}/>
                                         <Text style={styles.verifiedText}>{i18n.t('tutorVerified')}</Text>
                                     </View>
                                 )}
 
-                                <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
-                                    <Ionicons name="pencil" size={24} color="gray"/>
-                                </TouchableOpacity>
                             </View>
                         )}
                     </View>
@@ -382,12 +396,14 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         </TouchableOpacity>
                     )}
 
-                    {nextType && (
-                    <VerifyBusinessButton
-                        type={nextType}
-                        onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
-                    />
-                    )}
+                    <View style={styles.verificationButtonWrapper}>
+                        { unverifiedTypes.length > 0 && nextType && (
+                        <VerifyBusinessButton
+                            type={nextType}
+                            onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
+                        />
+                        )}
+                    </View>
 
                     <Modal transparent visible={showSettings} animationType="slide">
                         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
@@ -426,10 +442,10 @@ export default ProfileScreen;
 
 const styles = StyleSheet.create({
     container:{
-        flex: 1,
-        justifyContent: 'center',
+        // flex: 1,
+        // justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 10,
         backgroundColor: 'aliceblue',
     },
     topSection: {
@@ -452,7 +468,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 34,
         fontWeight: 'bold',
-        marginBottom: 40,   // Corrected from 'marginButtom
+        marginBottom: 15,   // Corrected from 'marginButtom
     },
     nameContainer: {
         marginBottom: 20,
@@ -490,7 +506,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 10,
-        marginBottom: 40,
+        marginBottom: 10,
         width: '60%',
     },
     buttonText: {
@@ -500,8 +516,10 @@ const styles = StyleSheet.create({
     },
     descriptionWrapper: {
         width: '100%',
-        marginTop: 30,
+        marginTop: 25,
         marginBottom: 20,
+        paddingLeft: 20,
+        paddingRight: 20,
     },
     noteRow: {
         flexDirection: 'row',
@@ -583,43 +601,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 20,
-    },
-    verifyButton: {
-        backgroundColor: '#0D9E6A',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 50,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 24,
-        alignSelf: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-        elevation: 5,
-        minWidth: 260,
-    },
-      
-    verifyButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-        letterSpacing: 0.5,
-      },
-      
-    verifiedTag: {
-        marginTop: 20,
-        backgroundColor: '#E6F4EA',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        alignItems: 'center',
-    },
-    
+    },      
     verifiedText: {
         color: '#2E7D32',
         fontWeight: '600',
         fontSize: 15,
+    },
+    verificationButtonWrapper: {
+        marginTop: 20,
+        alignItems: 'center',
+        width: '100%',
     },
 });
