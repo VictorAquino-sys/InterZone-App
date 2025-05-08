@@ -6,6 +6,7 @@ import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useUser } from '@/contexts/UserContext';
 import i18n from '@/i18n';
+import { useNavigation } from '@react-navigation/native';
 
 export default function VerifyBusinessScreen() {
     const { user, refreshUser } = useUser();
@@ -13,6 +14,7 @@ export default function VerifyBusinessScreen() {
     const device = useCameraDevice('back')
     const [scannedType, setScannedType] = React.useState<string | null>(null);
     const [scanned, setScanned] = React.useState(false);
+    const navigation = useNavigation();
 
     React.useEffect(() => {
         if (!hasPermission) requestPermission();
@@ -103,7 +105,16 @@ export default function VerifyBusinessScreen() {
       
             console.log('✅ Verification successful for type:', type);
             refreshUser();
-            Alert.alert(i18n.t('qr.verifiedTitle'), i18n.t(`qr.verifiedMessage.${type}`));
+            Alert.alert(
+                i18n.t('qr.verifiedTitle'), 
+                i18n.t(`qr.verifiedMessage.${type}`),
+                [
+                    {
+                      text: 'OK',
+                      onPress: () => navigation.goBack(),
+                    },
+                  ]
+            );
           } catch (e) {
             console.error('🔥 Error during verification:', e);
             Alert.alert(i18n.t('error'), i18n.t('qr.verificationError'));

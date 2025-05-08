@@ -25,7 +25,7 @@ import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
-import { NativeUpdateChecker } from '@/components/NativeUpdateChecker';
+import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
 import PostCard from '@/components/PostCard';
@@ -91,19 +91,17 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
 
   // Check native update first
   useEffect(() => {
-    const checkNativeUpdate = async () => {
-      try {
-        const NativeModule = await NativeUpdateChecker();
-        if (NativeModule === false) {
-          setFallbackUpdate(true);
+    const runUpdateCheck = async () => {
+      const updated = await checkNativeUpdate();
+      if (!updated) {
+        if (__DEV__) {
+          console.log('[HomeScreen] Falling back to JS update checker.');
         }
-      } catch (e) {
-        console.warn('Native update check failed, showing fallback.');
         setFallbackUpdate(true);
       }
     };
-
-    checkNativeUpdate();
+  
+    runUpdateCheck();
   }, []);
 
   useEffect(() => {
@@ -382,7 +380,8 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
           },
           categoryKey: data.categoryKey,
           commentCount: data.commentCount ?? 0,
-          commentsEnabled: data.commentsEnabled
+          commentsEnabled: data.commentsEnabled,
+          verifications: data.verifications || {}
         };
       }));
 
@@ -423,7 +422,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             return updated;
           });
 
-          console.log("📦 Firestore user data:", userData);
+          // console.log("📦 Firestore user data:", userData);
           setProfileImageUrl(userData.avatar);
         }
       } else {

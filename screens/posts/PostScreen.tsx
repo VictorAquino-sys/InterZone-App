@@ -432,11 +432,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       return;
     }
 
-    // if (mediaType === null) {
-    //   Alert.alert("Media Error", "Please select either an image or a video, not both.");
-    //   return;
-    // }
-
     setUploading(true);
 
     try {

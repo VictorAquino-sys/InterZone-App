@@ -30,7 +30,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [newName, setNewName] = useState<string>('');
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [profilePic, setProfilePic] = useState<string | null>(null);
-    const { user, setUser } = useUser();
+    const { user, setUser, refreshUser } = useUser();
     const [loading, setLoading] = useState<boolean>(false);
 
     const [description, setDescription] = useState('');
@@ -39,7 +39,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [showSettings, setShowSettings] = useState(false);
 
     const verificationTypes: Array<'business' | 'musician' | 'tutor'> = ['business', 'musician', 'tutor'];
-    const unverifiedTypes = verificationTypes.filter(type => !user?.verifications?.[type]);
+    const [unverifiedTypes, setUnverifiedTypes] = useState<Array<'business' | 'musician' | 'tutor'>>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
@@ -51,6 +51,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     }, []);
 
     useEffect(() => {
+        if (user?.verifications) {
+          const missing = verificationTypes.filter(type => !user.verifications?.[type]);
+          setUnverifiedTypes(missing);
+        }
+    }, [user]);
+
+    useEffect(() => {
         if (unverifiedTypes.length === 0) return;
       
         const interval = setInterval(() => {
@@ -60,10 +67,11 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         return () => clearInterval(interval);
       }, [unverifiedTypes.length]);
 
-    const nextType = unverifiedTypes[currentIndex];
+    const nextType = unverifiedTypes.length > 0 ? unverifiedTypes[currentIndex % unverifiedTypes.length] : null;
 
     useFocusEffect(
         useCallback(() => {
+            refreshUser();
             const fetchProfile = async () => {
                 try {// Ensure you have a valid user before proceeding
                     if (authUser) {
@@ -255,6 +263,10 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         }
     };
 
+    // console.log("👤 user.verifications:", user?.verifications);
+    // console.log("📉 unverifiedTypes:", unverifiedTypes);
+    // console.log("➡️ nextType:", nextType);
+
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
@@ -284,33 +296,35 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                 onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
                             />
                         ) : (
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={styles.newName}>{newName}</Text>
+                            <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={styles.newName}>{newName}</Text>
+                                    <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
+                                        <Ionicons name="pencil" size={20} color="gray"/>
+                                    </TouchableOpacity>
+                                </View>
 
                                 {user?.verifications?.business && (
                                     <View style={styles.verifiedBadge}>
-                                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" style={{ marginRight: 6 }}/>
                                         <Text style={styles.verifiedText}>{i18n.t('businessVerified')}</Text>
                                     </View>
                                 )}
 
                                 {user?.verifications?.musician && (
                                     <View style={styles.verifiedBadge}>
-                                        <Ionicons name="musical-notes" size={18} color="#3F51B5" />
+                                        <Ionicons name="musical-notes" size={18} color="#3F51B5" style={{ marginRight: 6 }}/>
                                         <Text style={styles.verifiedText}>{i18n.t('musicianVerified')}</Text>
                                     </View>
                                 )}
 
                                 {user?.verifications?.tutor && (
                                     <View style={styles.verifiedBadge}>
-                                        <Ionicons name="school" size={18} color="#FF9800" />
+                                        <Ionicons name="school" size={18} color="#FF9800" style={{ marginRight: 6 }}/>
                                         <Text style={styles.verifiedText}>{i18n.t('tutorVerified')}</Text>
                                     </View>
                                 )}
 
-                                <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
-                                    <Ionicons name="pencil" size={24} color="gray"/>
-                                </TouchableOpacity>
                             </View>
                         )}
                     </View>
@@ -383,7 +397,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                     )}
 
                     <View style={styles.verificationButtonWrapper}>
-                        {nextType && (
+                        { unverifiedTypes.length > 0 && nextType && (
                         <VerifyBusinessButton
                             type={nextType}
                             onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}

@@ -148,44 +148,43 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const getVerificationBadge = () => {
-    const verification = item.user?.verifications;
-  
+    const verification = item.verifications;
     if (!verification) return null;
   
+    const badges = [];
+  
     if (verification.business) {
-      return (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+      badges.push(
+        <View key="business" style={styles.badge}>
           <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-          <Text style={{ marginLeft: 4, fontSize: 11, color: '#4CAF50' }}>
-            {i18n.t('businessVerified')}
-          </Text>
+          <Text style={styles.badgeText}>{i18n.t('businessVerified')}</Text>
         </View>
       );
     }
   
     if (verification.musician) {
-      return (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+      badges.push(
+        <View key="musician" style={styles.badge}>
           <Ionicons name="musical-notes" size={16} color="#3F51B5" />
-          <Text style={{ marginLeft: 4, fontSize: 11, color: '#3F51B5' }}>
-            {i18n.t('musicianVerified')}
-          </Text>
+          <Text style={styles.badgeText}>{i18n.t('musicianVerified')}</Text>
         </View>
       );
     }
   
     if (verification.tutor) {
-      return (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
+      badges.push(
+        <View key="tutor" style={styles.badge}>
           <Ionicons name="school" size={16} color="#FF9800" />
-          <Text style={{ marginLeft: 4, fontSize: 11, color: '#FF9800' }}>
-            {i18n.t('tutorVerified')}
-          </Text>
+          <Text style={styles.badgeText}>{i18n.t('tutorVerified')}</Text>
         </View>
       );
     }
   
-    return null;
+    return (
+      <View style={{ flexDirection: 'column', flexWrap: 'wrap', marginLeft: 15, gap: 6 }}>
+        {badges}
+      </View>
+    );
   };
     
   const handleCommentAction = async (selected: string, comment: any) => {
@@ -359,6 +358,7 @@ const PostCard: React.FC<PostCardProps> = ({
               key={item.id}
               name={item.user?.name}
               imageUri={item.user?.avatar || undefined}
+              size={60}
             />
           </TouchableOpacity>
 
@@ -366,15 +366,13 @@ const PostCard: React.FC<PostCardProps> = ({
             <TouchableOpacity
               onPress={() => handleUserProfileNavigation(item.user?.uid || '')} // Use navigation for post owner profile
               >
-              {/* <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text> */}
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
-              {getVerificationBadge()}
+              <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+                <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
+                <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
               </View>
-
             </TouchableOpacity>
-            <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-            <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+            {getVerificationBadge()}
           </View>
         </View>
 
@@ -683,11 +681,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   postDetails: {
+    flexDirection: 'row',
     marginLeft: 10,
     flexShrink: 1,
   },
   userName: {
     fontWeight: 'bold',
+    marginTop: 8,
   },
   viewAllCommentsText: {
     color: '#007aff',
@@ -698,6 +698,7 @@ const styles = StyleSheet.create({
   postCity: {
     fontSize: 12,
     color: 'gray',
+    // marginBottom: 10,
   },
   postTimestamp: {
     fontSize: 11,
@@ -886,5 +887,15 @@ const styles = StyleSheet.create({
   fullScreenText: {
     color: 'white',
     fontSize: 14,
-  }
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 6,
+  },
+  badgeText: {
+    marginLeft: 4,
+    fontSize: 11,
+    fontWeight: '500',
+  },
 });

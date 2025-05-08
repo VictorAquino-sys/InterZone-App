@@ -5,7 +5,7 @@ import { db, auth, functions } from '@/config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '@/contexts/UserContext';
 import { httpsCallable } from 'firebase/functions';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, onSnapshot } from 'firebase/firestore';
 import QrCard from '@/components/QrCard'; // adjust path if needed
 import * as Clipboard from 'expo-clipboard';
 import i18n from '@/i18n';
@@ -26,6 +26,7 @@ export default function DistributeQrScreen() {
     const [loading, setLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
     const navigation = useNavigation();
+    const [generating, setGenerating] = useState(false);
     const { user } = useUser();
     const [selectedType, setSelectedType] = useState<'business' | 'musician' | 'tutor'>('business');
 
@@ -59,40 +60,68 @@ export default function DistributeQrScreen() {
 
     useEffect(() => {
         if (!user?.isQrDistributor) {
-            Alert.alert(i18n.t('qr.accessDenied'), i18n.t('qr.noPermission'));
-            navigation.goBack();
-            return;
+          Alert.alert(i18n.t('qr.accessDenied'), i18n.t('qr.noPermission'));
+          navigation.goBack();
+          return;
         }
-
-        refreshQrCodes();
-    }, []);
+      
+        setLoading(true);
+      
+        const q = query(
+          collection(db, 'verifications'),
+          where('used', '==', false),
+          orderBy('expiresAt', 'asc')
+        );
+      
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const results: QrCodeData[] = snapshot.docs.map(doc => {
+            const data = doc.data() as Omit<QrCodeData, 'id' | 'code'>;
+            return {
+              id: doc.id,
+              ...data,
+              code: doc.id,
+            };
+          });
+          setQrCodes(results);
+          setLoading(false);
+        }, (error: any) => {
+          console.error('Real-time QR listener failed:', error);
+          Alert.alert(i18n.t('qr.error'), i18n.t('qr.loadFail'));
+          setLoading(false);
+        });
+      
+        return () => unsubscribe(); // Clean up on unmount
+      }, []);
 
     const generateQrCode = async () => {
         try {
-          const user = auth.currentUser;
-          if (!user) throw new Error("User not signed in");
-      
-          console.log('🔐 Current user UID:', user.uid);
-      
-          // 🔄 Force refresh the ID token to ensure custom claims are up-to-date
-          const idToken = await user.getIdToken(true);
-          console.log("🔑 Fresh ID token:", idToken);
-      
-          const idTokenResult = await user.getIdTokenResult();
-          console.log('📋 Token claims:', idTokenResult.claims);
-      
-          // ✅ Call the Cloud Function with user's context
-          const callable = httpsCallable(functions, 'generateVerificationCode');
-          console.log(`🚀 Calling function generateVerificationCode with type: ${selectedType}`);
-      
-          const response: any = await callable({ type: selectedType });
-          console.log('✅ Cloud Function response:', response);
-      
-          Alert.alert(i18n.t('qr.success'), `${i18n.t('qr.created')}\n\n${response.data.qrUrl}`);
-          refreshQrCodes();
+            setGenerating(true); // 🟢 Start loading
+            const user = auth.currentUser;
+            if (!user) throw new Error("User not signed in");
+        
+            console.log('🔐 Current user UID:', user.uid);
+        
+            // 🔄 Force refresh the ID token to ensure custom claims are up-to-date
+            const idToken = await user.getIdToken(true);
+            console.log("🔑 Fresh ID token:", idToken);
+        
+            const idTokenResult = await user.getIdTokenResult();
+            console.log('📋 Token claims:', idTokenResult.claims);
+        
+            // ✅ Call the Cloud Function with user's context
+            const callable = httpsCallable(functions, 'generateVerificationCode');
+            console.log(`🚀 Calling function generateVerificationCode with type: ${selectedType}`);
+        
+            const response: any = await callable({ type: selectedType });
+            console.log('✅ Cloud Function response:', response);
+        
+            Alert.alert(i18n.t('qr.success'), `${i18n.t('qr.created')}\n\n${response.data.qrUrl}`);
+            refreshQrCodes();
         } catch (error: any) {
-          console.error('❌ QR generation failed:', error);
-          Alert.alert(i18n.t('qr.error'), error.message || i18n.t('qr.generationFail'));
+            console.error('❌ QR generation failed:', error);
+            Alert.alert(i18n.t('qr.error'), error.message || i18n.t('qr.generationFail'));
+        } finally {
+            setGenerating(false);
         }
     };
       
@@ -132,7 +161,22 @@ export default function DistributeQrScreen() {
 
         <Text style={styles.title}>{i18n.t('qr.unclaimedTitle')}</Text>
         <View style={styles.buttonWrapper}>
-            <Button title={i18n.t('qr.generateButton')} onPress={generateQrCode} />
+            <TouchableOpacity
+                style={[
+                styles.generateButton,
+                generating && { opacity: 0.6 },
+                ]}
+                onPress={generateQrCode}
+                disabled={generating}
+            >
+                {generating ? (
+                <ActivityIndicator color="#fff" />
+                ) : (
+                <Text style={styles.generateButtonText}>
+                    {i18n.t('qr.generateButton')}
+                </Text>
+                )}
+            </TouchableOpacity>
         </View>
 
         <FlatList
@@ -199,5 +243,17 @@ const styles = StyleSheet.create({
         marginBottom: 60,
         alignSelf: 'center',
         width: '100%',
+    },
+    generateButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        alignItems: 'center',
+      },
+    generateButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
