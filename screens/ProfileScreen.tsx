@@ -261,7 +261,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             <ScrollView
-                contentContainerStyle={styles.container}
+                contentContainerStyle={[styles.container, { flexGrow: 1 }]}
                 keyboardShouldPersistTaps="handled"
             >
                 <View style={styles.topSection}>
