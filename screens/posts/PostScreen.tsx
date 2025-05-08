@@ -71,56 +71,79 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   console.log("PostScreen");
 
   // Asynchronous function to upload image and return the download URL
-  const uploadImageToStorage = async (uri:string): Promise<string | null> => {
+  const uploadImageToStorage = async (uri: string): Promise<string | null> => {
     if (!uri) {
-      console.error("No URI provided for upload");
+      console.error("🚫 No URI provided for image upload");
       return null;
     }
-    
+
+    const exists = await fileExists(uri);
+    if (!exists) {
+      console.warn("🛑 File doesn't exist or is inaccessible:", uri);
+      Alert.alert("Upload Error", "The image file couldn't be accessed. Please try picking it again.");
+      return null;
+    }
+  
     try {
-        setUploading(true);
-        console.log("Preparing to fetch the image blob from URI");
-
-        const response = await fetch(uri);
-        const blob = await response.blob();
-
-        if(!blob || blob.size === 0) {
-          console.error("Blob is empty or Failed to create blob from URI:", uri);
-          return null;
-        }
-
-        console.log("setting timeout to 5000");
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Extract the file extension and set MIME type
-        const fileExtension = uri.split('.').pop() ?? 'jpg';
-        const mimeType = mime.getType(fileExtension) || 'application/octet-stream'; // Fallback to binary if unknown
-
-        if (!authUser) {
-          console.error("Authentication required for uploading images.");
-          return null; // or handle it by showing an error message
-        }
-        const imageName = `postImages/${authUser.uid}/${Date.now()}.${fileExtension}`;
-        const imageRef = ref(storage, imageName);
-
-        console.log("Starting upload for image:", imageName, "with MIME type", mimeType);
-
-        await uploadBytes(imageRef, blob, { contentType: mimeType });
-        setImagePath(imageRef.fullPath); // you can keep this if needed for deletion later
-        
-        const downloadUrl = await getDownloadURL(imageRef);
-        console.log("✅ Image uploaded successfully:", downloadUrl);
-
-        return downloadUrl;
-    } catch (error: any) {
-        console.error("Error uploading image:", error);
-        if (error.code) {
-          console.error("Firebase error code:", error.code);
-        }
-        Alert.alert("Upload Error", (error as Error).message || "Unknow error occurred");
+      setUploading(true);
+      console.log("📦 Fetching image blob from URI:", uri);
+  
+      let response: Response;
+      try {
+        response = await fetch(uri);
+      } catch (fetchErr) {
+        console.error("❌ fetch() failed:", fetchErr);
+        Alert.alert("Upload Error", "Unable to access the image. Please try a different one.");
         return null;
+      }
+  
+      if (!response || !response.ok) {
+        console.error("❌ Invalid fetch response:", response.status);
+        Alert.alert("Upload Error", "The selected image couldn't be processed.");
+        return null;
+      }
+  
+      let blob: Blob;
+      try {
+        blob = await response.blob();
+      } catch (blobErr) {
+        console.error("❌ blob() conversion failed:", blobErr);
+        Alert.alert("Upload Error", "Problem occurred while reading the image.");
+        return null;
+      }
+  
+      if (!blob || blob.size === 0) {
+        console.error("🚫 Blob is empty or corrupt");
+        Alert.alert("Upload Error", "The image file appears empty or corrupted.");
+        return null;
+      }
+  
+      const fileExtension = uri.split('.').pop() ?? 'jpg';
+      const mimeType = mime.getType(fileExtension) || 'application/octet-stream';
+  
+      if (!authUser) {
+        console.error("🔒 User not authenticated.");
+        Alert.alert("Upload Error", "You must be logged in to upload media.");
+        return null;
+      }
+  
+      const imageName = `postImages/${authUser.uid}/${Date.now()}.${fileExtension}`;
+      const imageRef = ref(storage, imageName);
+  
+      console.log("🚀 Uploading image:", imageName);
+      await uploadBytes(imageRef, blob, { contentType: mimeType });
+      setImagePath(imageRef.fullPath);
+  
+      const downloadUrl = await getDownloadURL(imageRef);
+      console.log("✅ Image uploaded:", downloadUrl);
+  
+      return downloadUrl;
+    } catch (error: any) {
+      console.error("🔥 Unhandled upload error:", error);
+      Alert.alert("Upload Failed", error.message || "An unknown error occurred.");
+      return null;
     } finally {
-        setUploading(false);
+      setUploading(false);
     }
   };
 
@@ -244,6 +267,19 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     return resizedPhoto.uri;
   };
 
+  const fileExists = async (uri: string): Promise<boolean> => {
+    if (Platform.OS === 'ios' && uri.startsWith('file://')) {
+      try {
+        const info = await FileSystem.getInfoAsync(uri);
+        return info.exists && info.isDirectory === false;
+      } catch (err) {
+        console.error("⚠️ File existence check failed:", err);
+        return false;
+      }
+    }
+    return true; // Skip for Android or other valid paths
+  };
+
   const handleImageUpload = async (uri: string): Promise<string> => {
     try {
       const resizedUri = await resizeImage(uri);
@@ -259,23 +295,40 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-        Alert.alert('Sorry, we need camera roll permissions to make this work!');
-        return;
+      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      return;
     }
-
+  
     const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 1,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
     });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri); // Store selected image URI
-      setMediaType('image'); // Set media type to image
-      setVideoUri(null); // Clear video URI if image is selected
-      // handleImageUpload(result.assets[0].uri); // Pass URI to function, ensuring it's a string
-    } else {
+  
+    if (result.canceled || !result.assets || result.assets.length === 0) {
       console.log('Image picker was canceled or no image was selected');
+      return;
+    }
+  
+    try {
+      const selectedAsset = result.assets[0];
+      const originalUri = selectedAsset.uri;
+      const fileName = originalUri.split('/').pop();
+      const newUri = `${FileSystem.documentDirectory}${fileName}`;
+  
+      await FileSystem.copyAsync({
+        from: originalUri,
+        to: newUri,
+      });
+  
+      console.log("📁 Image copied to safe local storage:", newUri);
+  
+      setImageUri(newUri);       // Set local URI for preview and upload
+      setMediaType('image');
+      setVideoUri(null);         // Clear video if set
+    } catch (err) {
+      console.error("🚫 Failed to copy image locally:", err);
+      Alert.alert("File Error", "Failed to prepare the image for upload.");
     }
   };
 
@@ -448,7 +501,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
       if (mediaType === 'image' && imageUri) {
         console.log("Resizing and uploading image...");
-        imageUrl = await uploadImageToStorage(imageUri) || '';
+        imageUrl = await handleImageUpload(imageUri) || '';
       } else if (mediaType === 'video' && videoUri) {
         if (!user) {
           Alert.alert("Upload Error", "User context is missing.");

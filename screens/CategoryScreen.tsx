@@ -207,7 +207,7 @@ const CategoryScreen = () => {
                     renderItem={({ item }) => (
                         <View style={styles.postItem}>
                             <View style={styles.userContainer}>
-                                <TouchableOpacity onPress={() => openImageModal(item.user?.avatar)}>
+                                <TouchableOpacity onPress={() => openImageModal(item.user?.avatar ?? null)}>
                                     {/* <Image source={{ uri: item.user.avatar || undefined }} style={styles.avatar} /> */}
                                     <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
                                 </TouchableOpacity>
