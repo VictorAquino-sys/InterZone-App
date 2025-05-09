@@ -274,6 +274,11 @@
     "musicianVerified": "Músico",
     "tutorVerified": "Mentor",
 
+    "loading": "Cargando...",
+
+    "loadingNearbyUsers": "Cargando usuarios cercanos...",
+    "noNearbyUsers": "No se encontraron usuarios cercanos.",
+
     "allowComments": "Permitir comentarios",
     "noComments": "Sin comentarios",
     "error": "Error",

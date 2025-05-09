@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 05-9
+    Add an "Accept/Decline button for incoming requests
+    Auto refresh the list after accepting
+
 ### 05-6
     Install Barcode scanner:
     npx expo install react-native-vision-camera

@@ -272,6 +272,11 @@
       "copyError": "Failed to copy the text"
     },
 
+    "loadingNearbyUsers": "Loading nearby users...",
+    "noNearbyUsers": "No users found nearby.",
+
+    "loading": "Loading...",
+
     "businessVerified": "Entrepreneur",
     "musicianVerified": "Musician",
     "tutorVerified": "Mentor",
