@@ -294,6 +294,10 @@
         "error": "Solo los usuarios autorizados pueden generar códigos de verificación.",
         "invalidMessage": "Este código QR no es válido.",
         "noTypeAssigned": "Este código QR no tiene un tipo de verificación asignado.",
+        "enterManually": "Ingresar código manualmente",
+        "useQrScanner": "Usar escáner QR",
+        "enterCodeLabel": "Introduce tu código",
+        "verifyCode": "Verificar código",
 
         "alreadyVerifiedTitle": "Ya verificado",
         "alreadyVerifiedMessage": {

@@ -294,7 +294,11 @@
   "qr": {
     "invalidTitle": "Invalid",
     "invalidMessage": "This QR is not valid.",
-
+    "enterManually": "Enter code manually",
+    "useQrScanner": "Use QR scanner",
+    "enterCodeLabel": "Enter your code",
+    "verifyCode": "Verify code",
+    
     "alreadyVerified": "Already Verified",
     "alreadyVerifiedTitle": "Already Verified",
     "alreadyVerifiedMessage": {
