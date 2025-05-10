@@ -38,17 +38,17 @@ export default function VerifyBusinessButton({
   };
 
   return (
-    <Animated.View style={[styles.container, animatedStyle]}>
-      <Pressable
+    <Animated.View style={[styles.container, { backgroundColor: typeColors[type] }, animatedStyle]}>
+    <Pressable
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onPress}
-        style={[styles.button, { backgroundColor: typeColors[type] }]}
-      >
+        style={styles.button}
+    >
         <Text style={styles.text}>
             {i18n.t(`profile.becomeVerified.${type}`)}
         </Text>
-      </Pressable>
+    </Pressable>
     </Animated.View>
   );
 }
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   button: {
-    backgroundColor: '#4CAF50',
+    // backgroundColor: '#4CAF50',
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 14,
