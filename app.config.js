@@ -112,8 +112,8 @@ export default {
       [
         "expo-location",
         {
-          locationAlwaysAndWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location at all times.",
-          locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location.",
+          locationAlwaysAndWhenInUsePermission: "$(PRODUCT_NAME) uses your location to recommend nearby events and send local updates.",
+          locationWhenInUsePermission: "$(PRODUCT_NAME) uses your location to show you nearby posts, events, and activities in your city while using the app.",
           isAndroidBackgroundLocationEnabled: false,
           isIosBackgroundLocationEnabled: false
         }
@@ -133,17 +133,17 @@ export default {
       [
         "expo-media-library",
         {
-          photosPermission: "Allow InterZone to access your photos.",
-          savePhotosPermission: "Allow InterZone to save photos.",
+          photosPermission: "Allow $(PRODUCT_NAME) to access your photo library so you can upload images and videos to your posts.",
+          savePhotosPermission: "Allow $(PRODUCT_NAME) to save your edited or captured media to your library.",
           isAccessMediaLocationEnabled: true
         }
       ],
       [
-      "react-native-vision-camera",
+        "react-native-vision-camera",
         {
-          "cameraPermissionText": "InterZone needs access to your camera to verify businesses.",
-          "enableMicrophonePermission": false,
-          "enableCodeScanner": true
+          cameraPermissionText: "$(PRODUCT_NAME) needs access to your camera to capture photos and videos for verifying businesses and creating posts.",
+          enableMicrophonePermission: false,
+          enableCodeScanner: true
         }
       ],
     ],

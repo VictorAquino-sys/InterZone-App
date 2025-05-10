@@ -599,7 +599,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             <TextInput
               multiline
               placeholder={i18n.t('postPlaceholder')}
-              maxLength={300}
+              maxLength={500}
               style={{height: 150}}
               value={postText}
               onChangeText={(text) => {
@@ -608,7 +608,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
               }}
             />
             <Text style={styles.charCount}>
-              {charCount} / 300
+              {charCount} / 500
             </Text>
           </View>
 

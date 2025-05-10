@@ -29,6 +29,12 @@ export interface User {
     musician?: boolean;
     tutor?: boolean;
   };
+  lastKnownLocation?: {
+    label: string;
+    latitude: number;
+    longitude: number;
+    timestamp: any;
+  };
 }
 
 // Define a separate interface for the full Firestore user document
@@ -46,6 +52,12 @@ export interface UserData {
     business?: boolean;
     musician?: boolean;
     tutor?: boolean;
+  };
+  lastKnownLocation?: {
+    label: string;
+    latitude: number;
+    longitude: number;
+    timestamp: any;
   };
 }
 
@@ -124,6 +136,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               emailVerified: firebaseUser.emailVerified, // ✅ ADD THIS LINE
               isQrDistributor: isQrDistributorClaim,
               verifications: userData.verifications || {},
+              lastKnownLocation: userData.lastKnownLocation || undefined,
             };
             console.log("User logged in with updated data:", updatedUser);
             setUser(updatedUser);
@@ -190,6 +203,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             emailVerified: firebaseUser.emailVerified, // ✅ ADD HERE TOO
             isQrDistributor: isQrDistributorClaim,
             verifications: userData.verifications || {},
+            lastKnownLocation: userData.lastKnownLocation || undefined, 
           };
 
           console.log("🔄 User manually refreshed:", updatedUser);

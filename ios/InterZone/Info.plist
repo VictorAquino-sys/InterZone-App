@@ -70,11 +70,11 @@
     <key>NSCameraUsageDescription</key>
     <string>The app needs access to your camera to take pictures.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to use your location at all times.</string>
+    <string>$(PRODUCT_NAME) uses your location to recommend nearby events and send local updates.</string>
     <key>NSLocationAlwaysUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to use your location.</string>
+    <string>$(PRODUCT_NAME) uses your location to show you nearby posts, events, and activities in your city while using the app.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your microphone.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>

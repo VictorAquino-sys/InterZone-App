@@ -301,6 +301,10 @@
         "noTypeAssigned": "Este código QR no tiene un tipo de verificación asignado.",
 
         "alreadyVerifiedTitle": "Ya verificado",
+        "enterManually": "Ingresar código manualmente",
+        "useQrScanner": "Usar escáner QR",
+        "enterCodeLabel": "Introduce tu código",
+        "verifyCode": "Verificar código",
         "alreadyVerifiedMessage": {
           "business": "Ya has verificado como Negocio.",
           "musician": "Ya has verificado como Músico.",

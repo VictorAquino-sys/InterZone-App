@@ -303,6 +303,11 @@
 
   "alreadyVerified": "Already Verified",
   "alreadyVerifiedTitle": "Already Verified",
+  "enterManually": "Enter code manually",
+  "useQrScanner": "Use QR scanner",
+  "enterCodeLabel": "Enter your code",
+  "verifyCode": "Verify code",
+  
   "alreadyVerifiedMessage": {
     "business": "You’ve already verified as a Business.",
     "musician": "You’ve already verified as a Musician.",
