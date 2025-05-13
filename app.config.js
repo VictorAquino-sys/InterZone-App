@@ -106,7 +106,7 @@ export default {
         "expo-image-picker",
         {
           photosPermission: "The app accesses your photos to let you share them with your friends.",
-          cameraPermission: "The app needs access to your camera to take pictures."
+          cameraPermission: "$(PRODUCT_NAME) uses your camera to scan QR codes for business verification and account setup."
         }
       ],
       [
@@ -121,7 +121,7 @@ export default {
       [
         "expo-av",
         {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+          microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone so you can record and send voice messages in chat."
         }
       ],
       [
