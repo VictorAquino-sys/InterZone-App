@@ -2,7 +2,8 @@ import React, { useState, useEffect, FunctionComponent } from 'react'
 import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider, sendEmailVerification } from "firebase/auth";
 import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import image from '../../assets/localbrands_1.png';
+import BG_PE from '../../assets/localbrands_1.png';
+import BG_US from '../../assets/usa_background_login.png';
 import GoogleIcon from '../../assets/google_icon.png'; // TypeScript-compatible
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
 import { Alert } from 'react-native';
@@ -17,7 +18,18 @@ import { useUser } from '../../src/contexts/UserContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { generateNonce, sha256 } from '@/utils/cryptoUtils';
 import { logScreen } from '@/utils/analytics';
+import * as Localization from 'expo-localization';
 import { recordHandledError } from '@/utils/crashlytics';
+
+const locales = Localization.getLocales() as Array<{ region?: string }>;
+const countryCode = locales[0]?.region || 'US';
+
+const backgroundMap: Record<string, any> = {
+  US: BG_US,
+  PE: BG_PE,
+};
+
+const image = backgroundMap[countryCode] || BG_US; // fallback to US
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 

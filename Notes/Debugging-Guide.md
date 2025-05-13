@@ -58,6 +58,10 @@ Open the simulator first through Xcode, this mounts the new simulator bundle, th
     to open xcode project:
     open ios/InterZone.xcworkspace
 
+    reset simulator (fast + safe):
+    xcrun simctl erase all
+
+
     Configure for iOS
     Delete Podfile.lock and ios/Pods folder
     rm -rf ios/Pods ios/Podfile.lock
