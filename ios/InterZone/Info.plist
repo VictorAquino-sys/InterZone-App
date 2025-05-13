@@ -68,7 +68,7 @@
       <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>The app needs access to your camera to take pictures.</string>
+    <string>$(PRODUCT_NAME) uses your camera to scan QR codes for business verification and account setup.</string>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>$(PRODUCT_NAME) uses your location to recommend nearby events and send local updates.</string>
     <key>NSLocationAlwaysUsageDescription</key>
@@ -76,7 +76,7 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>$(PRODUCT_NAME) uses your location to show you nearby posts, events, and activities in your city while using the app.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone.</string>
+    <string>Allow $(PRODUCT_NAME) to access your microphone so you can record and send voice messages in chat.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to save your edited or captured media to your library.</string>
     <key>NSPhotoLibraryUsageDescription</key>

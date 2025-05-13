@@ -6,6 +6,7 @@ import i18n from '@/i18n';
 import { NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import homeIcon from './assets/home_icon_transparent.png'
 import magicIcon from './assets/magic_icon_transparent.png'
