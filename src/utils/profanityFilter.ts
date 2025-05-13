@@ -1,5 +1,5 @@
 const englishBadWords = [
-    'shit', 'fuck', 'bitch', 'cunt', 'asshole', 'damn', 'crap', 'dick', 'piss', 'bastard', 'douchebag', 'motherfucker',
+    'shit', 'fuck', 'bitch', 'cunt', 'asshole', 'damn', 'crap', 'dick', 'piss', 'bastard', 'douchebag', 'motherfucker', 'nigger', 'heil hitler', 'nigga', 'pussy'
   ];
   
   const spanishBadWords = [
