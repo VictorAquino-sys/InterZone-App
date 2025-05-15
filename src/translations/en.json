@@ -8,6 +8,8 @@
     "termsOfUse": "Terms of Use"
   },
 
+  "signInWithGoogle": "Sign in with Google",
+
   "loginButton": "Login",
   "welcomeMessage": "Welcome to the app!",
   "appTitle": "InterZone",

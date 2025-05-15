@@ -37,6 +37,7 @@ Open the simulator first through Xcode, this mounts the new simulator bundle, th
     
     to test on IOS
     npx eas build --platform ios --profile ios-simulator
+
     To test on android device:
     npx expo start --dev-client --host lan
     connect through:
@@ -67,6 +68,9 @@ Open the simulator first through Xcode, this mounts the new simulator bundle, th
     rm -rf ios/Pods ios/Podfile.lock
     Run npx pod-install after installing the npm package.
     npx pod-install
+
+    erase emulator data:
+    xcrun simctl erase all
 
 * For production:
     Android

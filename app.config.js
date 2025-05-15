@@ -6,7 +6,7 @@ export default {
     name: IS_DEV ? "InterZone (Dev)" : "InterZone",
     slug: "InterZone",
     version: "1.0.0",
-    orientation: "portrait",
+    orientation: "default",
     icon: "./assets/images/icon.png",
     scheme: "interzone",
     userInterfaceStyle: "light",
@@ -17,7 +17,8 @@ export default {
     },
     assetBundlePatterns: ["**/*"],
     ios: {
-      supportsTablet: false,
+      supportsTablet: true,
+      // requireFullScreen: true,
       sdkVersion: "51.0",
       deploymentTarget: "18.0",
       buildNumber: "1.0.16",

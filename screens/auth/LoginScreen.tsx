@@ -1,8 +1,9 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
 import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider, sendEmailVerification } from "firebase/auth";
-import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
+import { Image, Dimensions, ScrollView, useWindowDimensions, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BG_PE from '../../assets/peru_background_login.png';
+import BG_U from '../../assets/image_for_ipads.png';
 import BG_US from '../../assets/usa_background_login.png';
 import GoogleIcon from '../../assets/google_icon.png'; // TypeScript-compatible
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
@@ -20,6 +21,7 @@ import { generateNonce, sha256 } from '@/utils/cryptoUtils';
 import { logScreen } from '@/utils/analytics';
 import * as Localization from 'expo-localization';
 import { recordHandledError } from '@/utils/crashlytics';
+import ResponsiveContainer from '@/components/ResponsiveContainer';
 
 const locales = Localization.getLocales() as Array<{ region?: string }>;
 const countryCode = locales[0]?.region || 'US';
@@ -29,7 +31,7 @@ const backgroundMap: Record<string, any> = {
   PE: BG_PE,
 };
 
-const image = backgroundMap[countryCode] || BG_US; // fallback to US
+// const image = backgroundMap[countryCode] || BG_US; // fallback to US
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -39,6 +41,11 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const [show, setShow] = useState<boolean>(true);
   const { refreshUser } = useUser(); // ⬅️ grab from context
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+  const image2 = isTablet ? BG_U : backgroundMap[countryCode] || BG_US;
 
   useEffect(() => {
     const logLoginScreen = async () => {
@@ -434,7 +441,10 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground source={image} resizeMode="cover" style={styles.rootContainer}
+    <ImageBackground 
+      source={image2} 
+      resizeMode="cover" 
+      style={styles.rootContainer}
     >
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
@@ -451,71 +461,77 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
             )}
           </View>
 
-          <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
-            <View style={styles.authButtonsContainer}>
-              <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
-                <View style={styles.googleContent}>
-                  <Image
-                    source={GoogleIcon} // use the actual G icon you have
-                    style={styles.googleIcon}
+          <ResponsiveContainer>
+
+            <KeyboardAvoidingView 
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              style= {styles.container}>
+              <View style={styles.authButtonsContainer}>
+                <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
+                  <View style={styles.googleContent}>
+                    <Image
+                      source={GoogleIcon} // use the actual G icon you have
+                      style={styles.googleIcon}
+                    />
+                    <Text style={styles.googleText}>{i18n.t('signInWithGoogle')}</Text>
+                    
+                  </View>
+                </TouchableOpacity>
+
+
+                {Platform.OS === 'ios' && isAppleAvailable && (
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                    cornerRadius={5}
+                    style={styles.appleButton}
+                    onPress={handleAppleSignIn}
                   />
-                  <Text style={styles.googleText}>Sign in with Google</Text>
-                </View>
-              </TouchableOpacity>
+                )}
+              </View>
 
-
-              {Platform.OS === 'ios' && isAppleAvailable && (
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                  cornerRadius={5}
-                  style={styles.appleButton}
-                  onPress={handleAppleSignIn}
+              <View style={[styles.inputContainer, { width: isTablet ? 400 : '60%' }]}>
+               <TextInput
+                  style={styles.input}
+                  placeholder={i18n.t('Email')}
+                  value={email}
+                  onChangeText={text => setEmail(text)}
                 />
-              )}
-            </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder={i18n.t('Password')}
+                  value={password}
+                  onChangeText={text => setPassword(text)}
+                  secureTextEntry
+                />
+              </View>
+              
+              <View style={[styles.buttonContainer, { width: isTablet ? 400 : '60%' }]}>
+                <TouchableOpacity onPress={handleLogin} style={styles.button}>
+                  <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
+                </TouchableOpacity>
 
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder={i18n.t('Email')}
-                value={email}
-                onChangeText={text => setEmail(text)}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder={i18n.t('Password')}
-                value={password}
-                onChangeText={text => setPassword(text)}
-                secureTextEntry
-              />
-            </View>
-            
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity onPress={handleLogin} style={styles.button}>
-                <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
+                  <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
+                </TouchableOpacity>
+              </View>
 
-              <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
-                <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={styles.troubleAccessContainer}>
+                <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
+                <View style={styles.troubleLinks}>
+                  <TouchableOpacity onPress={handlePasswordReset}>
+                    <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.separator}> | </Text>
+                  <TouchableOpacity onPress={handleResendVerificationEmail}>
+                    <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-            <View style={styles.troubleAccessContainer}>
-               <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
-               <View style={styles.troubleLinks}>
-                 <TouchableOpacity onPress={handlePasswordReset}>
-                   <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
-                 </TouchableOpacity>
-                 <Text style={styles.separator}> | </Text>
-                 <TouchableOpacity onPress={handleResendVerificationEmail}>
-                   <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
-                 </TouchableOpacity>
-               </View>
-            </View>
+            </KeyboardAvoidingView>
 
-
-          </KeyboardAvoidingView>
+          </ResponsiveContainer>
         </ScrollView>
       </SafeAreaView>
     </ImageBackground>
@@ -530,11 +546,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 0 : 40,
     marginBottom: 20,
     width: "100%",
   },
   scrollContent: {
     flexGrow: 1,
+    minHeight: '100%',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -607,7 +625,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    width:'60%',
+    // width: isTablet ? 400 : '60%',
     justifyContent: 'center',
   },
   input: {
@@ -679,5 +697,7 @@ const styles = StyleSheet.create({
   },
   rootContainer: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
 })

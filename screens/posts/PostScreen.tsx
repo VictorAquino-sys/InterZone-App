@@ -664,6 +664,13 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             </View>
           )}
 
+          {user?.accountType === 'business' && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+              <Text>{i18n.t('featureOnChannel')}</Text>
+              <Switch style={{marginLeft: 6 }} value={isShowcase} onValueChange={setIsShowcase} />
+            </View>
+          )}
+
           <View style={styles.inputContainer}>
             <TextInput
               multiline
@@ -767,19 +774,12 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           </View>
 
           {/* Show prompts when category or location is not ready */}
-          {!isCategorySelected && (
+          {/* {!isCategorySelected && (
             <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
-          )}
+          )} */}
 
           {locationLoading && (
             <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
-          )}
-
-          {user?.accountType === 'business' && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-              <Text>{i18n.t('featureOnChannel')}</Text>
-              <Switch value={isShowcase} onValueChange={setIsShowcase} />
-            </View>
           )}
 
           <TouchableOpacity
