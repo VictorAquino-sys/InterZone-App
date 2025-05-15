@@ -3,9 +3,9 @@ Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
 ### 4-24
-    Restrict users to only allow to see nearby people instead of all InterZone Users.
+    Restrict users to only allow to see nearby people instead of all InterZone Users. (Done)
     display error messages as toast/snackbar instead of alerts for a smoother UX.
-    Build a debug screen that shows the user's lastKnownLocation and city-based feed
+    Build a debug screen that shows the user's lastKnownLocation and city-based feed (Done)
 
     💡 Let users set a "Home City" for fallback alerts if GPS isn’t available
 

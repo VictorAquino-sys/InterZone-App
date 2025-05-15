@@ -1,6 +1,132 @@
 (Requested features & Ideas)
 Prioritize them with High (must-have), Medium (nice-to-have), and Low (low-priority)
 
+# 05-13  
+Would you like help building a mini form to let users edit their businessProfile info (name, logo, description)?
+
+Next Suggestions:
+Add a Firebase Cloud Function to notify admins when a new business application is submitted
+
+Create an AdminDashboardScreen to review and approve/reject these
+
+Optionally, show application status (pending, rejected, approved) under the user’s profile
+
+Optional Enhancements
+🔍 1. Add Discoverability
+Show verified businesses in a “Featured Businesses” section
+
+Allow users to “Follow” business channels
+
+Add search filters: category, location, recent activity
+
+🔗 2. Deep Linking
+Allow external links to interzone://channel/{uid} or interzone.com/@{businessHandle}
+
+👁️ 3. Business Post Badging
+Inside the post feed, if a post comes from a businessVerified user, show a small verified icon or category tag (Restaurant, Music, etc.).
+
+# 05-12 Business Account Feature
+Option A
+Phase 1: Public Business Channel
+Let each business have its own public page, accessible by anyone via a username or profile link.
+
+Features:
+Business avatar, name, description
+
+Verified badge if applicable
+
+A media feed (posts: images, videos, promos, etc.)
+
+Optional category tag (e.g., “Restaurant”)
+
+Contact options: phone, email, website/social
+
+🔧 Technical:
+Create a new screen: BusinessChannelScreen.tsx
+
+Navigate to it from:
+
+Post by that business
+
+Search result
+
+Tapping their avatar
+
+ Phase 2: Business-only Post Feed
+Let business users manage their channel feed from their profile.
+
+Features:
+Toggle for showing only business posts on their profile
+
+"Create New Promo Post" button (images/videos with tags)
+
+Optional post scheduling (future idea)
+
+🔹 Phase 3: Followers & Messaging
+Let users follow business profiles or receive updates.
+
+Features:
+"Follow" button on business channel
+
+Notification system when the business posts new content
+
+Optionally: allow DM between users and businesses
+
+Bonus Ideas
+✅ Let verified businesses get a unique @handle or slug (interzone.com/@mariasempanadas)
+
+🎯 Show category filters on Business Channel (e.g., “Menu,” “Events,” “Promotions”)
+
+🏆 Add “Top Businesses in Your City” on HomeScreen
+
+
+Option B
+### 📝 Summary
+Introduce a distinct "Business" account type in InterZone to support local commerce, improve content trustworthiness, and offer potential monetization pathways. This separates regular users from businesses and unlocks specialized functionality.
+
+---
+
+### 🔁 Phase 1 – Business Account Structure
+- Add `accountType` field to Firestore user document: `"individual"` or `"business"`
+- Update onboarding or settings to allow users to select or switch account type
+- Add business-specific profile fields:
+  - Business Name
+  - Category (e.g., restaurant, musician, tutoring)
+  - Description
+  - Business logo/image
+  - Contact info (phone, email, social links)
+  - Business hours
+- Require verification (QR Code system) for business accounts
+- Display a verified badge on business profiles
+
+---
+
+### 📊 Phase 2 – Business Dashboard (MVP)
+- Show basic analytics: views, likes, comments per post
+- Allow businesses to:
+  - Moderate comments
+  - Highlight or pin one post at a time
+- UI changes for business profiles (e.g., badge, layout emphasis)
+
+---
+
+### 💸 Phase 3 – Premium Business Features (Optional Monetization)
+- Priority listing in search results
+- Featured business badge or highlight in feed
+- Promote posts city-wide (ads-lite)
+- In-app booking/contact requests
+- Analytics on reach & engagement
+
+---
+
+### 🔒 Notes on Implementation
+- Firestore Rule: Restrict some write actions by account type
+- Admin-only control for verified status
+- Conditional UI rendering depending on `accountType`
+
+---
+
+
 # 4-04
 1. Recuperar contrasenia, compartir y comentarios.
 

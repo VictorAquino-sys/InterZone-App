@@ -272,6 +272,7 @@
       "copyError": "Failed to copy the text"
     },
 
+    "editBusinessProfile": "Edit Business Profile",
     "loadingNearbyUsers": "Loading nearby users...",
     "noNearbyUsers": "No users found nearby.",
 
@@ -349,5 +350,52 @@
     }
   },
 
-  "distributeQrButton": "Distribute QR Codes"
+  "distributeQrButton": "Distribute QR Codes",
+  "editBusinessProfileTitle": "Edit Business Profile",
+  "selectLogo": "Select Logo",
+  "businessName": "Business Name",
+  "businessDescription": "Business Description",
+  "saveChanges": "Save Changes",
+  "successTitle": "Success",
+  "businessProfileUpdated": "Business profile updated successfully.",
+  "errorTitle": "Error",
+  "updateBusinessProfileError": "Could not update business profile.",
+  "businessNameRequired": "Business name is required.",
+  "applyBusiness": {
+    "title": "Apply for a Business Account",
+    "businessName": "Business Name",
+    "category": "Category (e.g., Restaurant, Tutor, Musician)",
+    "description": "Describe your business",
+    "submitButton": "Submit Application",
+    "missingFieldsTitle": "Missing fields",
+    "missingFieldsMessage": "Please fill out all the fields.",
+    "successTitle": "✅ Application submitted",
+    "successMessage": "We’ll review your business info shortly.",
+    "errorTitle": "❌ Error",
+    "errorMessage": "Something went wrong. Please try again later."
+  },
+  "businessChannel": {
+    "verifiedBusiness": "Verified Business",
+    "mediaFeed": "Media Feed",
+    "noPosts": "No posts yet.",
+    "noDescription": "No description provided.",
+    "deleteTitle": "Delete Post",
+    "deleteMessage": "Are you sure you want to delete this post?",
+    "businessNotFound": "Business not found."
+  },
+  "delete": "Delete",
+  "postAs": "Post as:",
+  "featureOnChannel": "Feature on channel",
+  "uploading": "Uploading...",
+  "uploadFailedTitle": "Upload Failed",
+  "uploadFailedMessage": "Video could not be uploaded after multiple attempts.",
+  "authErrorTitle": "Authentication Error",
+  "authErrorMessage": "You must be logged in to post.",
+  "showcaseLimitTitle": "Showcase Limit Reached",
+  "showcaseLimitMessage": "You can only showcase up to 6 posts on your Business Channel. Please remove one before adding a new one.",
+  "userContextErrorTitle": "Upload Error",
+  "userContextErrorMessage": "User context is missing.",
+  "userErrorTitle": "User Error",
+  "userErrorMessage": "User data is missing. Please log in again."
+
 }  

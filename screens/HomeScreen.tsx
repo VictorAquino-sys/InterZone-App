@@ -377,6 +377,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
             uid: data.user.uid,
             name: data.user.name,
             avatar: avatarUrl || "", // fallback to empty string
+            mode: data.user.mode,
           },
           categoryKey: data.categoryKey,
           commentCount: data.commentCount ?? 0,
@@ -509,11 +510,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     setModalVisible(false);
   };
 
-  // Video container styles (adjusting based on full-screen mode)
-  // const videoContainerStyles = isFullScreen
-  // ? [styles.videoWrapper, styles.fullScreen] // Full-screen styles
-  // : styles.videoWrapper;
-
   const bounceStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bounceValue.value }],
   }));
@@ -563,13 +559,18 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       onDelete={handleDeletePost}
       onReport={handleReportPress}
       onOpenImage={openImageModal}
-      onUserProfile={(userId) => navigation.navigate('UserProfile', { userId })}
+      onUserProfile={(userId) => {
+        if (item.user.mode === 'business') {
+          navigation.navigate('BusinessChannel', { businessUid: userId });
+        } else {
+          navigation.navigate('UserProfile', { userId });
+        }
+      }}      
+      
       formatDate={formatDate}
-
       isFullScreen={isFullScreen} // Pass full-screen state
       toggleFullScreen={toggleFullScreen} // Pass the function to toggle full-screen mode
       // onVideoClick={handleVideoClick} // Pass the function to handle video click
-
 
     />
   );

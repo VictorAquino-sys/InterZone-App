@@ -273,6 +273,18 @@
     "businessVerified": "Empresario",
     "musicianVerified": "Músico",
     "tutorVerified": "Mentor",
+    "editBusinessProfile": "Editar Perfil de Negocio",
+
+    "editBusinessProfileTitle": "Editar Perfil de Negocio",
+    "selectLogo": "Seleccionar Logo",
+    "businessName": "Nombre del Negocio",
+    "businessDescription": "Descripción del Negocio",
+    "saveChanges": "Guardar Cambios",
+    "successTitle": "Éxito",
+    "businessProfileUpdated": "Perfil de negocio actualizado correctamente.",
+    "errorTitle": "Error",
+    "updateBusinessProfileError": "No se pudo actualizar el perfil del negocio.",
+    "businessNameRequired": "Se requiere el nombre del negocio.",
 
     "loading": "Cargando...",
 
@@ -348,7 +360,44 @@
         }
     },
 
-    "distributeQrButton": "Distribuir códigos QR"
+    "distributeQrButton": "Distribuir códigos QR",
+    "applyBusiness": {
+        "title": "Solicita una cuenta de negocio",
+        "businessName": "Nombre del negocio",
+        "category": "Categoría (por ejemplo, Restaurante, Tutor, Músico)",
+        "description": "Describe tu negocio",
+        "submitButton": "Enviar solicitud",
+        "missingFieldsTitle": "Faltan campos",
+        "missingFieldsMessage": "Por favor completa todos los campos.",
+        "successTitle": "✅ Solicitud enviada",
+        "successMessage": "Revisaremos la información de tu negocio pronto.",
+        "errorTitle": "❌ Error",
+        "errorMessage": "Algo salió mal. Por favor, intenta nuevamente más tarde."
+    },
 
+    "businessChannel": {
+        "verifiedBusiness": "Negocio verificado",
+        "mediaFeed": "Galería de medios",
+        "noPosts": "Aún no hay publicaciones.",
+        "noDescription": "No se ha proporcionado una descripción.",
+        "deleteTitle": "Eliminar publicación",
+        "deleteMessage": "¿Estás seguro de que deseas eliminar esta publicación?",
+        "businessNotFound": "Negocio no encontrado."
+    },
+
+    "delete": "Eliminar",
+    "postAs": "Publicar como:",
+    "featureOnChannel": "Destacar en el canal",
+    "uploading": "Subiendo...",
+    "uploadFailedTitle": "Error de carga",
+    "uploadFailedMessage": "No se pudo subir el video después de varios intentos.",
+    "authErrorTitle": "Error de autenticación",
+    "authErrorMessage": "Debes iniciar sesión para publicar.",
+    "showcaseLimitTitle": "Límite de publicaciones destacadas",
+    "showcaseLimitMessage": "Solo puedes mostrar hasta 6 publicaciones en tu canal. Elimina una antes de añadir otra.",
+    "userContextErrorTitle": "Error de carga",
+    "userContextErrorMessage": "Falta el contexto del usuario.",
+    "userErrorTitle": "Error de usuario",
+    "userErrorMessage": "Faltan los datos del usuario. Por favor, inicia sesión nuevamente."
        
 } 
