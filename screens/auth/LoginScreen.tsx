@@ -3,6 +3,7 @@ import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPasswor
 import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import image from '../../assets/localbrands_1.png';
+import BG_PE from '../../assets/peru_background_login.png';
 import GoogleIcon from '../../assets/google_icon.png'; // TypeScript-compatible
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
 import { Alert } from 'react-native';
@@ -411,7 +412,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground source={image} resizeMode="cover" style={styles.rootContainer}
+    <ImageBackground source={BG_PE} resizeMode="cover" style={styles.rootContainer}
     >
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
