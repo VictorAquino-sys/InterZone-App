@@ -1,12 +1,12 @@
 import React, { useContext, useState, useEffect, useRef, FunctionComponent } from 'react';
-import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform, NativeEventEmitter, NativeModules } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform, NativeEventEmitter, NativeModules, Switch } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { usePosts } from '../../src/contexts/PostsContext';
 import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
 import { db } from '../../src/config/firebase';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
-import { Timestamp, collection, addDoc, doc, getDoc } from "firebase/firestore";
+import { Timestamp, collection, addDoc, doc, getDoc, query, getDocs, where } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import i18n from '@/i18n';
@@ -22,17 +22,18 @@ import { TabParamList } from '../../src/navigationTypes';
 import { Video } from 'expo-av';
 import { app } from '../../src/config/firebase';
 import * as FileSystem from 'expo-file-system';  // Import FileSystem from expo-file-system
-import * as ScreenOrientation from 'expo-screen-orientation';
-import { Video as VideoCompressor } from 'react-native-compressor';
+// import * as ScreenOrientation from 'expo-screen-orientation';
+// import { Video as VideoCompressor } from 'react-native-compressor';
 import { getReadableVideoPath, saveVideoToAppStorage, validateVideoFile, uploadVideoWithCompression } from '@/utils/videoUtils';
 import { isValidFile, showEditor } from 'react-native-video-trim';
-import * as MediaLibrary from 'expo-media-library';
+// import * as MediaLibrary from 'expo-media-library';
 import { getProfaneWords } from '@/utils/profanityFilter';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
 const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const auth = getAuth();
+  const { user } = useUser();
   const authUser = auth.currentUser;
   const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [postText, setPostText] = useState<string>('');
@@ -46,7 +47,12 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [isTrimming, setIsTrimming] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null); // New state to track media type
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
+  const [isShowcase, setIsShowcase] = useState(false); // 🔹 Showcase toggle state
 
+  const [postingAsBusiness, setPostingAsBusiness] = useState<boolean>(
+    user?.accountType === 'business' && user?.businessVerified === true
+  );
+  
   const [locationIconVisible, setLocationIconVisible] = useState(true);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>('');
@@ -64,7 +70,15 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const isCategorySelected = selectedCategory !== '';
   const isLocationReady = !locationLoading;
 
-  const { user } = useUser(); // Use the useUser hook
+  const displayName = postingAsBusiness
+  ? user?.businessProfile?.name || user?.name
+  : user?.name;
+
+  const displayAvatar = postingAsBusiness
+    ? user?.businessProfile?.avatar || user?.avatar
+    : user?.avatar;
+
+
   const { setPosts } = usePosts();
   const storage = getStorage(app);
 
@@ -448,7 +462,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           await new Promise((res) => setTimeout(res, 2000)); // wait before retry
         }
       }
-      Alert.alert('Upload Failed', 'Video could not be uploaded after multiple attempts.');
+      Alert.alert(i18n.t('uploadFailedTitle'), i18n.t('uploadFailedMessage'))      
       return null;
     })();
   }
@@ -458,7 +472,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   // Handle Creating a Post button
   const handleDone = async () => {
     if (!authUser || !authUser.uid) {
-      Alert.alert("Authentication Error", "You must be logged in to post.");
+      Alert.alert(i18n.t('authErrorTitle'), i18n.t('authErrorMessage'))
       return;
     }
 
@@ -487,6 +501,29 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
     setUploading(true);
 
+    if (postingAsBusiness && isShowcase) {
+      try {
+        const showcaseQuery = query(
+          collection(db, 'posts'),
+          where('user.uid', '==', authUser.uid),
+          where('showcase', '==', true)
+        );
+        const snapshot = await getDocs(showcaseQuery);
+    
+        if (snapshot.size >= 6) {
+          Alert.alert(i18n.t('showcaseLimitTitle'), i18n.t('showcaseLimitMessage'))
+
+          setUploading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("🔥 Error checking showcase post limit:", err);
+        Alert.alert("Error", "Could not verify showcase post limit. Please try again.");
+        setUploading(false);
+        return;
+      }
+    }
+
     try {
       // Fetch the latest user data from Firestore
       const userRef = doc(db, "users", authUser.uid);
@@ -504,7 +541,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         imageUrl = await handleImageUpload(imageUri) || '';
       } else if (mediaType === 'video' && videoUri) {
         if (!user) {
-          Alert.alert("Upload Error", "User context is missing.");
+          Alert.alert(i18n.t('userContextErrorTitle'), i18n.t('userContextErrorMessage'))
           return;
         }
         const result = await uploadWithRetry(() =>
@@ -519,6 +556,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         videoStoragePath = result.storagePath;
       }
 
+      if (!user) {
+        Alert.alert(i18n.t('userErrorTitle'), i18n.t('userErrorMessage'))
+        return;
+      }
+
       // Create post with latest user data
       const postData = {
         city: location,
@@ -530,13 +572,22 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         videoPath: videoStoragePath || "", // Store video path for later use
         user: {
           uid: authUser.uid,
-          name: latestUserData.name || "Anonymous", // Use updated name
-          avatar: latestUserData.avatar || "", 
+          name: postingAsBusiness
+            ? user.businessProfile?.name || user.name
+            : user.name,
+          avatar: postingAsBusiness
+            ? user.businessProfile?.avatar || user.avatar || ""
+            : user.avatar || "",
+          description: postingAsBusiness
+            ? user.businessProfile?.description
+            : user.description || '',
+            mode: postingAsBusiness ? 'business' : 'individual' as 'business' | 'individual', // ✅ Fix here
         },
         categoryKey: selectedCategory,
         commentCount: 0,
         commentsEnabled: commentsEnabled,
         verifications: user?.verifications || {},
+        showcase: isShowcase // 🔹 Save showcase field
       };
 
       // Add post to Firestore
@@ -580,6 +631,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       setImagePath(null);      // ✅ Clear stored image path
       setVideoPath(null); // Clear video path
       setSelectedCategory(''); // ✅ Reset selected category
+      setIsShowcase(false);
       setMediaType(null); // Reset media type
     } catch (error: any) {
       console.error("Error adding post: ", error);
@@ -594,6 +646,23 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       <ScrollView contentContainerStyle={{ flexGrow: 1}}>
         <View style={styles.container}>
           <Text style={styles.screenTitle}>{i18n.t('createPost')}</Text>
+
+          {user?.accountType === 'business' && user.businessVerified && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={{ marginRight: 10 }}>{i18n.t('postAs')}</Text>
+              <TouchableOpacity onPress={() => setPostingAsBusiness(false)}>
+                <Text style={{ fontWeight: !postingAsBusiness ? 'bold' : 'normal' }}>
+                  {user.name}
+                </Text>
+              </TouchableOpacity>
+              <Text style={{ marginHorizontal: 6 }}>/</Text>
+              <TouchableOpacity onPress={() => setPostingAsBusiness(true)}>
+                <Text style={{ fontWeight: postingAsBusiness ? 'bold' : 'normal' }}>
+                {user.businessProfile?.name || user.name}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={styles.inputContainer}>
             <TextInput
@@ -638,39 +707,14 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
           <View style={styles.iconsContainer}>
             {/* Image picker button */}
-            <View style={{ alignItems: 'center' }}>
-              <TouchableOpacity 
-                onPress={() => {
-                  if (!isCategorySelected) {
-                    Alert.alert(i18n.t('imageTooltip.alertTitleCategory'), i18n.t('imageTooltip.alertMsgCategory'));
-                    return;
-                  }
-                  if (!isLocationReady) {
-                    Alert.alert(i18n.t('imageTooltip.alertTitleLocation'), i18n.t('imageTooltip.alertMsgLocation'));
-                    return;
-                  }
-                  if (mediaType === 'video') {
-                    Alert.alert(i18n.t('imageTooltip.alertTitleMedia'), i18n.t('imageTooltip.alertMsgMedia'));
-                    return;
-                  }
-                  pickImage();
-                }}
-              >
+            <TouchableOpacity 
+              onPress={pickImage} 
+              disabled={locationLoading || !isLocationReady || !isCategorySelected || mediaType === 'video'}>
                 <Ionicons 
                   name="image-outline" 
                   size={30} 
-                  color={(!isCategorySelected || !isLocationReady || mediaType === 'video') ? "gray" : "#FF9966"} 
-                />
-              </TouchableOpacity>
-              
-              {(!isCategorySelected || !isLocationReady) && (
-                <Text style={{ fontSize: 12, color: 'gray', marginTop: 4, textAlign: 'center' }}>
-                  {!isCategorySelected
-                    ? i18n.t('imageTooltip.selectCategory')
-                    : i18n.t('imageTooltip.waitLocation')}
-                </Text>
-              )}
-            </View>
+                  color={(!isCategorySelected || !isLocationReady || mediaType === 'video') ? "gray" : "#FF9966"} /> 
+            </TouchableOpacity>
 
             {/* Video picker button */}
             {isCategorySelected && isLocationReady && ( isVideoCategory && ( // Show video icon only when category and location are ready
@@ -723,12 +767,19 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           </View>
 
           {/* Show prompts when category or location is not ready */}
-          {/* {!isCategorySelected && (
+          {!isCategorySelected && (
             <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
-          )} */}
+          )}
 
           {locationLoading && (
             <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
+          )}
+
+          {user?.accountType === 'business' && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+              <Text>{i18n.t('featureOnChannel')}</Text>
+              <Switch value={isShowcase} onValueChange={setIsShowcase} />
+            </View>
           )}
 
           <TouchableOpacity
@@ -737,7 +788,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             disabled={uploading || locationLoading || !isCategorySelected || !isLocationReady}
             activeOpacity={0.8} // Optional: Controls the opacity on touch
           >
-            <Text style={styles.buttonText}>{uploading ? "Uploading..." : i18n.t('doneButton')}</Text>
+            <Text style={styles.buttonText}>{uploading ? i18n.t('uploading') : i18n.t('doneButton')}</Text>
           </TouchableOpacity>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, paddingHorizontal: 10 }}>

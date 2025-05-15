@@ -6,11 +6,12 @@ import i18n from '@/i18n';
 import { NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import homeIcon from './assets/home_icon_transparent.png'
-import magicIcon from './assets/magic_icon_transparent.png'
-import Ionicons from '@expo/vector-icons/Ionicons';
+import homeIcon from './assets/home_icon_transparent.png';
+import magicIcon from './assets/magic_icon_transparent.png';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable } from 'react-native';
+// import Ionicons from '@expo/vector-icons/Ionicons';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -46,6 +47,10 @@ import { logScreen } from '@/utils/analytics';
 import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
 import VerifyBusinessScreen from 'screens/business/VerifyBusinessScreen';
 import Animated, { BounceIn} from 'react-native-reanimated';
+import AdminApprovalScreen from 'screens/admin/AdminApprovalScreen';
+import BusinessChannelScreen from 'screens/business/BusinessChannelScreen';
+import ApplyBusinessScreen from 'screens/business/ApplyBusinessScreen';
+import EditBusinessProfileScreen from './screens/business/EditBusinessProfileScreen';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -139,7 +144,6 @@ function BottomTabs() {
       screenOptions={{ 
         headerShown: false,
         tabBarStyle: {
-          position: 'absolute',
           height: 35,
           backgroundColor: '#e8f5e9',
         },
@@ -156,7 +160,7 @@ function BottomTabs() {
                 {...props}
                 style={{
                   position: 'absolute',
-                  bottom: insets.bottom - 40,
+                  bottom: insets.bottom + 12,
                   left: iconSpacing,
                   backgroundColor: 'white',
                   borderRadius: 20,
@@ -190,7 +194,7 @@ function BottomTabs() {
                 {...props}
                 style={{
                   position: 'absolute',
-                  bottom: insets.bottom - 40,
+                  bottom: insets.bottom + 12,
                   left: postIconLeft,
                   backgroundColor: 'white',
                   borderRadius: 20,
@@ -304,7 +308,34 @@ function AuthenticatedApp() {
 
           <Stack.Screen name="DistributeQr" component={DistributeQrScreen} options={{ title: 'QR Distribution' }} />
 
-          <Stack.Screen name="VerifyBusiness" component={VerifyBusinessScreen} options={{ title: 'Verify Account' }}/>
+          <Stack.Screen name="VerifyBusiness" component={VerifyBusinessScreen} options={{ title: 'Verify Account' }} />
+
+          <Stack.Screen name="BusinessChannel" component={BusinessChannelScreen} options={{ title: 'Business Channel' }} />
+
+          <Stack.Screen name="ApplyBusiness" component={ApplyBusinessScreen} options={{ title: 'Apply for Business' }} />
+
+          <Stack.Screen
+            name="EditBusinessProfile"
+            component={EditBusinessProfileScreen}
+            options={({ navigation }) => ({
+              title: "Edit Business",
+              presentation: 'modal', // ✅ Modal behavior
+              animation: 'slide_from_bottom', // ✅ Smooth transition
+              headerLeft: () => (
+                <Pressable onPress={() => navigation.goBack()} style={{ paddingHorizontal: 16 }}>
+                  <Ionicons name="chevron-down" size={26} color="black" />
+                </Pressable>
+              ),
+            })}
+          />
+
+          {user?.isQrDistributor && (
+            <Stack.Screen
+              name="AdminApproval"
+              component={AdminApprovalScreen}
+              options={{ title: 'Review Business Applications' }}
+            />
+          )}
 
         </>
       )}

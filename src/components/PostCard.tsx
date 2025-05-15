@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef} from 'react';
-import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button, Modal } from 'react-native';
+import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button, Modal, ViewStyle, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Avatar from './Avatar';
 import LikeButton from './LikeButton';
@@ -16,6 +16,9 @@ import Toast from 'react-native-toast-message';
 // import { Video, ResizeMode } from 'expo-av';
 import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
 import { User } from '@/contexts/UserContext';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigationTypes';
 
 
 interface PostCardProps {
@@ -31,6 +34,9 @@ interface PostCardProps {
     // onVideoClick: (videoUrl: string) => void; // Pass the full-screen state
     isFullScreen: boolean;
     toggleFullScreen: () => void;
+    isShowcase?: boolean;
+    // style?: ViewStyle;
+
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -46,6 +52,9 @@ const PostCard: React.FC<PostCardProps> = ({
   // onVideoClick, // Add this prop
   isFullScreen,  // Full-screen state passed from HomeScreen
   toggleFullScreen,  // Full-screen toggle passed from HomeScreen
+  isShowcase,
+  // style
+
 }) => {
   const category = getCategoryByKey(item.categoryKey);
 
@@ -59,6 +68,9 @@ const PostCard: React.FC<PostCardProps> = ({
   const [commentCount, setCommentCount] = useState(item.commentCount ?? 0);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedComment, setEditedComment] = useState('');
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [zoomModalVisible, setZoomModalVisible] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
@@ -181,7 +193,7 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   
     return (
-      <View style={{ flexDirection: 'column', flexWrap: 'wrap', marginLeft: 15, gap: 6 }}>
+      <View style={styles.badgeContainer}>
         {badges}
       </View>
     );
@@ -338,7 +350,7 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   return (
-    <View style={styles.postItem}>
+    <View style={[styles.postItem, isShowcase && styles.showcaseBorder]}>
       <View style={styles.postHeader}>
         <View style={styles.userContainer}>
           <TouchableOpacity onPress={() => {
@@ -364,16 +376,24 @@ const PostCard: React.FC<PostCardProps> = ({
 
           <View style={styles.postDetails}>
             <TouchableOpacity
-              onPress={() => handleUserProfileNavigation(item.user?.uid || '')} // Use navigation for post owner profile
-              >
-              <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+              onPress={() => {
+                if (item.user?.mode === 'business') {
+                  navigation.navigate('BusinessChannel', {
+                    businessUid: item.user.uid,
+                  });
+                } else {
+                  onUserProfile(item.user.uid);
+                }
+              }}
+            >
+              <View style={{ flexDirection: 'column', alignItems: 'center'}}>
                 <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
                 <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
                 <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
               </View>
             </TouchableOpacity>
-            {getVerificationBadge()}
           </View>
+          {getVerificationBadge()}
         </View>
 
         <View style={styles.topRightIcons}>
@@ -395,6 +415,12 @@ const PostCard: React.FC<PostCardProps> = ({
         <View style={styles.toastContainer}>
           <Text style={styles.toastText}>{copyMessage}</Text>
         </View>
+      )}
+
+      {isShowcase && (
+        <Text style={{ color: '#4A90E2', fontWeight: 'bold', marginBottom: 8, marginLeft: 6 }}>
+          🌟 Featured by this business
+        </Text>
       )}
 
       {item.imageUrl && (
@@ -638,9 +664,26 @@ const PostCard: React.FC<PostCardProps> = ({
       )}
 
       {userId === item.user?.uid && (
-        <TouchableOpacity onPress={() => onDelete(item.id, item.imageUrl)} style={styles.deleteButton}>
-          <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
+        <TouchableOpacity
+          onPress={async () => {
+            if (isDeleting) return;
+            setIsDeleting(true);
+            try {
+              await onDelete(item.id, item.imageUrl);
+            } finally {
+              setIsDeleting(false);
+            }
+          }}
+          style={styles.deleteButton}
+          disabled={isDeleting}
+        >
+          {isDeleting ? (
+            <ActivityIndicator size="small" color="red" />
+          ) : (
+            <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
+          )}
         </TouchableOpacity>
+
       )}
     </View>
   );
@@ -682,7 +725,7 @@ const styles = StyleSheet.create({
   },
   postDetails: {
     flexDirection: 'row',
-    marginLeft: 10,
+    marginLeft: 4,
     flexShrink: 1,
   },
   userName: {
@@ -698,7 +741,6 @@ const styles = StyleSheet.create({
   postCity: {
     fontSize: 12,
     color: 'gray',
-    // marginBottom: 10,
   },
   postTimestamp: {
     fontSize: 11,
@@ -765,7 +807,8 @@ const styles = StyleSheet.create({
   deleteButton: {
     paddingVertical: 5,
     paddingHorizontal: 30,
-    alignItems: 'flex-end'
+    alignItems: 'flex-end',
+    opacity: 1,
   },
   deleteText: {
     color: 'red',
@@ -826,8 +869,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-
-
   fullScreenModal: {
     flex: 1,
     justifyContent: 'center',
@@ -897,5 +938,16 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 11,
     fontWeight: '500',
+  },
+  showcaseBorder: {
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+  },
+  badgeContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start', // aligns each badge to the left
+    marginTop: 6,
+    marginLeft: 10, // you can adjust this spacing as needed
+    gap: 4, // optional, if you want spacing between badges
   },
 });

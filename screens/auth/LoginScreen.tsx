@@ -2,7 +2,7 @@ import React, { useState, useEffect, FunctionComponent } from 'react'
 import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider, sendEmailVerification } from "firebase/auth";
 import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BG_PE from '../../assets/localbrands_1.png';
+import BG_PE from '../../assets/peru_background_login.png';
 import BG_US from '../../assets/usa_background_login.png';
 import GoogleIcon from '../../assets/google_icon.png'; // TypeScript-compatible
 import { auth, db } from '../../src/config/firebase'; // Import Firestore

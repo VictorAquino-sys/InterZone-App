@@ -5,12 +5,13 @@
 // Import necessary hooks and functions from React and Firebase
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Alert } from 'react-native';
-import { getAuth, User as FirebaseUser } from "firebase/auth";
+// import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
 import { auth, db } from '../../src/config/firebase';
 import * as RNLocalize from 'react-native-localize';
 import { setUserProps } from '@/utils/analytics';
 import { recordHandledError } from '@/utils/crashlytics';
+import { deepMerge } from '@/utils/merge';
 
 // Define Typescript interface for user data used in the app context
 export interface User {
@@ -24,6 +25,14 @@ export interface User {
   termsAccepted?: boolean;
   emailVerified?: boolean;
   isQrDistributor?: boolean;
+  accountType?: "individual" | "business";
+  businessVerified?: boolean;
+  businessProfile?: {
+    name: string;        // Business display name
+    avatar?: string;     // Business logo
+    description?: string;
+    category?: string;   // ✅ Add this line
+  };
   verifications?: {
     business?: boolean;
     musician?: boolean;
@@ -48,6 +57,13 @@ export interface UserData {
   blocked?: string[];
   termsAccepted?: boolean;
   isQrDistributor?: boolean;
+  accountType?: "individual" | "business";
+  businessVerified?: boolean;
+  businessProfile?: {
+    name: string;        // Business display name
+    avatar?: string;     // Business logo
+    description?: string;
+  };
   verifications?: {
     business?: boolean;
     musician?: boolean;
@@ -107,7 +123,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
 
           const userRef = doc(db, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
-          const locale = RNLocalize.getLocales()[0].languageCode;
+          const locale = RNLocalize.getLocales()[0].languageCode || 'en';
           console.log("Locale from RNLocalize:", locale); // Check what RNLocalize returns
 
           if(userSnap.exists()) {
@@ -137,6 +153,9 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               isQrDistributor: isQrDistributorClaim,
               verifications: userData.verifications || {},
               lastKnownLocation: userData.lastKnownLocation || undefined,
+              accountType: userData.accountType || "individual",
+              businessProfile: userData.businessProfile || undefined,
+              businessVerified: userData.businessVerified ?? false
             };
             console.log("User logged in with updated data:", updatedUser);
             setUser(updatedUser);
@@ -167,9 +186,8 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
   // Function to update user profile details, accepting partial user info.
   const updateUserProfile = (updates: Partial<User>) => {
     setUser(prev => {
-      const updated = { ...prev!, ...updates };
-  
-      return updated;
+      if (!prev) return prev;
+      return deepMerge(prev, updates);
     });
   };
 
@@ -203,7 +221,10 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             emailVerified: firebaseUser.emailVerified, // ✅ ADD HERE TOO
             isQrDistributor: isQrDistributorClaim,
             verifications: userData.verifications || {},
-            lastKnownLocation: userData.lastKnownLocation || undefined, 
+            lastKnownLocation: userData.lastKnownLocation || undefined,
+            accountType: userData.accountType || "individual",
+            businessProfile: userData.businessProfile || undefined,
+            businessVerified: userData.businessVerified ?? false
           };
 
           console.log("🔄 User manually refreshed:", updatedUser);

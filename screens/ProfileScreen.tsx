@@ -373,65 +373,94 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                         </View>
                     )}
                     </View>
+
                     <View style={styles.bottomSection}>
 
-                    <TouchableOpacity
-                        style={styles.buttonContainer} // Additional top margin for separation
-                        onPress={handleLogout}
-                    >
-                        <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 30, alignItems: 'center' }}>
-                        <Ionicons name="settings-outline" size={26} color="#555" />
-                    </TouchableOpacity>
-
-                    {/* ✅ Add this block below the settings icon */}
-                    {user?.isQrDistributor && (
                         <TouchableOpacity
-                        style={[styles.buttonContainer, { backgroundColor: '#007aff', marginTop: 36 }]}
-                        onPress={() => navigation.navigate('DistributeQr')}
+                            style={styles.buttonContainer} // Additional top margin for separation
+                            onPress={handleLogout}
                         >
-                        <Text style={styles.buttonText}>{i18n.t('distributeQrButton')}</Text>
+                            <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
                         </TouchableOpacity>
-                    )}
 
-                    <View style={styles.verificationButtonWrapper}>
-                        { unverifiedTypes.length > 0 && nextType && (
-                        <VerifyBusinessButton
-                            type={nextType}
-                            onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
-                        />
+                        <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 30, alignItems: 'center' }}>
+                            <Ionicons name="settings-outline" size={26} color="#555" />
+                        </TouchableOpacity>
+
+                        {/* ✅ Add this block below the settings icon */}
+                        {user?.isQrDistributor && (
+                            <TouchableOpacity
+                            style={[styles.buttonContainer, { backgroundColor: '#007aff', marginTop: 36 }]}
+                            onPress={() => navigation.navigate('DistributeQr')}
+                            >
+                            <Text style={styles.buttonText}>{i18n.t('distributeQrButton')}</Text>
+                            </TouchableOpacity>
                         )}
-                    </View>
 
-                    <Modal transparent visible={showSettings} animationType="slide">
-                        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
-                            <View style={styles.modalBox}>
-                                <Text style={styles.modalTitle}>{i18n.t('settings.title')}</Text>
-                                <TouchableOpacity style={styles.modalOption} onPress={() => {
-                                    setShowSettings(false);
-                                    navigation.navigate('DeleteAccount');
-                                }}>
-                                    <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>{i18n.t('deleteAccount.button')}</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}
-                                    style={[styles.modalOption, { marginTop: 20 }]}
-                                >
-                                <Text style={{ color: '#007aff', textAlign: 'center' }}>
-                                    {i18n.t('privacyPolicy')}
-                                </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity onPress={() => setShowSettings(false)}>
-                                    <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
-                                </TouchableOpacity>
-
-                            </View>
+                        {user?.isQrDistributor && (
+                        <TouchableOpacity
+                            style={[styles.buttonContainer, { backgroundColor: '#388e3c' }]}
+                            onPress={() => navigation.navigate('AdminApproval')}
+                        >
+                            <Text style={styles.buttonText}>Review Business Applications</Text>
                         </TouchableOpacity>
-                    </Modal>
+                        )}
+
+                        {user?.accountType === 'individual' && !user.businessVerified && (
+                        <TouchableOpacity
+                            style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
+                            onPress={() => navigation.navigate('ApplyBusiness')}
+                        >
+                            <Text style={styles.buttonText}>Apply for Business</Text>
+                        </TouchableOpacity>
+                        )}
+
+                        {user?.businessVerified && (
+                        <TouchableOpacity
+                            style={[styles.buttonContainer, { backgroundColor: '#6A1B9A' }]}
+                            onPress={() => navigation.navigate('EditBusinessProfile')}
+                        >
+                            <Text style={styles.buttonText}>{i18n.t('editBusinessProfile')}</Text>
+                        </TouchableOpacity>
+                        )}
+
+                        <View style={styles.verificationButtonWrapper}>
+                            { unverifiedTypes.length > 0 && nextType && (
+                            <VerifyBusinessButton
+                                type={nextType}
+                                onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
+                            />
+                            )}
+                        </View>
+
+                        <Modal transparent visible={showSettings} animationType="slide">
+                            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
+                                <View style={styles.modalBox}>
+                                    <Text style={styles.modalTitle}>{i18n.t('settings.title')}</Text>
+                                    <TouchableOpacity style={styles.modalOption} onPress={() => {
+                                        setShowSettings(false);
+                                        navigation.navigate('DeleteAccount');
+                                    }}>
+                                        <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>{i18n.t('deleteAccount.button')}</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}
+                                        style={[styles.modalOption, { marginTop: 20 }]}
+                                    >
+                                    <Text style={{ color: '#007aff', textAlign: 'center' }}>
+                                        {i18n.t('privacyPolicy')}
+                                    </Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setShowSettings(false)}>
+                                        <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
+                                    </TouchableOpacity>
+
+                                </View>
+                            </TouchableOpacity>
+                        </Modal>
+                        
                     </View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -442,8 +471,6 @@ export default ProfileScreen;
 
 const styles = StyleSheet.create({
     container:{
-        // flex: 1,
-        // justifyContent: 'center',
         alignItems: 'center',
         padding: 10,
         backgroundColor: 'aliceblue',
@@ -500,18 +527,23 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     buttonContainer: {
-        backgroundColor: '#4A90E2', // Change as necessary
-        borderRadius: 10,
-        padding: 10,
+        backgroundColor: '#4A90E2',
+        borderRadius: 14,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 10,
-        marginBottom: 10,
-        width: '60%',
+        marginTop: 12,
+        width: '100%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     buttonText: {
         color: 'white',
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
     },
     descriptionWrapper: {
@@ -608,7 +640,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
     },
     verificationButtonWrapper: {
-        marginTop: 20,
+        marginTop: 18,
         alignItems: 'center',
         width: '100%',
     },

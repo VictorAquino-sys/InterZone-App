@@ -10,7 +10,13 @@ export interface Post {
     timestamp: Timestamp | null; // Conside using a speficic type like Date or firebase.firestore.Timestamp
     imageUrl: string;
     videoUrl: string | null; // Add videoUrl to Post interface
-    user: User;
+    user: {
+        uid: string;
+        name: string;
+        avatar: string;
+        description?: string;
+        mode?: 'business' | 'individual'; // ✅ Add this to distinguish who posted
+    };
     likedBy?: string[];
     categoryKey: string;
     commentCount?: number;

@@ -21,6 +21,11 @@ export type RootStackParamList = {
     MessagesScreen: undefined;
     DistributeQr: undefined;
     VerifyBusiness: { type: 'business' | 'musician' | 'tutor' }; // ✅ Add this
+    AdminApproval: undefined;
+    BusinessChannel: { businessUid: string };
+    ApplyBusiness: undefined;
+    EditBusinessProfile: undefined; // ✅ Add this
+
 
   };
 
