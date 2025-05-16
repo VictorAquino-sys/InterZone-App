@@ -44,6 +44,8 @@ export interface User {
     longitude: number;
     timestamp: any;
   };
+  averageRating?: number;
+  ratingCount?: number;
 }
 
 // Define a separate interface for the full Firestore user document

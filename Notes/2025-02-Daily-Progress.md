@@ -1,5 +1,16 @@
 (Daily logs of what have been worked on)
 
+### 05-15
+    Add a star rating system for businesses
+    - Visual Feedback After Rating
+    - Show Average Rating on Business Channel Header
+    - Allow Seeing Other Reviews
+    - Prevent Accidental Double Ratings
+    - Show Rating Prompt on Post Likes
+
+    Install Dependencies for star rating UI:
+    npm install react-native-star-rating-widget
+
 ### 05-9
     Add an "Accept/Decline button for incoming requests
     Auto refresh the list after accepting

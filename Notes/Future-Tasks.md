@@ -2,6 +2,9 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+# 5 - 15
+Implement the rating prompt after liking a post (if the user hasn't rated that business yet).
+
 ### 4-24
     Restrict users to only allow to see nearby people instead of all InterZone Users. (Done)
     display error messages as toast/snackbar instead of alerts for a smoother UX.

@@ -79,6 +79,8 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const videoRef = useRef<VideoRef | null>(null); // Use VideoRef for the reference type
 
+  const [businessRating, setBusinessRating] = useState<{ average: number; count: number } | null>(null);
+
   const [status, setStatus] = useState<any>({}); // Update state with appropriate type for Video status
   const [showControls, setShowControls] = useState(false); // To control visibility of the play/pause button
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false); // Modal visibility state
@@ -101,6 +103,26 @@ const PostCard: React.FC<PostCardProps> = ({
     setCommentCount(item.commentCount ?? 0);
 
   }, [item.commentCount]);
+
+  useEffect(() => {
+    const fetchBusinessRating = async () => {
+      if (item.user?.mode === 'business') {
+        const docRef = doc(db, 'businessProfiles', item.user.uid);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.averageRating !== undefined && data.ratingCount !== undefined) {
+            setBusinessRating({
+              average: data.averageRating,
+              count: data.ratingCount,
+            });
+          }
+        }
+      }
+    };
+  
+    fetchBusinessRating();
+  }, [item.user?.uid]);
 
 
   // Fetch recent comments only when toggling open
@@ -387,7 +409,16 @@ const PostCard: React.FC<PostCardProps> = ({
               }}
             >
               <View style={{ flexDirection: 'column', alignItems: 'center'}}>
-                <Text style={styles.userName}>{item.user?.name || i18n.t('anonymous')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Text style={styles.userName}>
+                    {item.user?.name || i18n.t('anonymous')}
+                  </Text>
+                  {item.user?.mode === 'business' && businessRating && (
+                    <Text style={styles.ratingInline}>
+                      &nbsp;★ {businessRating.average.toFixed(1)} ({businessRating.count})
+                    </Text>
+                  )}
+                </View>
                 <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
                 <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
               </View>
@@ -400,9 +431,7 @@ const PostCard: React.FC<PostCardProps> = ({
             {category && (
                 <Image source={category.icon} style={styles.categoryIcon} />
             )}
-          <TouchableOpacity onPress={() => onReport(item.id, item.user.uid)}>
-            <Ionicons name="ellipsis-vertical" size={20} color="#888" style={styles.moreIconInline} />
-          </TouchableOpacity>
+
         </View>
       </View>
 
@@ -478,16 +507,48 @@ const PostCard: React.FC<PostCardProps> = ({
         </Modal>
       )}
 
-      <View style={styles.likeButtonWrapper}>
-        <LikeButton postId={item.id} userId={userId} />
+      <View style={styles.actionRow}>
+        {/* Left Side: Like + Comment */}
+        <View style={styles.leftActions}>
+          <LikeButton postId={item.id} userId={userId} />
+          {item.commentsEnabled !== false && (
+            <TouchableOpacity onPress={handleToggleComments} style={styles.commentButton}>
+              <Ionicons name="chatbubble-outline" size={20} color="#888" />
+              <Text style={styles.commentCount}>{commentCount}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-        {item.commentsEnabled !== false && ( 
-          <TouchableOpacity onPress={handleToggleComments} style={styles.commentButton}>
-            <Ionicons name="chatbubble-outline" size={20} color= "#888" />
-            <Text style={styles.commentCount}>{commentCount}</Text>
+        {/* Right Side: Delete + Ellipsis */}
+        <View style={styles.rightActions}>
+          {userId === item.user?.uid && (
+            <TouchableOpacity
+              onPress={async () => {
+                if (isDeleting) return;
+                setIsDeleting(true);
+                try {
+                  await onDelete(item.id, item.imageUrl);
+                } finally {
+                  setIsDeleting(false);
+                }
+              }}
+              style={styles.deleteWrapper}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="red" />
+              ) : (
+                <Ionicons name="trash-outline" size={20} color="red" />
+              )}
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity onPress={() => onReport(item.id, item.user.uid)} style={styles.ellipsisWrapper}>
+            <Ionicons name="ellipsis-vertical" size={20} color="#888" />
           </TouchableOpacity>
-        )}
+        </View>
       </View>
+
 
       {/* 🔽 Expanded Comments Section */}
       {showComments && (
@@ -659,31 +720,7 @@ const PostCard: React.FC<PostCardProps> = ({
             </View>
           </KeyboardAvoidingView>
 
-
         </View>
-      )}
-
-      {userId === item.user?.uid && (
-        <TouchableOpacity
-          onPress={async () => {
-            if (isDeleting) return;
-            setIsDeleting(true);
-            try {
-              await onDelete(item.id, item.imageUrl);
-            } finally {
-              setIsDeleting(false);
-            }
-          }}
-          style={styles.deleteButton}
-          disabled={isDeleting}
-        >
-          {isDeleting ? (
-            <ActivityIndicator size="small" color="red" />
-          ) : (
-            <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
-          )}
-        </TouchableOpacity>
-
       )}
     </View>
   );
@@ -731,6 +768,7 @@ const styles = StyleSheet.create({
   userName: {
     fontWeight: 'bold',
     marginTop: 8,
+    marginLeft: 6,
   },
   viewAllCommentsText: {
     color: '#007aff',
@@ -768,13 +806,34 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 12,
   },
-  likeButtonWrapper: {
-    marginTop: 8,
-    paddingVertical: 6,
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 12,
+    marginTop: 8,
+  },
+  
+  leftActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  
+  deleteWrapper: {
+    marginRight: 4,
+    paddingVertical: 4,
+  },
+  
+  ellipsisWrapper: {
+    paddingVertical: 4,
+  },
+
   commentButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -821,7 +880,7 @@ const styles = StyleSheet.create({
   categoryIcon: {
     width: 40,
     height: 40,
-    marginRight: 8,
+    marginRight: 2,
     marginBottom: 20,
   },
   moreIconInline: {
@@ -946,8 +1005,14 @@ const styles = StyleSheet.create({
   badgeContainer: {
     flexDirection: 'column',
     alignItems: 'flex-start', // aligns each badge to the left
-    marginTop: 6,
-    marginLeft: 10, // you can adjust this spacing as needed
+    marginTop: 0,
+    marginLeft: 20, // you can adjust this spacing as needed
     gap: 4, // optional, if you want spacing between badges
+  },
+  ratingInline: {
+    fontSize: 13,
+    color: '#555',
+    fontWeight: '500',
+    // gap: 4,
   },
 });

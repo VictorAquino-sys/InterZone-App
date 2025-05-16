@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Post } from '@/contexts/PostsContext';
 import { User } from '@/contexts/UserContext';
+import { useUser } from '@/contexts/UserContext';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../src/navigationTypes';
 import PostCard from '@/components/PostCard';
 import Avatar from '@/components/Avatar';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import BusinessPostCard from '@/components/businessPostCard';
 import i18n from '@/i18n'; 
 import { deleteDoc, doc } from 'firebase/firestore';
+import BusinessReviewListModal from '@/components/BusinessReviewListModal';
+import BusinessRatingModal from '@/components/businessRatingModal';
+import { useNavigation } from '@react-navigation/native';
 import { Alert } from 'react-native';
 
 interface BusinessChannelRouteParams {
@@ -20,14 +26,23 @@ interface BusinessChannelRouteParams {
 const BusinessChannelScreen = () => {
   const route = useRoute<RouteProp<Record<string, BusinessChannelRouteParams>, string>>();
   const { businessUid } = route.params;
+  const { user } = useUser();
 
   const [business, setBusiness] = useState<User | null>(null);
+  const [businessRating, setBusinessRating] = useState<{ average: number; count: number } | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showReviewList, setShowReviewList] = useState(false);
+  const [shouldRefreshReviews, setShouldRefreshReviews] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
 
   useEffect(() => {
     const fetchBusinessData = async () => {
+      // await fetchBusinessRating(); // 👈 rating handled separately
+
       try {
         const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', businessUid)));
         if (!userDoc.empty) {
@@ -56,47 +71,77 @@ const BusinessChannelScreen = () => {
     fetchBusinessData();
   }, [businessUid]);
 
-    const handleDeletePost = async (postId: string, imageUrl?: string | null) => {
-        Alert.alert(
-            i18n.t('businessChannel.deleteTitle'),
-            i18n.t('businessChannel.deleteMessage'),
-        [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: i18n.t('delete'),
-                style: "destructive",
-            onPress: async () => {
-                try {
-                setDeletingPostId(postId); // 🔄 start loading
-    
-                await deleteDoc(doc(db, 'posts', postId));
-                setPosts(prev => prev.filter(post => post.id !== postId));
-                } catch (error) {
-                console.error('❌ Error deleting post:', error);
-                } finally {
-                setDeletingPostId(null); // ✅ stop loading
-                }
-            },
-            },
-        ]
-        );
-    };
+  useLayoutEffect(() => {
+    if (!business || user?.uid === businessUid) return;
+  
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('ChatScreen', {
+            friendId: businessUid,
+            friendName: business.businessProfile?.name || business.name || 'Business',
+          })}
+          style={{ marginRight: 16 }}
+        >
+          <Ionicons name="chatbubble-ellipses-outline" size={24} color="#007aff" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, businessUid, business, user?.uid]);
 
-    if (loading) {
-        return (
-        <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#007aff" />
-        </View>
-        );
+  const fetchBusinessRating = async () => {
+    const profileDocRef = doc(db, 'businessProfiles', businessUid);
+    const profileSnap = await getDoc(profileDocRef);
+    if (profileSnap.exists()) {
+      const profileData = profileSnap.data();
+      setBusinessRating({
+        average: profileData.averageRating ?? 0,
+        count: profileData.ratingCount ?? 0,
+      });
     }
+  };
 
-    if (!business) {
-        return (
-        <View style={styles.centered}>
-            <Text>{i18n.t('businessChannel.businessNotFound')}</Text>
-        </View>
-        );
-    }
+  const handleDeletePost = async (postId: string, imageUrl?: string | null) => {
+      Alert.alert(
+          i18n.t('businessChannel.deleteTitle'),
+          i18n.t('businessChannel.deleteMessage'),
+      [
+          { text: "Cancel", style: "cancel" },
+          {
+              text: i18n.t('delete'),
+              style: "destructive",
+          onPress: async () => {
+              try {
+              setDeletingPostId(postId); // 🔄 start loading
+  
+              await deleteDoc(doc(db, 'posts', postId));
+              setPosts(prev => prev.filter(post => post.id !== postId));
+              } catch (error) {
+              console.error('❌ Error deleting post:', error);
+              } finally {
+              setDeletingPostId(null); // ✅ stop loading
+              }
+          },
+          },
+      ]
+      );
+  };
+
+  if (loading) {
+      return (
+      <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#007aff" />
+      </View>
+      );
+  }
+
+  if (!business) {
+      return (
+      <View style={styles.centered}>
+          <Text>{i18n.t('businessChannel.businessNotFound')}</Text>
+      </View>
+      );
+  }
 
   return (
     <View style={styles.container}>
@@ -121,8 +166,23 @@ const BusinessChannelScreen = () => {
                 {business.businessProfile?.description || business.description || i18n.t('businessChannel.noDescription')}
                 </Text>
 
+                <View style={{ alignItems: 'center', marginTop: 12 }}>
+                  <TouchableOpacity onPress={() => setShowRatingModal(true)} style={styles.ratingBox}>
+                    <Ionicons name="star" size={20} color="#FFD700" style={{ marginRight: 6 }} />
+                      <Text style={styles.ratingText}>
+                        {businessRating && businessRating.count > 0
+                          ? `${businessRating.average.toFixed(1)} ★ (${businessRating.count})`
+                          : '⭐ No ratings yet'}
+                      </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity onPress={() => setShowReviewList(true)} style={{ marginTop: 6 }}>
+                  <Text style={{ color: '#007aff', fontSize: 14 }}>View all reviews</Text>
+                </TouchableOpacity>    
+
                 <Text style={styles.sectionTitle}>{i18n.t('businessChannel.mediaFeed')}</Text>
-                
+
                 </View>
             }
             renderItem={({ item }) => (
@@ -145,6 +205,27 @@ const BusinessChannelScreen = () => {
 
             ListEmptyComponent={<Text style={styles.emptyFeed}>{i18n.t('businessChannel.noPosts')}</Text>}
         />
+      <BusinessRatingModal
+        visible={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        businessId={businessUid}
+        businessName={business.businessProfile?.name || business.name}
+        onSubmitted={async () => {  
+          setShouldRefreshReviews(true);
+          await fetchBusinessRating(); // ✅ update right away
+        }}
+      />
+
+      <BusinessReviewListModal
+        visible={showReviewList}
+        onClose={() => {
+          setShowReviewList(false);
+          setShouldRefreshReviews(false); // Reset the flag when closed
+        }}
+        businessId={businessUid}
+        refreshTrigger={shouldRefreshReviews}
+      />
+
     </View>
   );
 };
@@ -240,6 +321,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 1,
+  },
+  ratingBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  ratingText: {
+    fontSize: 15,
+    color: '#444',
+    fontWeight: '500',
   },
   
 });

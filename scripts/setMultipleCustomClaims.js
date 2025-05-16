@@ -34,7 +34,7 @@ const uids = [
     }
 
     try {
-      await auth.setCustomUserClaims(uid, { isQrDistributor: true });
+      await auth.setCustomUserClaims(uid, { admin: true, isQrDistributor: true });
       console.log(`✅ Custom claim set for UID: ${uid}`);
     } catch (error) {
       console.error(`❌ Failed to set custom claim for UID ${uid}:`, error.message);
