@@ -360,7 +360,8 @@
       "tutor": "Tutor"
     }
   },
-
+  "reviewBusinessApplications": "Review Business Applications",
+  "applyForBusiness": "Apply for Business",
   "distributeQrButton": "Distribute QR Codes",
   "editBusinessProfileTitle": "Edit Business Profile",
   "selectLogo": "Select Logo",

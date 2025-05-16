@@ -63,6 +63,7 @@
 * For production:
     Android
     npx eas build --platform android --profile production 
+    
     IOS/Submit
     npx eas build --platform ios 
     (OR)
