@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FunctionComponent } from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from '../config/firebase';
@@ -13,6 +13,7 @@ type LikeButtonProps = {
 const LikeButton: FunctionComponent<LikeButtonProps> = ({ postId, userId, likedCount = 0 }) => {
     const [liked, setLiked] = useState<boolean>(false);
     const [likeCount, setLikeCount] = useState<number>(likedCount);
+    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchLikeStatus = async () => {
@@ -29,6 +30,9 @@ const LikeButton: FunctionComponent<LikeButtonProps> = ({ postId, userId, likedC
     }, [postId, userId]);
 
     const toggleLike = async () => {
+        if (loading) return; // Prevent multiple presses
+        setLoading(true);
+
         const postRef = doc(db, "posts", postId);
       
         try {
@@ -51,13 +55,19 @@ const LikeButton: FunctionComponent<LikeButtonProps> = ({ postId, userId, likedC
           console.error("❌ Error toggling like:", error);
           setLiked(prev => !prev);
           setLikeCount(prev => liked ? prev - 1 : prev + 1);
+        } finally {
+          setLoading(false);
         }
     };
 
     return (
-        <TouchableOpacity onPress={toggleLike} style={styles.button}>
+        <TouchableOpacity onPress={toggleLike} style={styles.button} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator size="small" color="grey" style={{ marginRight: 6 }} />
+          ) : (
             <FontAwesome name={liked ? 'heart' : 'heart-o'} size={21} color={liked ? 'red' : 'grey'} />
-            <Text style={styles.count}>{likeCount}</Text>
+          )}
+          <Text style={styles.count}>{likeCount}</Text>
       </TouchableOpacity>
     );
 };
