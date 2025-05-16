@@ -16,6 +16,8 @@ import {
   getUserBusinessRating,
   updateBusinessRatingStats,
 } from '@/utils/businessRating';
+import i18n from '@/i18n';
+
 
 interface Props {
   visible: boolean;
@@ -61,8 +63,8 @@ const BusinessRatingModal: React.FC<Props> = ({ visible, onClose, businessId, bu
 
   const handleSubmit = async () => {
     if (!stars) {
-      Alert.alert('Please select a rating before submitting.');
-      return;
+        Alert.alert(i18n.t('businessRating.selectStarsTitle'));
+        return;
     }
 
     console.log('Auth UID:', user?.uid);
@@ -81,10 +83,10 @@ const BusinessRatingModal: React.FC<Props> = ({ visible, onClose, businessId, bu
       await updateBusinessRatingStats(businessId);
       onSubmitted(); // Notify parent to refresh reviews
       onClose();     // Close modal
-      Alert.alert('Thank you!', 'Your review has been submitted.');
+      Alert.alert(i18n.t('businessRating.successTitle'), i18n.t('businessRating.successMessage'));
     } catch (error) {
       console.error('Error submitting rating:', error);
-      Alert.alert('Oops!', 'Something went wrong. Please try again later.');
+      Alert.alert(i18n.t('oops'), i18n.t('businessRating.errorMessage'));
     }
     setLoading(false);
   };
@@ -93,34 +95,37 @@ const BusinessRatingModal: React.FC<Props> = ({ visible, onClose, businessId, bu
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <Text style={styles.title}>Rate {businessName}</Text>
-
+            <Text style={styles.title}>
+                {i18n.t('businessRating.rateTitle', { name: businessName })}
+            </Text>
           {loading && !existingRatingLoaded ? (
             <ActivityIndicator size="large" />
           ) : (
             <>
-              <StarRating
-                rating={stars}
-                onChange={setStars}
-                starSize={32}
-                animationConfig={{ scale: 1.2 }}
-              />
+                <StarRating
+                    rating={stars}
+                    onChange={setStars}
+                    starSize={32}
+                    animationConfig={{ scale: 1.2 }}
+                />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Leave a short review (optional)"
-                value={review}
-                onChangeText={setReview}
-                multiline
-              />
+                <TextInput
+                    style={styles.input}
+                    placeholder={i18n.t('businessRating.placeholder')}
+                    value={review}
+                    onChangeText={setReview}
+                    multiline
+                />
 
-              <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
-                <Text style={styles.submitText}>{existingRatingLoaded && stars > 0 ? 'Update' : 'Submit'}</Text>
-              </TouchableOpacity>
+                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
+                <Text style={styles.submitText}>
+                    {existingRatingLoaded && stars > 0 ? i18n.t('businessRating.update') : i18n.t('businessRating.submit')}
+                </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity onPress={onClose} style={styles.cancel}>
-                <Text style={{ color: '#888' }}>Cancel</Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={onClose} style={styles.cancel}>
+                    <Text style={{ color: '#888' }}>Cancel</Text>
+                </TouchableOpacity>
             </>
           )}
         </View>

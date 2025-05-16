@@ -17,6 +17,7 @@ import { deepMerge } from '@/utils/merge';
 export interface User {
   uid: string;
   name: string;
+  email?: string;
   avatar?: string;
   country?: string;
   language?: string;
@@ -32,6 +33,8 @@ export interface User {
     avatar?: string;     // Business logo
     description?: string;
     category?: string;   // ✅ Add this line
+    location?: string; // ✅ Add this
+    email?: string;      // ✅ added
   };
   verifications?: {
     business?: boolean;
@@ -65,6 +68,8 @@ export interface UserData {
     name: string;        // Business display name
     avatar?: string;     // Business logo
     description?: string;
+    location?: string; // ✅ Add this
+    email?: string;      // ✅ added
   };
   verifications?: {
     business?: boolean;
@@ -147,6 +152,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             const updatedUser: User = {
               uid: firebaseUser.uid,
               name: userData.name || firebaseUser.displayName || "Default Name",
+              email: userData.email || firebaseUser.email || '',
               avatar: userData.avatar || firebaseUser.photoURL || "",
               country: userData.country || "Unknown",
               language: RNLocalize.getLocales()[0].languageCode,
@@ -216,6 +222,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
           const updatedUser: User = {
             uid: firebaseUser.uid,
             name: userData.name || firebaseUser.displayName || "Default Name",
+            email: userData.email || firebaseUser.email || '',
             avatar: userData.avatar || firebaseUser.photoURL || "",
             country: userData.country || "Unknown",
             language: RNLocalize.getLocales()[0].languageCode,

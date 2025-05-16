@@ -6,6 +6,7 @@ import { db } from '@/config/firebase';
 import Avatar from './Avatar';
 import { Timestamp } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
+import i18n from '@/i18n';
 
 interface Props {
   visible: boolean;
@@ -64,9 +65,9 @@ const BusinessReviewListModal: React.FC<Props> = ({ visible, onClose, businessId
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
             <View style={styles.header}>
                 <View style={styles.flexSpacer} />
-                    <Text style={styles.headerText}>User Reviews</Text>
+                    <Text style={styles.headerText}>{i18n.t('businessReviews.title')}</Text>
                 <TouchableOpacity onPress={onClose}>
-                    <Text style={styles.closeText}>Close</Text>
+                    <Text style={styles.closeText}>{i18n.t('close')}</Text>
                 </TouchableOpacity>
             </View>
 

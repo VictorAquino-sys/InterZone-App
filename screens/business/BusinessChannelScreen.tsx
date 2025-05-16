@@ -172,13 +172,13 @@ const BusinessChannelScreen = () => {
                       <Text style={styles.ratingText}>
                         {businessRating && businessRating.count > 0
                           ? `${businessRating.average.toFixed(1)} ★ (${businessRating.count})`
-                          : '⭐ No ratings yet'}
+                          : i18n.t('businessChannel.noRatings')}
                       </Text>
                   </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity onPress={() => setShowReviewList(true)} style={{ marginTop: 6 }}>
-                  <Text style={{ color: '#007aff', fontSize: 14 }}>View all reviews</Text>
+                  <Text style={{ color: '#007aff', fontSize: 14 }}>{i18n.t('businessChannel.viewAllReviews')}</Text>
                 </TouchableOpacity>    
 
                 <Text style={styles.sectionTitle}>{i18n.t('businessChannel.mediaFeed')}</Text>
