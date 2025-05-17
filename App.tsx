@@ -291,35 +291,38 @@ function AuthenticatedApp() {
       ) : (
         <>
           <Stack.Screen name="BottomTabs" component={BottomTabs} options={{ headerShown: false }} />
+
+          <Stack.Screen name="ChatScreen" component={ChatScreen} options={({ route }) => ({
+            title: (route.params as any)?.friendName || i18n.t('chat.title'),
+            headerShown: true,
+          })} />
+
           <Stack.Screen
-            name="ChatScreen"
-            component={ChatScreen}
-            options={({ route }) => ({
-              title: (route.params as any)?.friendName || 'Chat',
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen name="MessagesScreen" component={MessagesScreen} />
+            name="MessagesScreen"
+            component={MessagesScreen}
+            options={{ title: i18n.t('messages.title') }}
+            />
+
           <Stack.Screen
             name="BlockedUsers"
             component={BlockedUsersScreen}
             options={{ title: i18n.t('block.manage'), headerShown: true }}
           />
-          <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: 'Post' }} />
+          <Stack.Screen name="PostDetail" component={PostDetailScreen} options={{ title: i18n.t('post.detailTitle') }} />
 
-          <Stack.Screen name="DistributeQr" component={DistributeQrScreen} options={{ title: 'QR Distribution' }} />
+          <Stack.Screen name="DistributeQr" component={DistributeQrScreen} options={{ title: i18n.t('qr.distributeTitle') }} />
 
-          <Stack.Screen name="VerifyBusiness" component={VerifyBusinessScreen} options={{ title: 'Verify Account' }} />
+          <Stack.Screen name="VerifyBusiness" component={VerifyBusinessScreen} options={{ title: i18n.t('business.verifyTitle') }} />
 
-          <Stack.Screen name="BusinessChannel" component={BusinessChannelScreen} options={{ title: 'Business Channel' }} />
+          <Stack.Screen name="BusinessChannel" component={BusinessChannelScreen} options={{ title: i18n.t('business.channelTitle') }} />
 
-          <Stack.Screen name="ApplyBusiness" component={ApplyBusinessScreen} options={{ title: 'Apply for Business' }} />
+          <Stack.Screen name="ApplyBusiness" component={ApplyBusinessScreen} options={{ title: i18n.t('business.applyTitle') }} />
 
           <Stack.Screen
             name="EditBusinessProfile"
             component={EditBusinessProfileScreen}
             options={({ navigation }) => ({
-              title: "Edit Business",
+              title: i18n.t('business.editTitle'),
               presentation: 'modal', // ✅ Modal behavior
               animation: 'slide_from_bottom', // ✅ Smooth transition
               headerLeft: () => (
@@ -334,7 +337,7 @@ function AuthenticatedApp() {
             <Stack.Screen
               name="AdminApproval"
               component={AdminApprovalScreen}
-              options={{ title: 'Review Business Applications' }}
+              options={{ title: i18n.t('admin.reviewApplications') }}
             />
           )}
 
@@ -367,6 +370,7 @@ export default function App() {
               >
                 <AuthenticatedApp />
               </NavigationContainer>
+              <Toast />
             </ChatProvider>
           </HistoryTriviaProvider>
         </TriviaProvider>

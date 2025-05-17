@@ -8,7 +8,15 @@
     "termsOfUse": "Terms of Use"
   },
 
-  "signInWithGoogle": "Sign in with Google",
+  "chat": { "title": "Chat" },
+  "post": { "detailTitle": "Post" },
+  "business": {
+    "verifyTitle": "Verify Account",
+    "channelTitle": "Business Channel",
+    "applyTitle": "Apply for Business",
+    "editTitle": "Back"
+  },
+  "admin": { "reviewApplications": "Review Business Applications" },
 
   "loginButton": "Login",
   "welcomeMessage": "Welcome to the app!",
@@ -109,7 +117,6 @@
 
   "home": "Home",
   "updateAvailable": "🔄 A new version of InterZone is available. Tap here to update!",
-  "post": "Post",
   "funnyMessage": "Ah ah! Still working on this awesome feature 😆🎉",
   "anonymous": "Anonymous",
   "searchPlaceholder": "Search categories",
@@ -289,12 +296,14 @@
   "error": "Error",
 
   "messages": {
+    "title": "Messages",
     "noConversations": "💬 You don’t have any conversations yet.",
     "findFriends": "Find Friends",
     "startChatting": "Start chatting..."
 },
 
 "qr": {
+  "distributeTitle": "QR Distribution",
   "invalidTitle": "Invalid",
   "invalidMessage": "This QR is not valid.",
   "enterManually": "Enter code manually",
@@ -351,7 +360,8 @@
     "tutor": "Tutor"
   }
 },
-
+"reviewBusinessApplications": "Review Business Applications",
+"applyForBusiness": "Apply for Business",
 "distributeQrButton": "Distribute QR Codes",
 "editBusinessProfileTitle": "Edit Business Profile",
 "selectLogo": "Select Logo",
@@ -365,11 +375,15 @@
 "businessNameRequired": "Business name is required.",
 "applyBusiness": {
   "title": "Apply for a Business Account",
-  "businessName": "Business Name",
+  "businessName": "Business Name (Will be display on Channels)",
+  "emailInfoTitle": "This email is pre-filled",
+  "emailInfoMessage": "We have attached your email to InterZone.",
   "category": "Category (e.g., Restaurant, Tutor, Musician)",
   "description": "Describe your business",
   "submitButton": "Submit Application",
   "missingFieldsTitle": "Missing fields",
+  "location": "City or Neighborhood",
+  "email": "Email used to sign up at InterZone",
   "missingFieldsMessage": "Please fill out all the fields.",
   "successTitle": "✅ Application submitted",
   "successMessage": "We’ll review your business info shortly.",
@@ -383,7 +397,9 @@
   "noDescription": "No description provided.",
   "deleteTitle": "Delete Post",
   "deleteMessage": "Are you sure you want to delete this post?",
-  "businessNotFound": "Business not found."
+  "businessNotFound": "Business not found.",
+  "noRatings": "⭐ No ratings yet",
+  "viewAllReviews": "View all reviews"
 },
 "delete": "Delete",
 "postAs": "Post as:",
@@ -398,6 +414,22 @@
 "userContextErrorTitle": "Upload Error",
 "userContextErrorMessage": "User context is missing.",
 "userErrorTitle": "User Error",
-"userErrorMessage": "User data is missing. Please log in again."
+"userErrorMessage": "User data is missing. Please log in again.",
+
+"businessRating": {
+  "rateTitle": "Rate {{name}}",
+  "placeholder": "Leave a short review (optional)",
+  "submit": "Submit",
+  "update": "Update",
+  "selectStarsTitle": "Please select a rating before submitting.",
+  "successTitle": "Thank you!",
+  "successMessage": "Your review has been submitted.",
+  "errorMessage": "Something went wrong. Please try again later."
+},
+"oops": "Oops!",
+"businessReviews": {
+  "title": "User Reviews"
+},
+"close": "Close"
 
 }  

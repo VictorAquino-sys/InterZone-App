@@ -40,12 +40,15 @@ export const getOrCreateConversation = async (user1Id: string, user2Id: string) 
   }
 
   // If no conversation exists, create one
-  const newDocRef = await addDoc(conversationsRef, {
+  const newConvoId = `${sortedUsers[0]}_${sortedUsers[1]}`;
+  const newDocRef = doc(conversationsRef, newConvoId);
+  
+  await setDoc(newDocRef, {
     users: sortedUsers,
     updatedAt: serverTimestamp(),
     lastMessage: '',
   });
-
+  
   return {
     id: newDocRef.id,
     users: sortedUsers,

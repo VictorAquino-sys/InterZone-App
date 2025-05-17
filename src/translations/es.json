@@ -9,7 +9,15 @@
         "termsOfUse": "Terminos de Uso"
     },
 
-    "signInWithGoogle": "Iniciar sesión con Google",
+    "chat": { "title": "Chat" },
+    "post": { "detailTitle": "Publicación" },
+    "business": {
+      "verifyTitle": "Verificar Cuenta",
+      "channelTitle": "Canal del Negocio",
+      "applyTitle": "Aplicar como Negocio",
+      "editTitle": "Perfil"
+    },
+    "admin": { "reviewApplications": "Revisar Solicitudes" },
 
     "loginButton": "Iniciar sesión",
     "welcomeMessage": "¡Bienvenido a la aplicación!",
@@ -110,7 +118,6 @@
     "openGallery": "Abrir galería",
 
     "home": "Inicio",
-    "post": "Publicar",
     "funnyMessage": "¡Ah ah! Todavía estamos trabajando en esta increíble función 😆🎉",
     "searchPlaceholder": "Buscar categorías",
     "categories": {
@@ -227,6 +234,8 @@
             "tutor": "Verificate como Tutor"
         }
     },
+    "reviewBusinessApplications": "Revisar Solicitudes de Negocio",
+    "applyForBusiness": "Solicitar Perfil de Negocio",
     
     "comments": {
         "title": "Comentarios",
@@ -298,12 +307,14 @@
     "error": "Error",
     
     "messages": {
+        "title": "Mensajes",
         "noConversations": "💬 Aún no tienes conversaciones.",
         "findFriends": "Buscar amigos",
         "startChatting": "Comienza a chatear..."
     },
 
     "qr": {
+        "distributeTitle": "Distribuir QR",
         "invalidTitle": "Inválido",
         "error": "Solo los usuarios autorizados pueden generar códigos de verificación.",
         "invalidMessage": "Este código QR no es válido.",
@@ -365,9 +376,13 @@
     "distributeQrButton": "Distribuir códigos QR",
     "applyBusiness": {
         "title": "Solicita una cuenta de negocio",
-        "businessName": "Nombre del negocio",
+        "businessName": "Nombre del negocio (Se usara para tu canal)",
         "category": "Categoría (por ejemplo, Restaurante, Tutor, Músico)",
         "description": "Describe tu negocio",
+        "location": "Ciudad o vecindario",
+        "emailInfoTitle": "Este correo ya está completado",
+        "emailInfoMessage": "Este correo ya esta vinculado a tu cuenta InterZone.",
+        "email": "Correo Electrónico que usa para ingresar a InterZone",
         "submitButton": "Enviar solicitud",
         "missingFieldsTitle": "Faltan campos",
         "missingFieldsMessage": "Por favor completa todos los campos.",
@@ -384,7 +399,9 @@
         "noDescription": "No se ha proporcionado una descripción.",
         "deleteTitle": "Eliminar publicación",
         "deleteMessage": "¿Estás seguro de que deseas eliminar esta publicación?",
-        "businessNotFound": "Negocio no encontrado."
+        "businessNotFound": "Negocio no encontrado.",
+        "noRatings": "⭐ Sin calificaciones",
+        "viewAllReviews": "Ver todas las reseñas"
     },
 
     "delete": "Eliminar",
@@ -400,6 +417,22 @@
     "userContextErrorTitle": "Error de carga",
     "userContextErrorMessage": "Falta el contexto del usuario.",
     "userErrorTitle": "Error de usuario",
-    "userErrorMessage": "Faltan los datos del usuario. Por favor, inicia sesión nuevamente."
+    "userErrorMessage": "Faltan los datos del usuario. Por favor, inicia sesión nuevamente.",
+
+    "businessRating": {
+        "rateTitle": "Califica a {{name}}",
+        "placeholder": "Escribe una reseña breve (opcional)",
+        "submit": "Enviar",
+        "update": "Actualizar",
+        "selectStarsTitle": "Por favor selecciona una calificación antes de enviar.",
+        "successTitle": "¡Gracias!",
+        "successMessage": "Tu reseña ha sido enviada.",
+        "errorMessage": "Algo salió mal. Por favor intenta nuevamente más tarde."
+    },
+    "oops": "¡Uy!",
+    "businessReviews": {
+        "title": "Reseñas de usuarios"
+      },
+      "close": "Cerrar"
        
 } 

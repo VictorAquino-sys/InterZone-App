@@ -52,9 +52,9 @@ const AdminApprovalScreen = () => {
         approve ? '✅ Approved' : '🚫 Rejected',
         `Business has been ${approve ? 'approved' : 'rejected'}.`
       );
-    } catch (error) {
-      console.error('Failed to update application:', error);
-      Alert.alert('Error', 'Could not process the request.');
+    } catch (error: any) {
+      console.error('Firestore update error:', error.message || error);
+      Alert.alert('Error', error.message || 'Could not process the request.');
     }
   };
 

@@ -402,7 +402,8 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                             style={[styles.buttonContainer, { backgroundColor: '#388e3c' }]}
                             onPress={() => navigation.navigate('AdminApproval')}
                         >
-                            <Text style={styles.buttonText}>Review Business Applications</Text>
+                            <Text style={styles.buttonText}>{i18n.t('reviewBusinessApplications')}</Text>
+                            
                         </TouchableOpacity>
                         )}
 
@@ -411,7 +412,8 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                             style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
                             onPress={() => navigation.navigate('ApplyBusiness')}
                         >
-                            <Text style={styles.buttonText}>Apply for Business</Text>
+                            <Text style={styles.buttonText}>{i18n.t('applyForBusiness')}</Text>
+                            
                         </TouchableOpacity>
                         )}
 
