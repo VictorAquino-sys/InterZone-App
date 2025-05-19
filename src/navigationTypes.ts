@@ -25,6 +25,20 @@ export type RootStackParamList = {
     BusinessChannel: { businessUid: string };
     ApplyBusiness: undefined;
     EditBusinessProfile: undefined; // ✅ Add this
+    UniversityScreen: { universityId: string; universityName: string};
+    RateProfessor: {
+      universityId: string;
+      professorId: string;
+      professorName: string;
+    };
+    ProfessorDetail: {
+      universityId: string;
+      professorId: string;
+      professorName: string;
+    };
+    SuggestProfessor: { universityId: string };
+    ProfessorSuggestionsReview: undefined; // ✅ Add this
+    AdminDashboard: undefined;
 
   };
 

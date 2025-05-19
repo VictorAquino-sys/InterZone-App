@@ -1,5 +1,12 @@
 (Daily logs of what have been worked on)
 
+### 05-18
+    Install SendGrid Package locally
+    Go to your functions directory:
+    cd functions
+    Install SendGrid SDK:
+    npm install @sendgrid/mail
+
 ### 05-15
     Add a star rating system for businesses
     - Visual Feedback After Rating

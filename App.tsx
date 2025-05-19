@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Dimensions, Platform } from 'react-native';
+import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Dimensions, Platform, ImageBackground, StatusBar } from 'react-native';
 import { getLocales } from 'expo-localization';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/i18n';
@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import homeIcon from './assets/home_icon_transparent.png';
+import limasunset from './assets/lima_sunset_image.png';
 import magicIcon from './assets/magic_icon_transparent.png';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
@@ -49,8 +50,14 @@ import VerifyBusinessScreen from 'screens/business/VerifyBusinessScreen';
 import Animated, { BounceIn} from 'react-native-reanimated';
 import AdminApprovalScreen from 'screens/admin/AdminApprovalScreen';
 import BusinessChannelScreen from 'screens/business/BusinessChannelScreen';
+import ProfessorDetailScreen from 'screens/studyub/ProfessorDetailScreen';
+import UniversityScreen from 'screens/studyub/UniversityScreen';
+import RateProfessorScreen from 'screens/studyub/RateProfessorScreen';
 import ApplyBusinessScreen from 'screens/business/ApplyBusinessScreen';
 import EditBusinessProfileScreen from './screens/business/EditBusinessProfileScreen';
+import SuggestProfessorScreen from 'screens/studyub/SuggestProfessorScreen';
+import ProfessorSuggestionsReviewScreen from 'screens/studyub/professorSuggestionsReviewScreen';
+import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -275,8 +282,28 @@ function AuthenticatedApp() {
   }, [user?.uid, activeConversationId]); // Depend on activeConversationId
 
   if (loading) {
-    console.log("🔄 Waiting for Firebase and User data...");
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    console.log("🔄 Waiting for Firebase and User data..."); 
+    
+    return (
+      <>
+      <StatusBar
+        translucent
+        backgroundColor={Platform.OS === 'android' ? 'rgba(0,0,0,0.2)' : 'transparent'}
+        barStyle="light-content"
+      />
+          <ImageBackground
+            source={limasunset}
+            resizeMode="cover"
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <ActivityIndicator size="large" color="#26c6da" />
+          </ImageBackground>
+      </>
+    );
   }
 
   return (
@@ -328,6 +355,22 @@ function AuthenticatedApp() {
               ),
             })}
           />
+
+          <Stack.Screen name="RateProfessor" component={RateProfessorScreen} />
+          <Stack.Screen name="ProfessorDetail" component={ProfessorDetailScreen} />
+          <Stack.Screen name="UniversityScreen" component={UniversityScreen} />
+
+          <Stack.Screen
+            name="SuggestProfessor" component={SuggestProfessorScreen}
+          />
+
+          <Stack.Screen
+            name="ProfessorSuggestionsReview"
+            component={ProfessorSuggestionsReviewScreen}
+          />
+
+          <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+
 
           {user?.isQrDistributor && (
             <Stack.Screen

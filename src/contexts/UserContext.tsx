@@ -25,9 +25,14 @@ export interface User {
   blocked?: string[];
   termsAccepted?: boolean;
   emailVerified?: boolean;
-  isQrDistributor?: boolean;
   accountType?: "individual" | "business";
   businessVerified?: boolean;
+  isQrDistributor?: boolean; // ✅ this line
+  claims?: {
+    admin?: boolean;
+    isQrDistributor?: boolean;
+    [key: string]: any;
+  };
   businessProfile?: {
     name: string;        // Business display name
     avatar?: string;     // Business logo
@@ -124,14 +129,18 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         }
 
         try {
-          const idTokenResult = await firebaseUser.getIdTokenResult(true);
+
+          await firebaseUser.getIdToken(true); // <-- ADD THIS LINE
+
+          const idTokenResult = await firebaseUser.getIdTokenResult();
           const claims = idTokenResult.claims;
+          console.log("🔥 Current Claims:", claims); // ✅ Add this line
           const isQrDistributorClaim = Boolean(claims.isQrDistributor); // ✅ Type-safe boolean
 
           const userRef = doc(db, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
-          const locale = RNLocalize.getLocales()[0].languageCode || 'en';
-          console.log("Locale from RNLocalize:", locale); // Check what RNLocalize returns
+          // const locale = RNLocalize.getLocales()[0].languageCode || 'en';
+          // console.log("Locale from RNLocalize:", locale); // Check what RNLocalize returns
 
           if(userSnap.exists()) {
             const userData = userSnap.data() as UserData;
@@ -163,10 +172,12 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               lastKnownLocation: userData.lastKnownLocation || undefined,
               accountType: userData.accountType || "individual",
               businessProfile: userData.businessProfile || undefined,
-              businessVerified: userData.businessVerified ?? false
+              businessVerified: userData.businessVerified ?? false,
+              claims: claims,
             };
-            console.log("User logged in with updated data:", updatedUser);
+            // console.log("User logged in with updated data:", updatedUser);
             setUser(updatedUser);
+
             // ✅ Set analytics user context
             await setUserProps(updatedUser.uid, {
               language: updatedUser.language || 'en',
@@ -233,10 +244,11 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             lastKnownLocation: userData.lastKnownLocation || undefined,
             accountType: userData.accountType || "individual",
             businessProfile: userData.businessProfile || undefined,
-            businessVerified: userData.businessVerified ?? false
+            businessVerified: userData.businessVerified ?? false,
+            claims: claims,
           };
 
-          console.log("🔄 User manually refreshed:", updatedUser);
+          // console.log("🔄 User manually refreshed:", updatedUser);
           setUser(updatedUser);
         }
       } catch (error: any) {

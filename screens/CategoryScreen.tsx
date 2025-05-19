@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { Modal, View, Text, StyleSheet, Alert, FlatList, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Modal, View, Text, StyleSheet, Alert, FlatList, Image, TouchableOpacity, ActivityIndicator, Pressable, Platform } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { usePosts } from '@/contexts/PostsContext';
 import i18n from '@/i18n';
@@ -17,6 +17,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTrivia } from '../src/contexts/TriviaContext'; // Make sure this is imported
 import NewsFeedContent from '@/components/NewsFeedContent';
 import { logEvent } from '@/utils/analytics';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { RootStackParamList } from '@/navigationTypes';
+import StudyHubContent from '@/components/category/studyHubContent';
 
 type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
@@ -29,6 +34,7 @@ const CategoryScreen = () => {
     const category = categories.find(cat => cat.key === categoryKey);
     const { user } = useUser();
     const { trivia } = useTrivia(); // Using the trivia context
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const [triviaActive, setTriviaActive] = useState(false);
     const [historyTriviaActive, setHistoryTriviaActive] = useState(false);
@@ -43,7 +49,7 @@ const CategoryScreen = () => {
               const userSnap = await getDoc(userRef);
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    console.log("Fetched user data on focus:", userData);
+                    // console.log("Fetched user data on focus:", userData);
                     setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
                 }
             }
@@ -180,18 +186,20 @@ const CategoryScreen = () => {
     };
 
     return (
-        <View style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
-            {/* Add a button in the CategoryScreen render method */}
+        <SafeAreaView  style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
+        
+            {/* MUSIC Trivia Feature */}
             {categoryKey === 'music' && !triviaActive && (
                 <TouchableOpacity style={styles.triviaButton} onPress={toggleTrivia}>
-                    <Text style={styles.triviaButtonText}>{i18n.t('testYourKnowledge')}</Text>
+                    <Text style={styles.triviaButtonText}>{i18n.t('testYourKnowledgeMusic')}</Text>
                 </TouchableOpacity>
             )}
 
-            {categoryKey === "study hub" && isPeruvian && !historyTriviaActive && (
-                <TouchableOpacity style={styles.triviaButton} onPress={toggleHistoryTrivia}>
-                    <Text style={styles.triviaButtonText}>{i18n.t('Villareal')}</Text>
-                </TouchableOpacity>
+            {/* STUDY HUB: show Peruvian universities instead of post list */}
+            {categoryKey === 'study hub' && isPeruvian && !historyTriviaActive && (
+                <>
+                    <StudyHubContent toggleHistoryTrivia={toggleHistoryTrivia} />
+                </>
             )}
 
             {triviaActive ? (
@@ -239,7 +247,11 @@ const CategoryScreen = () => {
                             )}
                         </View>
                     )}
-                    ListEmptyComponent={<Text style={styles.emptyCategoryText}>{i18n.t('EmptyCategoryScreen')}</Text>}
+                    ListEmptyComponent={
+                        categoryKey === 'study hub'
+                          ? null
+                          : <Text style={styles.emptyCategoryText}>{i18n.t('EmptyCategoryScreen')}</Text>
+                      }
                 />
             )}
 
@@ -253,7 +265,7 @@ const CategoryScreen = () => {
                     <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }}/>
                 </TouchableOpacity>
             </Modal>
-        </View>
+        </SafeAreaView >
     );
 };
 
@@ -267,11 +279,22 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 20
     },
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginVertical: 12,
+    },
     postItem: {
-        padding: 8,
-        borderTopWidth: 0.5,
-        borderTopColor: 'pearl river',
-        width: '100%', // Ensure post items take full width
+        padding: 12,
+        marginHorizontal: 10,
+        marginVertical: 8,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     userContainer: {
         flexDirection: 'row',
@@ -347,19 +370,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 
-
-
-    refreshButton: {
-        marginVertical: 10,
-        backgroundColor: '#4CAF50',
-        padding: 10,
-        borderRadius: 5,
-    },
-    refreshButtonText: {
-        color: 'white',
-        fontSize: 16,
-        textAlign: 'center',
-    },
 });
 
 export default CategoryScreen;

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useLayoutEffect, useRef, useState, FunctionComponent } from 'react';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
-import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert } from 'react-native';
+import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert, StatusBar, Platform } from 'react-native';
 // import { Image } from 'expo-image';
 import { Image } from 'react-native';
 import friendsIcon from '../assets/addfriends_icon.png'
@@ -416,7 +416,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
               avatar: userData.avatar || prevUser.avatar
             } : prevUser;
 
-            console.log("👀 Updated user context:", updated);
+            // console.log("👀 Updated user context:", updated);
             console.log("✅ Country preserved?", updated?.country);
             console.log("✅ Language preserved?", updated?.language);
 
@@ -575,147 +575,154 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     />
   );
   
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-      {/* Top Bar with Profile Icon and Search Bar */}
-        <View style={styles.topBar}>
-          <TouchableOpacity 
-            style={styles.profilePicContainer} 
-            onPress={() => {
-              navigation.navigate('ProfileScreen');
-            }}
-            activeOpacity={0.5} // Manage active opacity here
-          >
-            <Avatar 
-              name={user?.name || ''}
-              imageUri={profileImageUrl}
-              size={36}
-            />
-          </TouchableOpacity>
-          
-          <View style={styles.searchWithIcon}>
-            {/* Search Bar */}
-            <TextInput
-              style={styles.searchBar}
-              placeholder={i18n.t('searchPlaceholder')}
-              placeholderTextColor="#888"
-              value={searchText}
-              onChangeText={setSearchText}
-            />
-
-            <TouchableOpacity
-              onPress={() => navigation.navigate('FriendsHome')}
-              style={styles.iconWrapper}
-              activeOpacity={0.7}
-            >
-              <Image
-                source={friendsIcon}
-                style={styles.friendsIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 🔔 Version update checker */}
-        {fallbackUpdate && <UpdateChecker />}
-
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>{i18n.t('loadingPost')}</Text>
-            <ActivityIndicator size="large" color="#26c6da" />
-          </View>
-        ) : !user ? (
-          <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
-        ) : posts.length === 0 ? (
-          <View style={styles.noPostsContainer}>
-            <Text style={styles.noPostsText}>{i18n.t('noPosts')}</Text>
-          </View>
-        ) : (
-          /* Scrollable Content (Categories + Funny Message + Posts) */
-          <Animated.FlatList
-            onScroll={scrollHandler}
-            scrollEventThrottle={16}
-            ListHeaderComponent={
-              <View>
-                  {/* Categories (Now Scrollable) */}
-                  <View style={styles.categoriesContainer}>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                          {filteredCategories.map((item) => (
-                              <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
-                                  <Text style={styles.categoryText}>{item.label}</Text>
-                              </TouchableOpacity>
-                          ))}
-                      </ScrollView>
-                  </View>
-              </View>
-            }
-            data={posts}
-            keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
-          />
-        )}
-
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeImageModal}
-        >
-          <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
-            <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} resizeMode='contain'/>
-          </TouchableOpacity>
-        </Modal>
-
-        <Modal animationType="slide" transparent visible={reportModalVisible}>
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPressOut={() => setReportModalVisible(false)}
-          >
-            <View style={styles.modalBox}>
-              <Text style={styles.modalTitle}>{i18n.t('report.title')}</Text>
-              {[
-                { key: 'spam' },
-                { key: 'harassment' },
-                { key: 'inappropriate' },
-                { key: 'hate' },
-                { key: 'other' }
-              ].map(({ key }) => (
-                <TouchableOpacity
-                  key={key}
-                  onPress={() => handleSelectReason(i18n.t(`report.reasons.${key}`))}
-                  style={styles.modalOption}
-                >
-                  <Text>{i18n.t(`report.reasons.${key}`)}</Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity
-                onPress={() => handleBlockUser(selectedUserId)}
-                style={[styles.modalOption, { marginTop: 10 }]}
+    <>
+      <StatusBar
+        backgroundColor={Platform.OS === 'android' ? '#ECEFF4' : 'transparent'}
+        barStyle="dark-content"
+        />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.container}>
+          {/* Top Bar with Profile Icon and Search Bar */}
+            <View style={styles.topBar}>
+              <TouchableOpacity 
+                style={styles.profilePicContainer} 
+                onPress={() => {
+                  navigation.navigate('ProfileScreen');
+                }}
+                activeOpacity={0.5} // Manage active opacity here
               >
-                <Text style={{ color: 'red' }}>{i18n.t('block.blockUser')}</Text>
+                <Avatar 
+                  name={user?.name || ''}
+                  imageUri={profileImageUrl}
+                  size={36}
+                />
               </TouchableOpacity>
+              
+              <View style={styles.searchWithIcon}>
+                {/* Search Bar */}
+                <TextInput
+                  style={styles.searchBar}
+                  placeholder={i18n.t('searchPlaceholder')}
+                  placeholderTextColor="#888"
+                  value={searchText}
+                  onChangeText={setSearchText}
+                />
 
-              <TouchableOpacity onPress={() => setReportModalVisible(false)}>
-                <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('FriendsHome')}
+                  style={styles.iconWrapper}
+                  activeOpacity={0.7}
+                >
+                  <Image
+                    source={friendsIcon}
+                    style={styles.friendsIcon}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
-          </TouchableOpacity>
-        </Modal>
 
-        <Animated.View style={[styles.chatButton, fadeStyle, bounceStyle]}>
-          <TouchableOpacity onPress={() => navigation.navigate('MessagesScreen')}>
-            <Ionicons name="chatbubbles-outline" size={30} color="#007AFF" />
-            {hasUnreadMessages && <View style={styles.unreadDot} />}
-          </TouchableOpacity>
-        </Animated.View>
+            {/* 🔔 Version update checker */}
+            {fallbackUpdate && <UpdateChecker />}
 
-      </View>
-    </SafeAreaView>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>{i18n.t('loadingPost')}</Text>
+                <ActivityIndicator size="large" color="#26c6da" />
+              </View>
+            ) : !user ? (
+              <Text style={styles.noUserText}>{i18n.t('pleaseLogin')}</Text>
+            ) : posts.length === 0 ? (
+              <View style={styles.noPostsContainer}>
+                <Text style={styles.noPostsText}>{i18n.t('noPosts')}</Text>
+              </View>
+            ) : (
+              /* Scrollable Content (Categories + Funny Message + Posts) */
+              <Animated.FlatList
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
+                ListHeaderComponent={
+                  <View>
+                      {/* Categories (Now Scrollable) */}
+                      <View style={styles.categoriesContainer}>
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                              {filteredCategories.map((item) => (
+                                  <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
+                                      <Text style={styles.categoryText}>{item.label}</Text>
+                                  </TouchableOpacity>
+                              ))}
+                          </ScrollView>
+                      </View>
+                  </View>
+                }
+                data={posts}
+                keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
+                renderItem={renderItem}
+                contentContainerStyle={styles.listContent}
+                style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
+              />
+            )}
+
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={closeImageModal}
+            >
+              <TouchableOpacity style={styles.fullScreenModal} onPress={closeImageModal}>
+                <Image style={styles.fullScreenImage} source={{ uri: selectedImageUrl || undefined }} resizeMode='contain'/>
+              </TouchableOpacity>
+            </Modal>
+
+            <Modal animationType="slide" transparent visible={reportModalVisible}>
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPressOut={() => setReportModalVisible(false)}
+              >
+                <View style={styles.modalBox}>
+                  <Text style={styles.modalTitle}>{i18n.t('report.title')}</Text>
+                  {[
+                    { key: 'spam' },
+                    { key: 'harassment' },
+                    { key: 'inappropriate' },
+                    { key: 'hate' },
+                    { key: 'other' }
+                  ].map(({ key }) => (
+                    <TouchableOpacity
+                      key={key}
+                      onPress={() => handleSelectReason(i18n.t(`report.reasons.${key}`))}
+                      style={styles.modalOption}
+                    >
+                      <Text>{i18n.t(`report.reasons.${key}`)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    onPress={() => handleBlockUser(selectedUserId)}
+                    style={[styles.modalOption, { marginTop: 10 }]}
+                  >
+                    <Text style={{ color: 'red' }}>{i18n.t('block.blockUser')}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => setReportModalVisible(false)}>
+                    <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            </Modal>
+
+            <Animated.View style={[styles.chatButton, fadeStyle, bounceStyle]}>
+              <TouchableOpacity onPress={() => navigation.navigate('MessagesScreen')}>
+                <Ionicons name="chatbubbles-outline" size={30} color="#007AFF" />
+                {hasUnreadMessages && <View style={styles.unreadDot} />}
+              </TouchableOpacity>
+            </Animated.View>
+
+          </View>
+        </SafeAreaView>
+    </>
   );
 };
 
@@ -724,11 +731,11 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5' // or any other background color you want
+    backgroundColor: '#ECEFF4' // or any other background color you want
   },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ECEFF4',
   },
   topRightIcons: {
     flexDirection: 'row',
@@ -805,7 +812,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ECEFF4',
     borderBottomColor: '#ddd',
   },
   searchWithIcon: {
@@ -835,9 +842,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ccc',  // Light gray border
+    shadowColor: '#000',
     shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     borderRadius: 20,
+    shadowOpacity: 0.05,
     paddingHorizontal: 16,
     elevation: 2, // Shadow effect for Android
     marginRight: 25,  // Adjust the right spacing

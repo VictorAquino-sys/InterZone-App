@@ -18,6 +18,7 @@ import { useUser } from '../../src/contexts/UserContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { generateNonce, sha256 } from '@/utils/cryptoUtils';
 import { recordHandledError } from '@/utils/crashlytics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -27,6 +28,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const [show, setShow] = useState<boolean>(true);
   const { refreshUser } = useUser(); // ⬅️ grab from context
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     // let alreadyNavigated = false;
@@ -412,91 +414,98 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground source={BG_PE} resizeMode="cover" style={styles.rootContainer}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator= {false}
+    <>
+      <StatusBar 
+        translucent 
+        backgroundColor="transparent" 
+        barStyle="light-content" // ⬅️ or "dark-content" depending on image brightness
+      />
+        <ImageBackground source={BG_PE} resizeMode="cover" style={[styles.rootContainer, { paddingBottom: insets.bottom }]}
         >
-          <View style={styles.headerContainer}>
-            {show && (
-              <>
-                <Text style={styles.titleText}>{i18n.t('appTitle')}</Text>
-                <Text style={styles.phraseText}>{i18n.t('tagline')}</Text>
-              </>
-            )}
-          </View>
-
-          <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
-            <View style={styles.authButtonsContainer}>
-              <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
-                <View style={styles.googleContent}>
-                  <Image
-                    source={GoogleIcon} // use the actual G icon you have
-                    style={styles.googleIcon}
-                  />
-                  <Text style={styles.googleText}>Sign in with Google</Text>
-                </View>
-              </TouchableOpacity>
-
-
-              {Platform.OS === 'ios' && isAppleAvailable && (
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                  cornerRadius={5}
-                  style={styles.appleButton}
-                  onPress={handleAppleSignIn}
-                />
-              )}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder={i18n.t('Email')}
-                value={email}
-                onChangeText={text => setEmail(text)}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder={i18n.t('Password')}
-                value={password}
-                onChangeText={text => setPassword(text)}
-                secureTextEntry
-              />
-            </View>
-            
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity onPress={handleLogin} style={styles.button}>
-                <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
-                <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.troubleAccessContainer}>
-              <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
-              <View style={styles.troubleLinks}>
-                <TouchableOpacity onPress={handlePasswordReset}>
-                  <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
-                </TouchableOpacity>
-                <Text style={styles.separator}> | </Text>
-                <TouchableOpacity onPress={handleResendVerificationEmail}>
-                  <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
-                </TouchableOpacity>
+          <SafeAreaView style={styles.safeArea}>
+            <ScrollView
+              contentContainerStyle={[ styles.scrollContent, { paddingBottom: insets.bottom }]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator= {false}
+            >
+              <View style={styles.headerContainer}>
+                {show && (
+                  <>
+                    <Text style={styles.titleText}>{i18n.t('appTitle')}</Text>
+                    <Text style={styles.phraseText}>{i18n.t('tagline')}</Text>
+                  </>
+                )}
               </View>
-            </View>
+
+              <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
+                <View style={styles.authButtonsContainer}>
+                  <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
+                    <View style={styles.googleContent}>
+                      <Image
+                        source={GoogleIcon} // use the actual G icon you have
+                        style={styles.googleIcon}
+                      />
+                      <Text style={styles.googleText}>Sign in with Google</Text>
+                    </View>
+                  </TouchableOpacity>
 
 
-          </KeyboardAvoidingView>
-        </ScrollView>
-      </SafeAreaView>
-    </ImageBackground>
+                  {Platform.OS === 'ios' && isAppleAvailable && (
+                    <AppleAuthentication.AppleAuthenticationButton
+                      buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                      buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                      cornerRadius={5}
+                      style={styles.appleButton}
+                      onPress={handleAppleSignIn}
+                    />
+                  )}
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={i18n.t('Email')}
+                    value={email}
+                    onChangeText={text => setEmail(text)}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder={i18n.t('Password')}
+                    value={password}
+                    onChangeText={text => setPassword(text)}
+                    secureTextEntry
+                  />
+                </View>
+                
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity onPress={handleLogin} style={styles.button}>
+                    <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
+                    <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.troubleAccessContainer}>
+                  <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
+                  <View style={styles.troubleLinks}>
+                    <TouchableOpacity onPress={handlePasswordReset}>
+                      <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.separator}> | </Text>
+                    <TouchableOpacity onPress={handleResendVerificationEmail}>
+                      <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+
+              </KeyboardAvoidingView>
+            </ScrollView>
+          </SafeAreaView>
+        </ImageBackground>
+    </>
   );
 };
 

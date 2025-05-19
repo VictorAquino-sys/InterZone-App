@@ -136,6 +136,7 @@
       "business": "Local Business",
       "tutors": "Tutors"
     },
+    "testYourKnowledgeMusic": "Test Your Knowledge",
     "testYourKnowledge": "Test Your Knowledge",
 
     "selecCategoryPrompt": "Please select a category to proceed.",
@@ -430,6 +431,96 @@
   "businessReviews": {
     "title": "User Reviews"
   },
-  "close": "Close"
+  "close": "Close",
+  "adminDashboard": {
+    "title": "Admin Dashboard",
+    "reviewBusiness": "Review Business Applications",
+    "reviewProfessors": "Review Professor Suggestions",
+    "distributeQr": "Distribute QR Codes"
+  },
+  "professorReview": {
+    "title": "Professor Suggestions Review",
+    "accessDenied": "Access Denied",
+    "department": "Dept: {{department}}",
+    "course": "Course: {{course}}",
+    "submittedBy": "Submitted by UID: {{uid}}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approvedTitle": "Approved",
+    "approvedMsg": "{{name}} was added to professors.",
+    "rejectedTitle": "Rejected",
+    "rejectedMsg": "Suggestion was removed."
+  },
+  "discussion": {
+    "back": "Back",
+    "send": "Send",
+    "editing": "Editing your comment...",
+    "editPlaceholder": "Edit your comment...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "tooShortTitle": "Too Short",
+    "tooShortMessage": "Please enter a longer comment.",
+    "tooShortSaveMessage": "Please enter a longer comment before saving.",
+    "header": "Discussion - {{name}}",
+    "placeholder": "Share something...",
+    "post": "Post",
+    "edit": "Edit",
+    "delete": "Delete",
+    "comment": "Comment",
+    "report": "Report",
+    "reportedTitle": "Reported",
+    "reportedMsg": "Thank you. Our moderators will review this post.",
+    "tooShortPost": "Write a longer post.",
+    "tooShortEdit": "Please write something meaningful before saving.",
+    "limitTitle": "Limit Reached",
+    "limitMsg": "You can only post once per day."
+  },
+  "rateProfessors": {
+    "header": "Search or Add Professors",
+    "placeholder": "Type professor's name...",
+    "suggest": "Suggest a Professor"
+  },
+  "rateOne": {
+    "header": "Rate Professor {{name}}",
+    "placeholder": "Write your review...",
+    "submit": "Submit Review",
+    "incompleteTitle": "Incomplete",
+    "incompleteMsg": "Please provide a star rating and a comment.",
+    "duplicateTitle": "Duplicate Review",
+    "duplicateMsg": "You have already reviewed this professor. You can only leave one review.",
+    "successTitle": "Success",
+    "successMsg": "Thank you for your review!"
+  },
+  "suggest": {
+    "title": "Suggest a Professor",
+    "namePlaceholder": "Professor's Name *",
+    "departmentPlaceholder": "Department ",
+    "coursePlaceholder": "Course ",
+    "submit": "Submit for Review",
+    "incompleteTitle": "Incomplete",
+    "incompleteMsg": "Professor name is required.",
+    "successTitle": "Submitted",
+    "successMsg": "Your suggestion has been sent for review.",
+    "completeAllFields": "Please fill out all fields before submitting."
+  },
+  "verify": {
+    "title": "Verify Your Student Email",
+    "send": "Send Code",
+    "verify": "Verify",
+    "cancel": "Cancel",
+    "codePlaceholder": "Enter verification code",
+    "invalidTitle": "Invalid Email",
+    "invalidEmail": "Please enter a valid {{domain}} email",
+    "codeSentTitle": "Code Sent",
+    "codeSentMsg": "Check your school email for a 6-digit code.",
+    "errorTitle": "Error",
+    "errorGeneric": "Failed to send verification code.",
+    "failedTitle": "Verification Failed",
+    "failedMsg": "Invalid or expired code."
+  },
+  "university": {
+    "rateTab": "Rate Professors",
+    "discussionTab": "Discussions"
+  }
 
 }  
