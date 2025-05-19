@@ -11,7 +11,7 @@ export default {
     scheme: "interzone",
     userInterfaceStyle: "light",
     splash: {
-      image: "./assets/images/splash_icon.png",
+      image: "./assets/lima_sunset_image.png",
       resizeMode: "contain",
       "imageWidth": 200
     },

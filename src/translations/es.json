@@ -125,7 +125,7 @@
         "restaurants": "Restaurantes",
         "music": "Musica",
         "news": "Noticias",
-        "studyhub": "Centro de Estudio",
+        "studyhub": "Centro de Estudios",
         "petpals": "Mascotas",
         "deals": "Descuentos",
         "random": "Random",
@@ -135,7 +135,9 @@
         "business": "Emprendimientos",
         "tutors": "Tutores"
     },
-    "testYourKnowledge": "Cuanto sabes sobre musica?",
+    "testYourKnowledgeMusic": "Cuanto sabes sobre musica?",
+    "testYourKnowledge": "Pon a prueba tu conocimiento",
+
     "Villareal": "Villareal - Historia Universal",
 
     "videoPreview": "Vista prevista del video",
@@ -432,7 +434,96 @@
     "oops": "¡Uy!",
     "businessReviews": {
         "title": "Reseñas de usuarios"
-      },
-      "close": "Cerrar"
-       
+    },
+    "close": "Cerrar",
+    "adminDashboard": {
+        "title": "Panel de Administración",
+        "reviewBusiness": "Revisar Solicitudes de Negocios",
+        "reviewProfessors": "Revisar Sugerencias de Profesores",
+        "distributeQr": "Distribuir Códigos QR"
+    },
+    "professorReview": {
+        "title": "Revisión de Sugerencias de Profesores",
+        "accessDenied": "Acceso Denegado",
+        "department": "Departamento: {{department}}",
+        "course": "Curso: {{course}}",
+        "submittedBy": "Enviado por UID: {{uid}}",
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "approvedTitle": "Aprobado",
+        "approvedMsg": "{{name}} fue añadido a profesores.",
+        "rejectedTitle": "Rechazado",
+        "rejectedMsg": "La sugerencia fue eliminada."
+    },
+    "discussion": {
+        "back": "Volver",
+        "placeholder": "Escribe un comentario...",
+        "send": "Enviar",
+        "editing": "Editando tu comentario...",
+        "editPlaceholder": "Edita tu comentario...",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "tooShortTitle": "Muy corto",
+        "tooShortMessage": "Por favor, escribe un comentario más largo.",
+        "tooShortSaveMessage": "Escribe un comentario más largo antes de guardar.",
+        "header": "Discusión - {{name}}",
+        "post": "Publicar",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "comment": "Comentar",
+        "report": "Reportar",
+        "reportedTitle": "Reportado",
+        "reportedMsg": "Gracias. Nuestros moderadores revisarán esta publicación.",
+        "tooShortPost": "Escribe una publicación más larga.",
+        "tooShortEdit": "Por favor, escribe algo significativo antes de guardar.",
+        "limitTitle": "Límite Alcanzado",
+        "limitMsg": "Solo puedes publicar una vez por día."
+    },
+    "rateProfessors": {
+        "header": "Busca o Agrega a Profesores",
+        "placeholder": "Escribe el nombre del Profesor...",
+        "suggest": "Sugiere un Profesor"
+    },
+    "rateOne": {
+        "header": "Califica al Profesor {{name}}",
+        "placeholder": "Escribe tu reseña...",
+        "submit": "Enviar Reseña",
+        "incompleteTitle": "Incompleto",
+        "incompleteMsg": "Por favor, proporciona una calificación con estrellas y un comentario.",
+        "duplicateTitle": "Reseña Duplicada",
+        "duplicateMsg": "Ya calificaste a este profesor. Solo puedes dejar una reseña.",
+        "successTitle": "Éxito",
+        "successMsg": "¡Gracias por tu reseña!"
+    },
+    "suggest": {
+        "title": "Sugerir un Profesor",
+        "namePlaceholder": "Nombre del Profesor *",
+        "departmentPlaceholder": "Departamento (requerido)",
+        "coursePlaceholder": "Curso (requerido)",
+        "submit": "Enviar para Revisión",
+        "incompleteTitle": "Incompleto",
+        "incompleteMsg": "Se requiere el nombre del profesor.",
+        "successTitle": "Enviado",
+        "successMsg": "Tu sugerencia ha sido enviada para revisión.",
+        "completeAllFields": "Por favor completa todos los campos antes de enviar."
+    },
+    "verify": {
+        "title": "Verifica tu correo institucional",
+        "send": "Enviar Código",
+        "verify": "Verificar",
+        "cancel": "Cancelar",
+        "codePlaceholder": "Ingresa el código de verificación",
+        "invalidTitle": "Correo Inválido",
+        "invalidEmail": "Por favor ingresa un correo válido de {{domain}}",
+        "codeSentTitle": "Código Enviado",
+        "codeSentMsg": "Revisa tu correo institucional para el código de 6 dígitos.",
+        "errorTitle": "Error",
+        "errorGeneric": "No se pudo enviar el código de verificación.",
+        "failedTitle": "Verificación Fallida",
+        "failedMsg": "Código inválido o expirado."
+    },
+    "university": {
+        "rateTab": "Calificar Profesores",
+        "discussionTab": "Debates"
+      }
 } 

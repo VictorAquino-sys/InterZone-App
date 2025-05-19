@@ -1,47 +1,53 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import i18n from '../src/i18n';
 
 const FriendsHomeScreen = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-        <Text style={styles.title}>👥 {i18n.t('friendsTitle')}</Text>
+    <>
+      <StatusBar
+        backgroundColor={Platform.OS === 'android' ? '#f9f9f9' : 'transparent'}
+        barStyle="dark-content"
+      />
+        <View style={styles.container}>
+            <Text style={styles.title}>👥 {i18n.t('friendsTitle')}</Text>
 
-      <View style={styles.cardContainer}>
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate('People')}
-        >
-          <Ionicons name="person-add-outline" size={28} color="#007bff" />
-          <Text style={styles.cardText}>{i18n.t('findPeople')}</Text>
-        </TouchableOpacity>
+          <View style={styles.cardContainer}>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('People')}
+            >
+              <Ionicons name="person-add-outline" size={28} color="#007bff" />
+              <Text style={styles.cardText}>{i18n.t('findPeople')}</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate('Requests')}
-        >
-          <Ionicons name="mail-outline" size={28} color="#007bff" />
-          <Text style={styles.cardText}>{i18n.t('friendRequests')}</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('Requests')}
+            >
+              <Ionicons name="mail-outline" size={28} color="#007bff" />
+              <Text style={styles.cardText}>{i18n.t('friendRequests')}</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate('FriendsList')}
-        >
-          <Ionicons name="people-outline" size={28} color="#007bff" />
-          <Text style={styles.cardText}>{i18n.t('myFriends')}</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('FriendsList')}
+            >
+              <Ionicons name="people-outline" size={28} color="#007bff" />
+              <Text style={styles.cardText}>{i18n.t('myFriends')}</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.blockedUsersButton}
-          onPress={() => navigation.navigate('BlockedUsers')}
-        >
-          <Text style={styles.blockedUsersText}>{i18n.t('block.manage')}</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.blockedUsersButton}
+              onPress={() => navigation.navigate('BlockedUsers')}
+            >
+              <Text style={styles.blockedUsersText}>{i18n.t('block.manage')}</Text>
+            </TouchableOpacity>
 
-      </View>
-    </View>
+          </View>
+        </View>
+    </>
   );
 };
 

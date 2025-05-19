@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useRef, FunctionComponent } from 'react';
-import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform, NativeEventEmitter, NativeModules, Switch } from 'react-native';
+import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform, NativeEventEmitter, NativeModules, Switch, StatusBar } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Location from 'expo-location';
 import { usePosts } from '../../src/contexts/PostsContext';
@@ -642,190 +642,196 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS === 'ios' ? "padding": undefined}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1}}>
-        <View style={styles.container}>
-          <Text style={styles.screenTitle}>{i18n.t('createPost')}</Text>
+    <>
+      <StatusBar
+        backgroundColor={Platform.OS === 'android' ? 'seashell' : 'transparent'}
+        barStyle="dark-content"
+        />
+        <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS === 'ios' ? "padding": undefined}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1}}>
+            <View style={styles.container}>
+              <Text style={styles.screenTitle}>{i18n.t('createPost')}</Text>
 
-          {user?.accountType === 'business' && user.businessVerified && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ marginRight: 10 }}>{i18n.t('postAs')}</Text>
-              <TouchableOpacity onPress={() => setPostingAsBusiness(false)}>
-                <Text style={{ fontWeight: !postingAsBusiness ? 'bold' : 'normal' }}>
-                  {user.name}
+              {user?.accountType === 'business' && user.businessVerified && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <Text style={{ marginRight: 10 }}>{i18n.t('postAs')}</Text>
+                  <TouchableOpacity onPress={() => setPostingAsBusiness(false)}>
+                    <Text style={{ fontWeight: !postingAsBusiness ? 'bold' : 'normal' }}>
+                      {user.name}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={{ marginHorizontal: 6 }}>/</Text>
+                  <TouchableOpacity onPress={() => setPostingAsBusiness(true)}>
+                    <Text style={{ fontWeight: postingAsBusiness ? 'bold' : 'normal' }}>
+                    {user.businessProfile?.name || user.name}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {user?.accountType === 'business' && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+                  <Text>{i18n.t('featureOnChannel')}</Text>
+                  <Switch style={{marginLeft: 6 }} value={isShowcase} onValueChange={setIsShowcase} />
+                </View>
+              )}
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  multiline
+                  placeholder={i18n.t('postPlaceholder')}
+                  maxLength={500}
+                  style={{height: 150}}
+                  value={postText}
+                  onChangeText={(text) => {
+                    setPostText(text);
+                    setCharCount(text.length); // Update character count as user types
+                  }}
+                />
+                <Text style={styles.charCount}>
+                  {charCount} / 500
                 </Text>
+              </View>
+
+              {/* Image Preview */}
+              {imageUri && (
+                <View style={styles.imagePreviewContainer}>
+                  <Text style={styles.previewText}>{i18n.t('imagePreview')}</Text>
+                  <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                </View>
+              )}
+
+              {/* Video Preview */}
+              {videoUri && (
+                <View style={styles.imagePreviewContainer}>
+                  <Text style={styles.previewText}>{i18n.t('videoPreview')}</Text>
+                  <Video
+                    source={{ uri: videoUri }}
+                    rate={1.0}
+                    volume={1.0}
+                    isMuted={false}
+                    shouldPlay
+                    isLooping
+                    style={styles.videoPreview}
+                  />
+                </View>
+              )}
+
+              <View style={styles.iconsContainer}>
+                {/* Image picker button */}
+                <TouchableOpacity 
+                  onPress={pickImage} 
+                  disabled={locationLoading || !isLocationReady || !isCategorySelected || mediaType === 'video'}>
+                    <Ionicons 
+                      name="image-outline" 
+                      size={30} 
+                      color={(!isCategorySelected || !isLocationReady || mediaType === 'video') ? "gray" : "#FF9966"} /> 
+                </TouchableOpacity>
+
+                {/* Video picker button */}
+                {isCategorySelected && isLocationReady && ( isVideoCategory && ( // Show video icon only when category and location are ready
+                  <TouchableOpacity onPress={pickVideo} disabled={mediaType === 'image'}>
+                    <Ionicons
+                      name="videocam"
+                      size={30}
+                      color={(!isCategorySelected || !isLocationReady || mediaType === 'image') ? "gray" : "#FF9966"} // Gray out if no category or location is ready
+                    />
+                  </TouchableOpacity>
+                ))}
+
+                {locationIconVisible ? (
+                  <TouchableOpacity onPress={handleAddLocation}>
+                    {locationLoading ? (
+                      <ActivityIndicator size="small" color="blue" />
+                    ) : (
+                      <Ionicons name="location-outline" size={28} color="#009999" />
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  location && (
+                    <Text style={{ textAlign: 'center', color: '#333', marginTop: 8 }}>
+                      📍 {location}
+                    </Text>
+                  )
+                )}
+              </View>
+
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={selectedCategory}
+                  onValueChange={(itemValue, itemIndex) => setSelectedCategory(itemValue)}
+                  enabled={!locationLoading}                  
+                  style={styles.pickerStyle}
+                >
+                  <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
+                  <Picker.Item label={i18n.t('categories.restaurants')} value="restaurants" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.events')} value="events" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.music')} value="music" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.news')} value="news" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.studyhub')} value="study hub" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.petpals')} value="petpals" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.deals')} value="deals" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.random')} value="random" color="cornflowerblue"/>  
+                  <Picker.Item label={i18n.t('categories.ruteros')} value="ruteros" color="cornflowerblue"/>
+                  <Picker.Item label={i18n.t('categories.business')} value="business" color="cornflowerblue"/>            
+                  <Picker.Item label={i18n.t('categories.tutors')} value="tutors" color="cornflowerblue"/>            
+                </Picker>
+              </View>
+
+              {/* Show prompts when category or location is not ready */}
+              {/* {!isCategorySelected && (
+                <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
+              )} */}
+
+              {locationLoading && (
+                <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
+              )}
+
+              <TouchableOpacity
+                style={styles.buttonContainer}
+                onPress={handleDone}
+                disabled={uploading || locationLoading || !isCategorySelected || !isLocationReady}
+                activeOpacity={0.8} // Optional: Controls the opacity on touch
+              >
+                <Text style={styles.buttonText}>{uploading ? i18n.t('uploading') : i18n.t('doneButton')}</Text>
               </TouchableOpacity>
-              <Text style={{ marginHorizontal: 6 }}>/</Text>
-              <TouchableOpacity onPress={() => setPostingAsBusiness(true)}>
-                <Text style={{ fontWeight: postingAsBusiness ? 'bold' : 'normal' }}>
-                {user.businessProfile?.name || user.name}
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, paddingHorizontal: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setcommentsEnabled(prev => !prev)}
+                  style={{ 
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginRight:10, 
+                  }}
+                  hitSlop={{ top:10, bottom: 10, left: 10, right: 10 }} // Increase touch area
+                >
+                  <Ionicons
+                    name={commentsEnabled ? 'checkbox' : 'square-outline'}
+                    size={24}
+                    color="#4A90E2"
+                  />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 16, color: '#333' }}>
+                  {commentsEnabled ? i18n.t('allowComments') : i18n.t('noComments')}
                 </Text>
-              </TouchableOpacity>
+              </View>
+    
             </View>
-          )}
+        </ScrollView>
 
-          {user?.accountType === 'business' && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-              <Text>{i18n.t('featureOnChannel')}</Text>
-              <Switch style={{marginLeft: 6 }} value={isShowcase} onValueChange={setIsShowcase} />
-            </View>
-          )}
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              multiline
-              placeholder={i18n.t('postPlaceholder')}
-              maxLength={500}
-              style={{height: 150}}
-              value={postText}
-              onChangeText={(text) => {
-                setPostText(text);
-                setCharCount(text.length); // Update character count as user types
-              }}
-            />
-            <Text style={styles.charCount}>
-              {charCount} / 500
+            {/* ✅ Add this overlay here */}
+        {uploading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#4A90E2" />
+            <Text style={{ marginTop: 10, color: 'gray' }}>
+              {i18n.t('uploadingMessage') || 'Uploading your post...'}
             </Text>
           </View>
-
-          {/* Image Preview */}
-          {imageUri && (
-            <View style={styles.imagePreviewContainer}>
-              <Text style={styles.previewText}>{i18n.t('imagePreview')}</Text>
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-            </View>
-          )}
-
-          {/* Video Preview */}
-          {videoUri && (
-            <View style={styles.imagePreviewContainer}>
-              <Text style={styles.previewText}>{i18n.t('videoPreview')}</Text>
-              <Video
-                source={{ uri: videoUri }}
-                rate={1.0}
-                volume={1.0}
-                isMuted={false}
-                shouldPlay
-                isLooping
-                style={styles.videoPreview}
-              />
-            </View>
-          )}
-
-          <View style={styles.iconsContainer}>
-            {/* Image picker button */}
-            <TouchableOpacity 
-              onPress={pickImage} 
-              disabled={locationLoading || !isLocationReady || !isCategorySelected || mediaType === 'video'}>
-                <Ionicons 
-                  name="image-outline" 
-                  size={30} 
-                  color={(!isCategorySelected || !isLocationReady || mediaType === 'video') ? "gray" : "#FF9966"} /> 
-            </TouchableOpacity>
-
-            {/* Video picker button */}
-            {isCategorySelected && isLocationReady && ( isVideoCategory && ( // Show video icon only when category and location are ready
-              <TouchableOpacity onPress={pickVideo} disabled={mediaType === 'image'}>
-                <Ionicons
-                  name="videocam"
-                  size={30}
-                  color={(!isCategorySelected || !isLocationReady || mediaType === 'image') ? "gray" : "#FF9966"} // Gray out if no category or location is ready
-                />
-              </TouchableOpacity>
-            ))}
-
-            {locationIconVisible ? (
-              <TouchableOpacity onPress={handleAddLocation}>
-                {locationLoading ? (
-                  <ActivityIndicator size="small" color="blue" />
-                ) : (
-                  <Ionicons name="location-outline" size={28} color="#009999" />
-                )}
-              </TouchableOpacity>
-            ) : (
-              location && (
-                <Text style={{ textAlign: 'center', color: '#333', marginTop: 8 }}>
-                  📍 {location}
-                </Text>
-              )
-            )}
-          </View>
-
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={(itemValue, itemIndex) => setSelectedCategory(itemValue)}
-              enabled={!locationLoading}                  
-              style={styles.pickerStyle}
-            >
-              <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
-              <Picker.Item label={i18n.t('categories.restaurants')} value="restaurants" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.events')} value="events" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.music')} value="music" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.news')} value="news" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.studyhub')} value="study hub" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.petpals')} value="petpals" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.deals')} value="deals" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.random')} value="random" color="cornflowerblue"/>  
-              <Picker.Item label={i18n.t('categories.ruteros')} value="ruteros" color="cornflowerblue"/>
-              <Picker.Item label={i18n.t('categories.business')} value="business" color="cornflowerblue"/>            
-              <Picker.Item label={i18n.t('categories.tutors')} value="tutors" color="cornflowerblue"/>            
-            </Picker>
-          </View>
-
-          {/* Show prompts when category or location is not ready */}
-          {/* {!isCategorySelected && (
-            <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
-          )} */}
-
-          {locationLoading && (
-            <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
-          )}
-
-          <TouchableOpacity
-            style={styles.buttonContainer}
-            onPress={handleDone}
-            disabled={uploading || locationLoading || !isCategorySelected || !isLocationReady}
-            activeOpacity={0.8} // Optional: Controls the opacity on touch
-          >
-            <Text style={styles.buttonText}>{uploading ? i18n.t('uploading') : i18n.t('doneButton')}</Text>
-          </TouchableOpacity>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, paddingHorizontal: 10 }}>
-             <TouchableOpacity
-               onPress={() => setcommentsEnabled(prev => !prev)}
-               style={{ 
-                 flexDirection: 'row',
-                 alignItems: 'center',
-                 gap: 8,
-                 marginRight:10, 
-               }}
-               hitSlop={{ top:10, bottom: 10, left: 10, right: 10 }} // Increase touch area
-             >
-               <Ionicons
-                 name={commentsEnabled ? 'checkbox' : 'square-outline'}
-                 size={24}
-                 color="#4A90E2"
-               />
-             </TouchableOpacity>
-             <Text style={{ fontSize: 16, color: '#333' }}>
-               {commentsEnabled ? i18n.t('allowComments') : i18n.t('noComments')}
-             </Text>
-          </View>
- 
-        </View>
-    </ScrollView>
-
-        {/* ✅ Add this overlay here */}
-    {uploading && (
-      <View style={styles.loadingOverlay}>
-        <ActivityIndicator size="large" color="#4A90E2" />
-        <Text style={{ marginTop: 10, color: 'gray' }}>
-          {i18n.t('uploadingMessage') || 'Uploading your post...'}
-        </Text>
-      </View>
-    )}
-  </KeyboardAvoidingView>
+        )}
+      </KeyboardAvoidingView>
+    </>
   );
 };
 
@@ -835,7 +841,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    paddingTop: '8%',
+    paddingTop: '2%',
     backgroundColor: 'seashell',
   },
   screenTitle: {

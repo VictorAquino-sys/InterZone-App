@@ -21,6 +21,7 @@ import { generateNonce, sha256 } from '@/utils/cryptoUtils';
 import { logScreen } from '@/utils/analytics';
 import * as Localization from 'expo-localization';
 import { recordHandledError } from '@/utils/crashlytics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ResponsiveContainer from '@/components/ResponsiveContainer';
 
 const locales = Localization.getLocales() as Array<{ region?: string }>;
@@ -41,6 +42,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const [show, setShow] = useState<boolean>(true);
   const { refreshUser } = useUser(); // ⬅️ grab from context
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -441,100 +443,107 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <ImageBackground 
-      source={image2} 
-      resizeMode="cover" 
-      style={styles.rootContainer}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator= {false}
+    <>
+      <StatusBar 
+        translucent 
+        backgroundColor="transparent" 
+        barStyle="light-content" // ⬅️ or "dark-content" depending on image brightness
+      />
+        <ImageBackground 
+          source={image2} 
+          resizeMode="cover" 
+          style={styles.rootContainer}
         >
-          <View style={styles.headerContainer}>
-            {show && (
-              <>
-                <Text style={styles.titleText}>{i18n.t('appTitle')}</Text>
-                <Text style={styles.phraseText}>{i18n.t('tagline')}</Text>
-              </>
-            )}
-          </View>
-
-          <ResponsiveContainer>
-
-            <KeyboardAvoidingView 
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              style= {styles.container}>
-              <View style={styles.authButtonsContainer}>
-                <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
-                  <View style={styles.googleContent}>
-                    <Image
-                      source={GoogleIcon} // use the actual G icon you have
-                      style={styles.googleIcon}
-                    />
-                    <Text style={styles.googleText}>{i18n.t('signInWithGoogle')}</Text>
-                    
-                  </View>
-                </TouchableOpacity>
-
-
-                {Platform.OS === 'ios' && isAppleAvailable && (
-                  <AppleAuthentication.AppleAuthenticationButton
-                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                    cornerRadius={5}
-                    style={styles.appleButton}
-                    onPress={handleAppleSignIn}
-                  />
+          <SafeAreaView style={styles.safeArea}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator= {false}
+            >
+              <View style={styles.headerContainer}>
+                {show && (
+                  <>
+                    <Text style={styles.titleText}>{i18n.t('appTitle')}</Text>
+                    <Text style={styles.phraseText}>{i18n.t('tagline')}</Text>
+                  </>
                 )}
               </View>
 
-              <View style={[styles.inputContainer, { width: isTablet ? 400 : '60%' }]}>
-               <TextInput
-                  style={styles.input}
-                  placeholder={i18n.t('Email')}
-                  value={email}
-                  onChangeText={text => setEmail(text)}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder={i18n.t('Password')}
-                  value={password}
-                  onChangeText={text => setPassword(text)}
-                  secureTextEntry
-                />
-              </View>
-              
-              <View style={[styles.buttonContainer, { width: isTablet ? 400 : '60%' }]}>
-                <TouchableOpacity onPress={handleLogin} style={styles.button}>
-                  <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
-                </TouchableOpacity>
+              <ResponsiveContainer>
 
-                <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
-                  <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
-                </TouchableOpacity>
-              </View>
+                <KeyboardAvoidingView 
+                  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                  style= {styles.container}>
+                  <View style={styles.authButtonsContainer}>
+                    <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
+                      <View style={styles.googleContent}>
+                        <Image
+                          source={GoogleIcon} // use the actual G icon you have
+                          style={styles.googleIcon}
+                        />
+                        <Text style={styles.googleText}>{i18n.t('signInWithGoogle')}</Text>
+                        
+                      </View>
+                    </TouchableOpacity>
 
-              <View style={styles.troubleAccessContainer}>
-                <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
-                <View style={styles.troubleLinks}>
-                  <TouchableOpacity onPress={handlePasswordReset}>
-                    <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.separator}> | </Text>
-                  <TouchableOpacity onPress={handleResendVerificationEmail}>
-                    <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
 
-            </KeyboardAvoidingView>
+                    {Platform.OS === 'ios' && isAppleAvailable && (
+                      <AppleAuthentication.AppleAuthenticationButton
+                        buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                        cornerRadius={5}
+                        style={styles.appleButton}
+                        onPress={handleAppleSignIn}
+                      />
+                    )}
+                  </View>
 
-          </ResponsiveContainer>
-        </ScrollView>
-      </SafeAreaView>
-    </ImageBackground>
+                  <View style={[styles.inputContainer, { width: isTablet ? 400 : '60%' }]}>
+                  <TextInput
+                      style={styles.input}
+                      placeholder={i18n.t('Email')}
+                      value={email}
+                      onChangeText={text => setEmail(text)}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder={i18n.t('Password')}
+                      value={password}
+                      onChangeText={text => setPassword(text)}
+                      secureTextEntry
+                    />
+                  </View>
+                  
+                  <View style={[styles.buttonContainer, { width: isTablet ? 400 : '60%' }]}>
+                    <TouchableOpacity onPress={handleLogin} style={styles.button}>
+                      <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
+                      <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.troubleAccessContainer}>
+                    <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
+                    <View style={styles.troubleLinks}>
+                      <TouchableOpacity onPress={handlePasswordReset}>
+                        <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.separator}> | </Text>
+                      <TouchableOpacity onPress={handleResendVerificationEmail}>
+                        <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                </KeyboardAvoidingView>
+
+              </ResponsiveContainer>
+            </ScrollView>
+          </SafeAreaView>
+        </ImageBackground>
+    </>
   );
 };
 
