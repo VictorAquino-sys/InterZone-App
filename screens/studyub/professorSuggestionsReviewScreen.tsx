@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { db } from '@/config/firebase';
 import { collection, getDocs, deleteDoc, addDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useUser } from '@/contexts/UserContext';
+import { useFocusEffect } from '@react-navigation/native';
 import i18n from '@/i18n';
 
 type Suggestion = {
@@ -15,14 +16,18 @@ type Suggestion = {
 };
 
 const ProfessorSuggestionsReviewScreen = () => {
-    const { user } = useUser();
-    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const { user } = useUser();
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
-    const fetchSuggestions = async () => {
-        const universities = ['upc', 'villareal']; // Expand this list if needed
-        const allSuggestions: Suggestion[] = [];
-    
-        for (const universityId of universities) {
+
+  const fetchSuggestions = async () => {
+    setLoading(true);
+    const universities = ['upc', 'villareal']; // Expand this list if needed
+    const allSuggestions: Suggestion[] = [];
+    try {
+      for (const universityId of universities) {
         const snap = await getDocs(
             collection(db, 'universities', universityId, 'professorSuggestions')
         );
@@ -38,43 +43,61 @@ const ProfessorSuggestionsReviewScreen = () => {
             universityId: universityId,
             });
         });
-        }
-    
-        setSuggestions(allSuggestions);
-    };
-
-  const handleApprove = async (suggestion: Suggestion) => {
-    const ref = doc(db, 'universities', suggestion.universityId, 'professors', suggestion.id);
-    await setDoc(
-        doc(db, 'universities', suggestion.universityId, 'professors', suggestion.id),
-        {
-          name: suggestion.name,
-          department: suggestion.department || '',
-          course: suggestion.course || '',
-          createdBy: suggestion.createdBy,
-          createdAt: serverTimestamp(),
-        }
-    );
-
-    await deleteDoc(
-        doc(db, 'universities', suggestion.universityId, 'professorSuggestions', suggestion.id)
-      );
-
-    fetchSuggestions();
-    Alert.alert(i18n.t('professorReview.approvedTitle'), i18n.t('professorReview.approvedMsg', { name: suggestion.name }));
+      }
+      setSuggestions(allSuggestions);
+    } catch (err) {
+      Alert.alert("Error", "unable to fetch suggestions.");
+    }
+      setLoading(false);
   };
 
-    const handleReject = async (suggestion: Suggestion) => {
-    await deleteDoc(
-        doc(db, 'universities', suggestion.universityId, 'professorSuggestions', suggestion.id)
-    );
-    fetchSuggestions();
-    Alert.alert(i18n.t('professorReview.rejectedTitle'), i18n.t('professorReview.rejectedMsg'));
-    };
+  const handleApprove = async (suggestion: Suggestion) => {
+    setProcessingId(suggestion.id);
+    try {
+      const ref = doc(db, 'universities', suggestion.universityId, 'professors', suggestion.id);
+      await setDoc(
+          doc(db, 'universities', suggestion.universityId, 'professors', suggestion.id),
+          {
+            name: suggestion.name,
+            nameLower: suggestion.name.toLowerCase(),
+            department: suggestion.department || '',
+            course: suggestion.course || '',
+            createdBy: suggestion.createdBy,
+            createdAt: serverTimestamp(),
+          }
+      );
 
-  useEffect(() => {
-    if (user?.claims?.admin) fetchSuggestions();
-  }, [user?.uid]);
+      await deleteDoc(
+          doc(db, 'universities', suggestion.universityId, 'professorSuggestions', suggestion.id)
+        );
+
+      fetchSuggestions();
+      Alert.alert(i18n.t('professorReview.approvedTitle'), i18n.t('professorReview.approvedMsg', { name: suggestion.name }));
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (suggestion: Suggestion) => {
+    setProcessingId(suggestion.id);
+    try {
+      await deleteDoc(
+        doc(db, 'universities', suggestion.universityId, 'professorSuggestions', suggestion.id)
+      );
+      await fetchSuggestions();
+      Alert.alert(i18n.t('professorReview.rejectedTitle'), i18n.t('professorReview.rejectedMsg'));
+    } catch (err) {
+      Alert.alert("Error", "unable to reject suggestion.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.claims?.admin) fetchSuggestions();
+    }, [user?.claims?.admin])
+  );
 
   if (!user?.claims?.admin) {
     return (
@@ -83,6 +106,13 @@ const ProfessorSuggestionsReviewScreen = () => {
       </View>
     );
   }
+
+  if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
+  if (!loading && suggestions.length === 0) return (
+    <View style={styles.container}>
+      <Text>No hay sugerencias pendientes.</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -98,12 +128,21 @@ const ProfessorSuggestionsReviewScreen = () => {
             <Text style={styles.submittedBy}>{i18n.t('professorReview.submittedBy', { uid: item.createdBy })}</Text>
 
             <View style={styles.actions}>
-              <TouchableOpacity onPress={() => handleApprove(item)}>
+
+              <TouchableOpacity
+                disabled={processingId === item.id}
+                onPress={() => handleApprove(item)}
+              >
                 <Text style={styles.approve}>✅ {i18n.t('professorReview.approve')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleReject(item)}>
+
+              <TouchableOpacity
+                disabled={processingId === item.id}
+                onPress={() => handleReject(item)}
+              >
                 <Text style={styles.reject}>❌ {i18n.t('professorReview.reject')}</Text>
               </TouchableOpacity>
+
             </View>
           </View>
         )}

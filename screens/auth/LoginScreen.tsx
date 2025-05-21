@@ -29,6 +29,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const { refreshUser } = useUser(); // ⬅️ grab from context
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
   const insets = useSafeAreaInsets();
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     // let alreadyNavigated = false;
@@ -339,6 +340,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
   const signIn = async () => {
     try {
+      setGoogleLoading(true); // ⏳ Start loading
       await checkPlayServices(); // Check for Google Play Services
       const userInfo = await handleGoogleSignIn(); // Handle the Google sign-in process
       if (!userInfo.idToken) {
@@ -383,6 +385,8 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
     } catch (error: any) {
       await recordHandledError(error);
       Alert.alert('Login Failed', error.message || 'Failed to sign in with Google');
+    } finally {
+      setGoogleLoading(false); // ✅ End loading
     }
   };
   
@@ -439,13 +443,17 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
               <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
                 <View style={styles.authButtonsContainer}>
-                  <TouchableOpacity onPress={signIn} style={styles.customGoogleButton}>
+
+                  <TouchableOpacity
+                    onPress={signIn}
+                    disabled={googleLoading}
+                    style={[styles.customGoogleButton, googleLoading && { opacity: 0.6 }]}
+                  >
                     <View style={styles.googleContent}>
-                      <Image
-                        source={GoogleIcon} // use the actual G icon you have
-                        style={styles.googleIcon}
-                      />
-                      <Text style={styles.googleText}>Sign in with Google</Text>
+                      <Image source={GoogleIcon} style={styles.googleIcon} />
+                      <Text style={styles.googleText}>
+                        {googleLoading ? i18n.t('loading') : i18n.t('auth.signInWithGoogle')}
+                      </Text>
                     </View>
                   </TouchableOpacity>
 
@@ -532,7 +540,7 @@ const styles = StyleSheet.create({
     // gap: 12, // ✅ Works in React Native 0.71+, otherwise use marginBottom on each button
   },
   customGoogleButton: {
-    width: 170,
+    width: 200,
     height: 44,
     backgroundColor: 'white',
     borderRadius: 8,
@@ -544,6 +552,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
+    // paddingHorizontal: 2, // added padding
   },
   googleContent: {
     flexDirection: 'row',

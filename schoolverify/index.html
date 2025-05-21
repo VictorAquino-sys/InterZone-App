@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#26c6da" />
+  <title>School Email Verified</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 10% 5%;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #26c6da;
+    }
+    p {
+      font-size: 18px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="title">✅ School Email Verified</h1>
+  <p id="message">You can now return to the InterZone app. Welcome to the Study Hub!</p>
+  <p style="margin-top: 40px;">
+    <a href="interzone://verify" style="color:#26c6da; font-weight:bold; font-size:16px;">
+      Open InterZone App
+    </a>
+  </p>
+
+  <script>
+    const lang = navigator.language || navigator.userLanguage;
+
+    const translations = {
+      es: {
+        title: '✅ Correo institucional verificado',
+        message: 'Ya puedes regresar a la app de InterZone. ¡Bienvenido al Centro de Estudio!',
+      },
+      en: {
+        title: '✅ School Email Verified',
+        message: 'You can now return to the InterZone app. Welcome to the Study Hub!',
+      },
+    };
+
+    const selected = lang.startsWith('es') ? translations.es : translations.en;
+    document.getElementById('title').textContent = selected.title;
+    document.getElementById('message').textContent = selected.message;
+  </script>
+</body>
+</html>

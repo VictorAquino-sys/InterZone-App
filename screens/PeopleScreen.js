@@ -6,6 +6,7 @@ import { sendFriendRequest } from '../services/friendService';
 import { useUser } from '../src/contexts/UserContext';
 import i18n from '../src/i18n';
 import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 
 const PeopleScreen = () => {
   const [users, setUsers] = useState([]);
@@ -70,13 +71,12 @@ const PeopleScreen = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-
-    fetchData();
-  }, [user]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user) fetchData();
+      // Optionally return a cleanup function if you need to reset state on unfocus
+    }, [user])
+  );
 
   const handleAddFriend = async (toUserId) => {
     const status = await sendFriendRequest(currentUserId, toUserId);

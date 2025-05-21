@@ -28,5 +28,23 @@
       "enabled": true
     },
     "singleProjectMode": true
+  },
+  "hosting": {
+    "public": "schoolverify",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/schoolverify",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/schoolverify/**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

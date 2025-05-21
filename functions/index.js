@@ -421,10 +421,14 @@ exports.sendSchoolVerificationCode = onCall({ secrets: [SENDGRID_API_KEY] }, asy
   const subject = subjects[lang] || subjects.en;
   const body = bodies[lang] || bodies.en;
 
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  sgMail.setApiKey(SENDGRID_API_KEY.value());
 
   // ✅ Send email
   try {
+    console.log(`📧 Sending verification email to ${email} with code ${code}`);
+    console.log('Subject:', subject);
+    console.log('Body:', body);
+    
     await sgMail.send({
       to: email,
       from: 'contact.interzone.devs@gmail.com',
@@ -432,6 +436,9 @@ exports.sendSchoolVerificationCode = onCall({ secrets: [SENDGRID_API_KEY] }, asy
       text: body,
       html: `<p><strong>${body}</strong></p>`,
     });
+
+    console.log(`✅ Verification email sent to ${email}`);
+
   } catch (error) {
     console.error("❌ Failed to send verification email:", error);
     if (error.response) {

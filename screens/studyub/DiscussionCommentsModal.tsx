@@ -3,6 +3,8 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, Modal, A
 import { db } from '@/config/firebase';
 import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { useUser } from '@/contexts/UserContext';
+import { onSnapshot } from 'firebase/firestore';
+import { useFocusEffect } from '@react-navigation/native';
 import i18n from '@/i18n';
 
 type Props = {
@@ -20,28 +22,11 @@ type Comment = {
 };
 
 const DiscussionCommentsModal = ({ visible, onClose, universityId, postId }: Props) => {
-    const { user } = useUser();
-    const [comments, setComments] = useState<Comment[]>([]);
-    const [input, setInput] = useState('');
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editingContent, setEditingContent] = useState('');
-
-  const fetchComments = async () => {
-    const ref = collection(db, 'universities', universityId, 'discussions', postId, 'comments');
-    const q = query(ref, orderBy('createdAt', 'asc'));
-    const snap = await getDocs(q);
-    const data: Comment[] = [];
-    snap.forEach(docSnap => {
-      const raw = docSnap.data();
-      data.push({
-        id: docSnap.id,
-        text: raw.text,
-        createdBy: raw.createdBy,
-        createdAt: raw.createdAt,
-      });
-    });
-    setComments(data);
-  };
+  const { user } = useUser();
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [input, setInput] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
 
   const submitComment = async () => {
     if (!user?.uid || input.trim().length < 2) {
@@ -57,18 +42,37 @@ const DiscussionCommentsModal = ({ visible, onClose, universityId, postId }: Pro
 
     await addDoc(collection(db, 'universities', universityId, 'discussions', postId, 'comments'), newComment);
     setInput('');
-    fetchComments();
+    // fetchComments();
   };
 
-    useEffect(() => {
-        if (visible) {
-        fetchComments();
-        } else {
+  useFocusEffect(
+    React.useCallback(() => {
+      let unsubscribe: (() => void) | undefined;
+      if (visible) {
+        const ref = collection(db, 'universities', universityId, 'discussions', postId, 'comments');
+        const q = query(ref, orderBy('createdAt', 'asc'));
+        unsubscribe = onSnapshot(q, (snap) => {
+          const data: Comment[] = [];
+          snap.forEach(docSnap => {
+            const raw = docSnap.data();
+            data.push({
+              id: docSnap.id,
+              text: raw.text,
+              createdBy: raw.createdBy,
+              createdAt: raw.createdAt,
+            });
+          });
+          setComments(data);
+        });
+      }
+      return () => {
         setInput('');
         setEditingId(null);
         setEditingContent('');
-        }
-    }, [visible]);
+        if (unsubscribe) unsubscribe();
+      };
+    }, [visible, universityId, postId])
+  );
 
   return (
     <Modal visible={visible} animationType="slide">
@@ -95,7 +99,7 @@ const DiscussionCommentsModal = ({ visible, onClose, universityId, postId }: Pro
 
                 <TouchableOpacity onPress={async () => {
                     await deleteDoc(doc(db, 'universities', universityId, 'discussions', postId, 'comments', item.id));
-                    fetchComments();
+                    // fetchComments();
                 }}>
                     <Text style={{ color: 'red' }}>🗑️</Text>
                 </TouchableOpacity>
@@ -129,7 +133,7 @@ const DiscussionCommentsModal = ({ visible, onClose, universityId, postId }: Pro
                 });
                 setEditingId(null);
                 setEditingContent('');
-                fetchComments();
+                // fetchComments();
             }}
             >
                 <Text style={styles.buttonText}>{i18n.t('discussion.save')}</Text>

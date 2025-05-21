@@ -1,117 +1,188 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
-import { User } from '@/contexts/UserContext';
-import { httpsCallable } from 'firebase/functions';
-import { auth, functions } from '@/config/firebase';
+import { auth, db } from '@/config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '@/i18n';
+import { User } from '@/contexts/UserContext';
+import { sendSignInLinkToEmail } from 'firebase/auth';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   schoolId: 'upc' | 'villareal';
-  onSuccess: (verifiedEmail: string) => void;
-  user: User | null; // ✅ Add this line
+  onSuccess: (email: string) => void;
+  user: User | null;
 };
 
 const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoolId, onSuccess, user }) => {
-    const [email, setEmail] = useState('');
-    const [code, setCode] = useState('');
-    const [codeSent, setCodeSent] = useState(false);
-    const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [cooldown, setCooldown] = useState<number>(0);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
-    const domain = schoolId === 'upc' ? 'upc.edu.pe' : 'unfv.edu.pe';
+  const domain = schoolId === 'upc' ? 'upc.edu.pe' : 'unfv.edu.pe';
 
-    useEffect(() => {
-        if (visible && user?.claims?.admin) {
-            onSuccess(`${schoolId}-admin-bypass`);
-            onClose();
-        }
-    }, [visible, user, schoolId]);
+  useEffect(() => {
+    if (visible && user?.claims?.admin) {
+      onSuccess(`${schoolId}-admin-bypass`);
+      onClose();
+    }
+  }, [visible, user, schoolId]);
 
-    const handleSendCode = async () => {
-        const cleanEmail = email.trim().toLowerCase();
-        if (!cleanEmail.endsWith(`@${domain}`)) {
-          Alert.alert(i18n.t('verify.invalidTitle'), i18n.t('verify.invalidEmail', { domain }));
-          return;
-        }
-    
-        try {
-            setLoading(true);
-            await auth.currentUser?.getIdToken(true); // force refresh
-            const sendCode = httpsCallable(functions, 'sendSchoolVerificationCode');
-            await sendCode({ email: cleanEmail, schoolId });
-            setCodeSent(true);
-            Alert.alert(i18n.t('verify.codeSentTitle'), i18n.t('verify.codeSentMsg'));
-        } catch (err: any) {
-            console.error(err);
-            Alert.alert(i18n.t('verify.errorTitle'), err.message || i18n.t('verify.errorGeneric'));
-        } finally {
-            setLoading(false);
-        }
+  useEffect(() => {
+    if (visible) {
+      setLinkSent(false);
+      setEmail('');
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    return () => {
+      if (intervalId) clearInterval(intervalId);
     };
+  }, [intervalId]);
 
-    const handleVerify = async () => {
-        try {
-            setLoading(true);
-            const verifyCode = httpsCallable(functions, 'verifySchoolCode');
-            await verifyCode({ code });
-        
-            onSuccess(email.trim().toLowerCase());
-            onClose();
-        } catch (err: any) {
-          console.error(err);
-          Alert.alert(i18n.t('verify.failedTitle'), err.message || i18n.t('verify.failedMsg'));
-        } finally {
-            setLoading(false);
+  useEffect(() => {
+    const checkCooldown = async () => {
+      const lastSent = await AsyncStorage.getItem('schoolEmailCooldown');
+      if (lastSent) {
+        const elapsed = Math.floor((Date.now() - parseInt(lastSent)) / 1000);
+        const remaining = 300 - elapsed;
+        if (remaining > 0) {
+          setCooldown(remaining);
+          startCooldown(remaining);
         }
+      }
     };
+  
+    if (visible) {
+      setEmail('');
+      // ⛔ Don't reset cooldown if it’s already active
+      if (!linkSent) {
+        setCooldown(0);
+      }
+      setLinkSent(false);
+      checkCooldown();
+    }
+  }, [visible]);
 
-    if (user?.claims?.admin) return null;
+  const actionCodeSettings = {
+    url: 'https://interzone-production.web.app/schoolverify', // ✅ Your deployed Firebase hosting
+    handleCodeInApp: true,
+  };
 
-    return (
-        <Modal visible={visible} transparent animationType="fade">
-        <View style={styles.overlay}>
-            <View style={styles.modal}>
-            <Text style={styles.title}>{i18n.t('verify.title')}</Text>
+  const startCooldown = (duration = 300) => {
+    setCooldown(duration);
+    const id = setInterval(() => {
+      setCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(id);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    setIntervalId(id);
+  };
+  
+  const handleSendVerificationEmail = async () => {
+    const cleanEmail = email.trim().toLowerCase();
 
-            <TextInput
+    const indexRef = doc(db, 'schoolEmailIndex', cleanEmail);
+    const indexSnap = await getDoc(indexRef);
+
+    if (indexSnap.exists()) {
+      Alert.alert(
+        'Already Verified',
+        'This school email is already associated with another InterZone account.'
+      );
+      return;
+    }
+  
+    if (!cleanEmail.endsWith(`@${domain}`)) {
+      Alert.alert(i18n.t('verify.invalidTitle'), i18n.t('verify.invalidEmail', { domain }));
+      return;
+    }
+  
+    try {
+      setLoading(true);
+
+      await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+
+      const now = Date.now();
+      await AsyncStorage.setItem('schoolEmailCooldown', now.toString());
+  
+      await AsyncStorage.setItem('emailForSchoolSignIn', cleanEmail);
+      await AsyncStorage.setItem('schoolIdForSignIn', schoolId);
+  
+      setLinkSent(true);
+      startCooldown(); // ⬅️ start timer
+
+      Alert.alert(i18n.t('verify.linkSentTitle'), i18n.t('verify.linkSentMsg'));
+      // onClose();
+    } catch (error: any) {
+      console.error('Failed to send sign-in link:', error);
+      Alert.alert(i18n.t('verify.errorTitle'), error.message || i18n.t('verify.errorGeneric'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (user?.claims?.admin) return null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.overlay}>
+        <View style={styles.modal}>
+          <Text style={styles.title}>{i18n.t('verify.title')}</Text>
+
+          {!linkSent ? (
+            <>
+              <TextInput
                 placeholder={`you@${domain}`}
                 value={email}
                 onChangeText={setEmail}
                 style={styles.input}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                editable={!codeSent && !loading}
-            />
+                editable={cooldown === 0 && !loading}
+              />
 
-            {codeSent && (
-                <TextInput
-                    placeholder={i18n.t('verify.codePlaceholder')}
-                    value={code}
-                    onChangeText={setCode}
-                    style={styles.input}
-                    keyboardType="number-pad"
-                    editable={!loading}
-                />
-            )}
+              <TouchableOpacity
+                style={[styles.button, cooldown > 0 && styles.disabledButton]}
+                onPress={handleSendVerificationEmail}
+                disabled={loading || cooldown > 0}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>
+                    {cooldown > 0
+                      ? `${i18n.t('verify.pleaseWait')} ${cooldown}s`
+                      : i18n.t('verify.sendLink')}
+                  </Text>
+                )}
+              </TouchableOpacity>
 
-            {!codeSent ? (
-            <TouchableOpacity style={styles.button} onPress={handleSendCode} disabled={loading}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{i18n.t('verify.send')}</Text>}
-            </TouchableOpacity>
-            ) : (
-            <TouchableOpacity style={styles.button} onPress={handleVerify} disabled={loading}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{i18n.t('verify.verify')}</Text>}
-            </TouchableOpacity>
-            )}
-
-            <TouchableOpacity onPress={onClose} disabled={loading}>
-                <Text style={[styles.cancel, loading && { color: '#ccc' }]}>{i18n.t('verify.cancel')}</Text>
-            </TouchableOpacity>
+            </>
+          ) : (
+            <View style={{ marginTop: 20, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#26c6da" />
+              <Text style={{ marginTop: 10, fontSize: 14, color: '#666', textAlign: 'center' }}>
+                {i18n.t('verify.waitingVerification')}
+              </Text>
             </View>
+          )}
+
+          <TouchableOpacity onPress={onClose} disabled={loading}>
+            <Text style={[styles.cancel, loading && { color: '#ccc' }]}>{i18n.t('verify.cancel')}</Text>
+          </TouchableOpacity>
         </View>
-        </Modal>
-    );
+      </View>
+    </Modal>
+  );
 };
 
 export default SchoolEmailVerificationModal;
@@ -149,6 +220,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 6,
     marginTop: 16,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
   buttonText: {
     color: '#fff',

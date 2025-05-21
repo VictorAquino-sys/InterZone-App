@@ -32,6 +32,9 @@
     "registerButton": "Sign Up",
     "SignUpError": "Sign up Error",
     "invalidEmail": "Invalid email address. Please enter a valid email.",
+    "auth": {
+      "signInWithGoogle": "Sign in with Google"
+    },
     
     "wrongPassword": "Incorrect password. Please try again.",
     "userNotFound": "No account found with this email.",
@@ -454,6 +457,7 @@
   "discussion": {
     "back": "Back",
     "send": "Send",
+    "you": "You",
     "editing": "Editing your comment...",
     "editPlaceholder": "Edit your comment...",
     "save": "Save",
@@ -461,6 +465,7 @@
     "tooShortTitle": "Too Short",
     "tooShortMessage": "Please enter a longer comment.",
     "tooShortSaveMessage": "Please enter a longer comment before saving.",
+    "loading": "Loading discussion...",
     "header": "Discussion - {{name}}",
     "placeholder": "Share something...",
     "post": "Post",
@@ -477,6 +482,8 @@
   },
   "rateProfessors": {
     "header": "Search or Add Professors",
+    "topProfessors": "Top Professors",
+    "reviewsCount": "{{count}} reviews",
     "placeholder": "Type professor's name...",
     "suggest": "Suggest a Professor"
   },
@@ -507,6 +514,9 @@
     "title": "Verify Your Student Email",
     "send": "Send Code",
     "verify": "Verify",
+    "pleaseWait": "Please wait 5 minutes ->",
+    "verifiedTitle": "You're verified! 🎓",
+    "verifiedMessage": "Your school email has been confirmed.",
     "cancel": "Cancel",
     "codePlaceholder": "Enter verification code",
     "invalidTitle": "Invalid Email",
@@ -516,7 +526,9 @@
     "errorTitle": "Error",
     "errorGeneric": "Failed to send verification code.",
     "failedTitle": "Verification Failed",
-    "failedMsg": "Invalid or expired code."
+    "failedMsg": "Invalid or expired code.",
+    "waitingVerification": "Waiting for you to verify from your student email..."
+
   },
   "university": {
     "rateTab": "Rate Professors",

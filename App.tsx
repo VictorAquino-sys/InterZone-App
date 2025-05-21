@@ -1,8 +1,9 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Dimensions, Platform, ImageBackground, StatusBar } from 'react-native';
+import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Dimensions, Platform, ImageBackground, StatusBar, Alert, Pressable } from 'react-native';
 import { getLocales } from 'expo-localization';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/i18n';
+import { auth, db } from '@/config/firebase';
 import { NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -11,7 +12,6 @@ import homeIcon from './assets/home_icon_transparent.png';
 import limasunset from './assets/lima_sunset_image.png';
 import magicIcon from './assets/magic_icon_transparent.png';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
 // import Ionicons from '@expo/vector-icons/Ionicons';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -38,13 +38,13 @@ import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 import DeleteAccountScreen from 'screens/DeleteAccountScreen';
 import { registerForPushNotificationsAsync, setupNotificationChannelAsync } from './services/notifications';
 import * as Notifications from 'expo-notifications';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase'; // adjust path if needed
+import { doc, updateDoc, setDoc, arrayUnion } from 'firebase/firestore';
 import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
 import Toast from 'react-native-toast-message';
 import { logScreen } from '@/utils/analytics';
+import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
 import VerifyBusinessScreen from 'screens/business/VerifyBusinessScreen';
 import Animated, { BounceIn} from 'react-native-reanimated';
@@ -58,6 +58,8 @@ import EditBusinessProfileScreen from './screens/business/EditBusinessProfileScr
 import SuggestProfessorScreen from 'screens/studyub/SuggestProfessorScreen';
 import ProfessorSuggestionsReviewScreen from 'screens/studyub/professorSuggestionsReviewScreen';
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
+import { createNavigationContainerRef } from '@react-navigation/native';
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -73,6 +75,7 @@ const linking = {
     screens: {
       ChatScreen: 'chat/:conversationId',
       PostDetail: 'post/:postId',
+      UniversityScreen: 'verify',
     },
   },
   async getInitialURL() {
@@ -257,7 +260,8 @@ function AuthenticatedApp() {
         }
       }
     };
-  
+
+
     setupNotifications();
   
     const subscription = Notifications.addNotificationReceivedListener(notification => {
@@ -280,6 +284,8 @@ function AuthenticatedApp() {
     return () => subscription.remove();
 
   }, [user?.uid, activeConversationId]); // Depend on activeConversationId
+
+
 
   if (loading) {
     console.log("🔄 Waiting for Firebase and User data..."); 
@@ -387,7 +393,64 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
-  const navigationRef = useNavigationContainerRef();
+  // const navigationRef = useNavigationContainerRef();
+
+  useEffect(() => {
+    const checkEmailLink = async () => {
+      const url = await Linking.getInitialURL();
+      if (!url || !isSignInWithEmailLink(auth, url)) return;
+
+      const email = await AsyncStorage.getItem('emailForSchoolSignIn');
+      const schoolId = await AsyncStorage.getItem('schoolIdForSignIn');
+
+      if (!email || !schoolId) {
+        Alert.alert('Error', 'Missing stored school email or schoolId');
+        return;
+      }
+
+      try {
+        await signInWithEmailLink(auth, email, url);
+
+        if (!auth.currentUser) {
+          Alert.alert('Verification Error', 'No user is currently signed in.');
+          return;
+        }
+
+        await setDoc(doc(db, 'schoolEmailIndex', email), {
+          uid: auth.currentUser!.uid,
+          schoolId,
+          verifiedAt: new Date().toISOString()
+        });
+
+        const userRef = doc(db, 'users', auth.currentUser!.uid);
+        await setDoc(userRef, {
+          verifiedSchools: arrayUnion(schoolId),
+          verifiedEmails: arrayUnion(email),
+        }, { merge: true });
+
+        await AsyncStorage.multiRemove(['emailForSchoolSignIn', 'schoolIdForSignIn']);
+
+        // ✅ Add this toast before navigation
+        Toast.show({
+          type: 'success',
+          text1: i18n.t('verify.verifiedTitle'),
+          text2: i18n.t('verify.verifiedMessage'), // e.g. "You've been verified successfully!"
+          position: 'bottom',
+        });
+        await AsyncStorage.removeItem('schoolEmailCooldown');
+        navigationRef.current?.navigate('UniversityScreen', {
+          universityId: schoolId,
+          universityName: schoolId === 'upc' ? 'UPC' : 'Villareal',
+        });
+
+      } catch (error) {
+        console.error('Error verifying email link:', error);
+        Alert.alert('Verification Failed', 'Something went wrong verifying your email.');
+      }
+    };
+
+    checkEmailLink();
+  }, []);
 
   return (
     <UserProvider> 
