@@ -196,8 +196,15 @@ const CategoryScreen = () => {
             )}
 
             {/* STUDY HUB: show Peruvian universities instead of post list */}
-            {categoryKey === 'study hub' && isPeruvian && !historyTriviaActive && (
+            {categoryKey === 'study hub' && (isPeruvian || user?.claims?.admin ) && !historyTriviaActive && (
                 <>
+
+                {user?.claims?.admin && !isPeruvian && (
+                    <Text style={{ textAlign: 'center', marginVertical: 10, color: 'orange', fontWeight: '600' }}>
+                        {i18n.t('studyHubAdminNote', 'Note: This content is primarily for Peruvian users.')}
+                    </Text>
+                )}
+
                     <StudyHubContent toggleHistoryTrivia={toggleHistoryTrivia} />
                 </>
             )}

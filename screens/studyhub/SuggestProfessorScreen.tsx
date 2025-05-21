@@ -38,7 +38,10 @@ const SuggestProfessorScreen = () => {
       createdAt: serverTimestamp(),
     };
 
-    await addDoc(collection(db, 'professorSuggestions'), suggestion);
+    await addDoc(
+      collection(db, 'universities', universityId, 'professorSuggestions'),
+      suggestion
+    );
     Alert.alert(i18n.t('suggest.successTitle'), i18n.t('suggest.successMsg'), [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);

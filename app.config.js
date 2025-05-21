@@ -5,7 +5,7 @@ export default {
   expo: {
     name: IS_DEV ? "InterZone (Dev)" : "InterZone",
     slug: "InterZone",
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "default",
     icon: "./assets/images/icon.png",
     scheme: "interzone",
@@ -157,7 +157,7 @@ export default {
       url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6",
       fallbackToCacheTimeout: 0,
       checkAutomatically: "ON_LOAD",
-      runtimeVersion: "1.0.1"
+      runtimeVersion: "1.0.2"
     }
   }
 };

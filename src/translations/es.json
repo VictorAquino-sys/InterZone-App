@@ -22,7 +22,10 @@
     "loginButton": "Iniciar sesión",
     "welcomeMessage": "¡Bienvenido a la aplicación!",
     "appTitle": "InterZone",
-    "tagline": "Conecta con tu comunidad!",
+    "auth": {
+        "signInWithGoogle": "Iniciar sesión con Google"
+    },
+    "tagline": "Conectado con tu ciudad!",
     "saveButton": "Guardar",
     "Email": "Ingrese correo electronico",
     "Password": "Contraseña",
@@ -459,6 +462,7 @@
         "back": "Volver",
         "placeholder": "Escribe un comentario...",
         "send": "Enviar",
+        "you": "Tú",
         "editing": "Editando tu comentario...",
         "editPlaceholder": "Edita tu comentario...",
         "save": "Guardar",
@@ -468,6 +472,7 @@
         "tooShortSaveMessage": "Escribe un comentario más largo antes de guardar.",
         "header": "Discusión - {{name}}",
         "post": "Publicar",
+        "loading": "Cargando comentarios...",
         "edit": "Editar",
         "delete": "Eliminar",
         "comment": "Comentar",
@@ -481,7 +486,9 @@
     },
     "rateProfessors": {
         "header": "Busca o Agrega a Profesores",
-        "placeholder": "Escribe el nombre del Profesor...",
+        "topProfessors": "Profesores más Calificados",
+        "reviewsCount": "{{count}} reseñas",
+        "placeholder": "Escribe el Nombre y Appellido del Profesor",
         "suggest": "Sugiere un Profesor"
     },
     "rateOne": {
@@ -497,9 +504,9 @@
     },
     "suggest": {
         "title": "Sugerir un Profesor",
-        "namePlaceholder": "Nombre del Profesor *",
-        "departmentPlaceholder": "Departamento (requerido)",
-        "coursePlaceholder": "Curso (requerido)",
+        "namePlaceholder": "Nombre y Apellido del Profesor",
+        "departmentPlaceholder": "Departamento (ej. Escuela de Ingenieria)",
+        "coursePlaceholder": "Curso (ej. Biologia)",
         "submit": "Enviar para Revisión",
         "incompleteTitle": "Incompleto",
         "incompleteMsg": "Se requiere el nombre del profesor.",
@@ -511,8 +518,16 @@
         "title": "Verifica tu correo institucional",
         "send": "Enviar Código",
         "verify": "Verificar",
+        "sendLink": "Enviar link",
+        "pleaseWait": "Porfavor espera 5 minutos ->",
+        "verifiedTitle": "¡Verificado! 🎓",
+        "verifiedMessage": "Tu correo de universidad ha sido confirmado.",
+        "linkSentTitle": "¡Revisa tu correo!",
+        "linkSentMsg": "Te hemos enviado un enlace de verificación. Haz clic en él para continuar.",
         "cancel": "Cancelar",
         "codePlaceholder": "Ingresa el código de verificación",
+        "waitingVerification": "Esperando que verifiques desde tu correo institucional...",
+
         "invalidTitle": "Correo Inválido",
         "invalidEmail": "Por favor ingresa un correo válido de {{domain}}",
         "codeSentTitle": "Código Enviado",
@@ -524,6 +539,6 @@
     },
     "university": {
         "rateTab": "Calificar Profesores",
-        "discussionTab": "Debates"
+        "discussionTab": "Chat"
       }
 } 

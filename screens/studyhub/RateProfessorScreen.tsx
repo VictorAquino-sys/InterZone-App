@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import { addDoc, collection, serverTimestamp, getDocs, orderBy, deleteDoc, query, where } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, getDocs, orderBy, deleteDoc, query, where, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useUser } from '@/contexts/UserContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -68,6 +68,17 @@ const RateProfessorScreen = () => {
     };
   
     await addDoc(reviewsRef, reviewData);
+    // Increment reviewsCount for the professor
+    const professorDoc = doc(
+      db,
+      'universities',
+      universityId,
+      'professors',
+      professorId
+    );
+    await updateDoc(professorDoc, {
+      reviewsCount: increment(1),
+    });
   
     // ⏳ FIFO limit: keep only 20 reviews
     const snapshot = await getDocs(query(reviewsRef, orderBy('createdAt', 'asc')));
