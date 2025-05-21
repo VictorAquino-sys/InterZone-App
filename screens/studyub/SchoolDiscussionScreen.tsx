@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { collection, addDoc, getDocs, serverTimestamp, orderBy, query, updateDoc, doc, where, Timestamp, limit, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, serverTimestamp, orderBy, query, updateDoc, doc, where, Timestamp, limit, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useUser } from '@/contexts/UserContext';
 import i18n from '@/i18n';
@@ -27,22 +27,20 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
   const [firstLoad, setFirstLoad] = useState(true);
   const [loading, setLoading] = useState(true);
 
-  const fetchPosts = useCallback(async () => {
+  useEffect(() => {
     setLoading(true);
     const ref = collection(db, 'universities', universityId, 'discussions');
     const q = query(ref, orderBy('createdAt', 'asc'));
-    const snap = await getDocs(q);
-    const result: DiscussionPost[] = [];
-    snap.forEach(docSnap => {
-      result.push({ id: docSnap.id, ...(docSnap.data() as Omit<DiscussionPost, 'id'>) });
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const result: DiscussionPost[] = [];
+      snap.forEach(docSnap => {
+        result.push({ id: docSnap.id, ...(docSnap.data() as Omit<DiscussionPost, 'id'>) });
+      });
+      setPosts(result);
+      setLoading(false);
     });
-    setPosts(result);
-    setLoading(false);
+    return unsubscribe;
   }, [universityId]);
-
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
 
   useEffect(() => {
     if (flatListRef.current && posts.length > 0) {
@@ -77,12 +75,10 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
   
     await addDoc(collectionRef, newDoc);
     setNewPost('');
-    fetchPosts();
   };
 
   const handleDeletePost = async (postId: string) => {
     await deleteDoc(doc(db, 'universities', universityId, 'discussions', postId));
-    fetchPosts();
   };
 
   const renderItem = ({ item }: { item: DiscussionPost }) => {
@@ -157,7 +153,6 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
               });
               setEditingPostId(null);
               setEditingText('');
-              fetchPosts();
             }}
           >
             <Text style={styles.postButtonText}>{i18n.t('discussion.save')}</Text>

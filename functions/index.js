@@ -1,4 +1,4 @@
-const { onDocumentCreated, onDocumentDeleted } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentDeleted, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const { Expo } = require('expo-server-sdk');
@@ -25,6 +25,9 @@ const i18n = {
       newMessageBody: "New message from",
       newPostTitle: "🆕 New Post in Your City",
       newPostBody: "just posted in",
+      likeTitle: "👍 New Like!",
+      likeBody: "liked your post.",
+      someone: "Someone",
     },
   },
 
@@ -34,6 +37,9 @@ const i18n = {
       newMessageBody: "Nuevo mensaje de",
       newPostTitle: "🆕 Nueva publicación en tu ciudad",
       newPostBody: "acaba de publicar en",
+      likeTitle: "👍 Nuevo Me Gusta!",
+      likeBody: "le dio me gusta a tu publicación.",
+      someone: "Alguien",
     },
   }
 };
@@ -345,150 +351,47 @@ exports.generateVerificationCode = onCall(async (request) => {
   };
 });
 
+exports.notifyPostLike = onDocumentUpdated("posts/{postId}", async (event) => {
+  const before = event.data.before.data();
+  const after = event.data.after.data();
 
-exports.sendSchoolVerificationCode = onCall({ secrets: [SENDGRID_API_KEY] }, async (request) => {
+  // Check if likedBy array increased in length (someone liked)
+  if ((before.likedBy?.length ?? 0) < (after.likedBy?.length ?? 0)) {
+    // Find which user(s) liked
+    const oldSet = new Set(before.likedBy ?? []);
+    const newLikes = (after.likedBy ?? []).filter(uid => !oldSet.has(uid));
+    if (!newLikes.length) return;
 
-  const uid = request.auth?.uid;
-  const email = request.data.email?.trim().toLowerCase();
-  const schoolId = request.data.schoolId;
+    // Only notify the post owner, not the liker themself
+    const postOwner = after.user?.uid;
+    for (const likerUid of newLikes) {
+      if (likerUid === postOwner) continue; // Don’t notify on self-likes
 
-  if (!uid || !email || !schoolId) {
-    throw new HttpsError('invalid-argument', 'Missing required fields');
-  }
+      // Get post owner user doc (to get expoPushToken and language)
+      const ownerSnap = await db.collection("users").doc(postOwner).get();
+      const owner = ownerSnap.data();
+      if (!owner?.expoPushToken || !Expo.isExpoPushToken(owner.expoPushToken)) continue;
 
-  const allowedDomains = {
-    upc: 'upc.edu.pe',
-    villareal: 'unfv.edu.pe',
-  };
+      // Get the liker’s name
+      const likerSnap = await db.collection("users").doc(likerUid).get();
+      const liker = likerSnap.data();
 
-  const domain = allowedDomains[schoolId];
-  if (!email.endsWith(`@${domain}`)) {
-    // 🛡️ Log abuse
-    await db.collection('abuse_logs').add({
-      uid,
-      email,
-      reason: 'Invalid domain',
-      attemptedAt: Timestamp.now(),
-      type: 'verification',
-    });
+      const lang = i18n[owner.language] ? owner.language : "en";
+      const likerName = liker?.name || i18n[lang].notification.someone;
 
-    throw new HttpsError('invalid-argument', `Email must end with @${domain}`);
-  }
+      const message = {
+        to: owner.expoPushToken,
+        sound: "default",
+        title: i18n[lang].notification.likeTitle || "👍 New Like!",
+        body: `${likerName} ${i18n[lang].notification.likeBody}`,
+        data: {
+          type: "like",
+          postId: event.params.postId,
+          url: `interzone://post/${event.params.postId}`
+        }
+      };
 
-  // 🕒 Rate limiting: Max 3 requests in 10 minutes
-  const recentRequestsSnap = await db.collection('school_verifications')
-    .where('uid', '==', uid)
-    .where('requestedAt', '>=', Timestamp.fromDate(new Date(Date.now() - 15 * 60 * 1000)))
-    .get();
-
-  if (recentRequestsSnap.size >= 3) {
-    await db.collection('abuse_logs').add({
-      uid,
-      email,
-      reason: 'Rate limit exceeded (15 min window)',
-      attemptedAt: Timestamp.now(),
-      type: 'verification',
-    });
-
-    throw new HttpsError('resource-exhausted', 'Too many verification attempts. Try again later.');
-  }
-
-  const code = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-  const expiresAt = Timestamp.fromDate(new Date(Date.now() + 10 * 60 * 1000));
-
-  await db.collection('school_verifications').doc(uid).set({
-    uid,
-    email,
-    code,
-    expiresAt,
-    schoolId,
-    requestedAt: Timestamp.now(),
-  });
-
-// Determine language based on email domain or your own logic
-  const lang = email.endsWith('@upc.edu.pe') || email.endsWith('@unfv.edu.pe') ? 'es' : 'en';
-
-  const subjects = {
-    en: "Your InterZone Verification Code",
-    es: "Tu código de verificación de InterZone",
-  };
-
-  const bodies = {
-    en: `Your verification code is: ${code}`,
-    es: `Tu código de verificación es: ${code}`,
-  };
-
-  const subject = subjects[lang] || subjects.en;
-  const body = bodies[lang] || bodies.en;
-
-  sgMail.setApiKey(SENDGRID_API_KEY.value());
-
-  // ✅ Send email
-  try {
-    console.log(`📧 Sending verification email to ${email} with code ${code}`);
-    console.log('Subject:', subject);
-    console.log('Body:', body);
-    
-    await sgMail.send({
-      to: email,
-      from: 'contact.interzone.devs@gmail.com',
-      subject,
-      text: body,
-      html: `<p><strong>${body}</strong></p>`,
-    });
-
-    console.log(`✅ Verification email sent to ${email}`);
-
-  } catch (error) {
-    console.error("❌ Failed to send verification email:", error);
-    if (error.response) {
-      console.error("SendGrid response error:", error.response.body);
+      await expo.sendPushNotificationsAsync([message]);
     }
-    throw new HttpsError('internal', 'Failed to send email. Try again later.');
   }
-
-  return { message: 'Verification code sent' };
 });
-
-
-exports.verifySchoolCode = onCall(async (request) => {
-  const uid = request.auth?.uid;
-  const inputCode = request.data.code;
-
-  if (!uid || !inputCode) {
-    throw new HttpsError('invalid-argument', 'Missing verification code');
-  }
-
-  const docRef = db.collection('school_verifications').doc(uid);
-  const docSnap = await docRef.get();
-
-  if (!docSnap.exists) {
-    throw new HttpsError('not-found', 'No verification attempt found');
-  }
-
-  const { code, expiresAt, email, schoolId } = docSnap.data();
-
-  if (code !== inputCode) {
-    throw new HttpsError('invalid-argument', 'Incorrect verification code');
-  }
-
-  if (expiresAt.toDate() < new Date()) {
-    throw new HttpsError('deadline-exceeded', 'Verification code has expired');
-  }
-
-  // ✅ Update user record
-  const userRef = db.collection('users').doc(uid);
-  await userRef.set(
-    {
-      verifiedSchools: FieldValue.arrayUnion(schoolId),
-      verifiedEmails: FieldValue.arrayUnion(email),
-    },
-    { merge: true }
-  );
-
-  // ✅ Clean up the verification doc
-  await docRef.delete();
-
-  return { message: 'Email verified successfully' };
-});
-
