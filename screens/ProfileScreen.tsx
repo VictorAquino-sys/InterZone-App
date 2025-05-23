@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useContext, FunctionComponent 
 import { View, Text, StyleSheet, Button, ScrollView, Image, Linking, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Modal, StatusBar } from 'react-native';
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Keyboard } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
@@ -269,226 +270,206 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
 
     return (
         <>
-        <StatusBar
-            backgroundColor={Platform.OS === 'android' ? 'aliceblue' : 'transparent'}
-            barStyle="dark-content"
-            />
-                <KeyboardAvoidingView
-                    style={{ flex: 1 }}
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                >
-                    <ScrollView
-                        contentContainerStyle={[styles.container, { flexGrow: 1 }]}
-                        keyboardShouldPersistTaps="handled"
+            <StatusBar
+                backgroundColor={Platform.OS === 'android' ? 'aliceblue' : 'transparent'}
+                barStyle="dark-content"
+                />
+            <SafeAreaView style={{ flex: 1, backgroundColor: 'aliceblue'}}>
+                    <KeyboardAvoidingView
+                        style={{ flex: 1 }}
+                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                     >
-                        <View style={styles.topSection}>
+                        <ScrollView
+                            contentContainerStyle={[styles.container, { flexGrow: 1 }]}
+                            keyboardShouldPersistTaps="handled"
+                        >
+                            <View style={styles.topSection}>
 
-                            <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
-                        
-                            <TouchableOpacity onPress={pickImageProfile}>
-                                <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150} />
-                            </TouchableOpacity>
+                                <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
                             
-                            {loading && <ActivityIndicator size="large" color="#0000ff" />} 
-                            
-                            <View style={styles.nameContainer}>
-                                {isEditing ? (
-                                    <TextInput
-                                        value={newName}
-                                        onChangeText={setNewName}
-                                        style={styles.input}
-                                        autoFocus={true}
-                                        onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
-                                    />
-                                ) : (
-                                    <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <Text style={styles.newName}>{newName}</Text>
-                                            <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
-                                                <Ionicons name="pencil" size={20} color="gray"/>
-                                            </TouchableOpacity>
+                                <TouchableOpacity onPress={pickImageProfile}>
+                                    <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150} />
+                                </TouchableOpacity>
+                                
+                                {loading && <ActivityIndicator size="large" color="#0000ff" />} 
+                                
+                                <View style={styles.nameContainer}>
+                                    {isEditing ? (
+                                        <TextInput
+                                            value={newName}
+                                            onChangeText={setNewName}
+                                            style={styles.input}
+                                            autoFocus={true}
+                                            onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
+                                        />
+                                    ) : (
+                                        <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Text style={styles.newName}>{newName}</Text>
+                                                <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
+                                                    <Ionicons name="pencil" size={20} color="gray"/>
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            {user?.verifications?.business && (
+                                                <View style={styles.verifiedBadge}>
+                                                    <Ionicons name="checkmark-circle" size={18} color="#4CAF50" style={{ marginRight: 6 }}/>
+                                                    <Text style={styles.verifiedText}>{i18n.t('businessVerified')}</Text>
+                                                </View>
+                                            )}
+
+                                            {user?.verifications?.musician && (
+                                                <View style={styles.verifiedBadge}>
+                                                    <Ionicons name="musical-notes" size={18} color="#3F51B5" style={{ marginRight: 6 }}/>
+                                                    <Text style={styles.verifiedText}>{i18n.t('musicianVerified')}</Text>
+                                                </View>
+                                            )}
+
+                                            {user?.verifications?.tutor && (
+                                                <View style={styles.verifiedBadge}>
+                                                    <Ionicons name="school" size={18} color="#FF9800" style={{ marginRight: 6 }}/>
+                                                    <Text style={styles.verifiedText}>{i18n.t('tutorVerified')}</Text>
+                                                </View>
+                                            )}
+
                                         </View>
-
-                                        {user?.verifications?.business && (
-                                            <View style={styles.verifiedBadge}>
-                                                <Ionicons name="checkmark-circle" size={18} color="#4CAF50" style={{ marginRight: 6 }}/>
-                                                <Text style={styles.verifiedText}>{i18n.t('businessVerified')}</Text>
-                                            </View>
-                                        )}
-
-                                        {user?.verifications?.musician && (
-                                            <View style={styles.verifiedBadge}>
-                                                <Ionicons name="musical-notes" size={18} color="#3F51B5" style={{ marginRight: 6 }}/>
-                                                <Text style={styles.verifiedText}>{i18n.t('musicianVerified')}</Text>
-                                            </View>
-                                        )}
-
-                                        {user?.verifications?.tutor && (
-                                            <View style={styles.verifiedBadge}>
-                                                <Ionicons name="school" size={18} color="#FF9800" style={{ marginRight: 6 }}/>
-                                                <Text style={styles.verifiedText}>{i18n.t('tutorVerified')}</Text>
-                                            </View>
-                                        )}
-
-                                    </View>
-                                )}
-                            </View>
-                            
-                            {isEditing && (
-                                <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
-                            )}
-
-                        </View>
-                        
-                        {/* 📝 Description Editor Section */}
-                        <View style={styles.descriptionWrapper}>
-                            <Text style={styles.label}>{i18n.t('yourNote')}</Text>
-
-                            {isEditingNote ? (
-                                <>
-                                <TextInput
-                                    style={styles.descriptionInput}
-                                    multiline
-                                    maxLength={150}
-                                    placeholder={i18n.t('descriptionPlaceholder')}
-                                    value={description}
-                                    onChangeText={setDescription}
-                                />
-                                <View style={styles.characterCountWrapper}>
-                                    <Text style={styles.characterCount}>{description.length}/150</Text>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={handleSaveDescription}
-                                    style={styles.saveButton}
-                                    disabled={savingNote}
-                                >
-                                    <Text style={styles.saveButtonText}>
-                                        {savingNote ? i18n.t('saving') : i18n.t('saveNote')}
-                                    </Text>
-                                </TouchableOpacity>
-                                </>
-                            ) : (
-                                <View style={styles.noteRow}>
-                                    <Text style={styles.noteText}>
-                                        {description ? description : i18n.t('noNote')}
-                                    </Text>
-                                    <TouchableOpacity onPress={() => setIsEditingNote(true)}>
-                                        <Ionicons name="create-outline" size={20} color="#4A90E2" style={{ marginLeft: 8 }} />
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                            </View>
-
-                            <View style={styles.bottomSection}>
-
-                                <TouchableOpacity
-                                    style={styles.buttonContainer} // Additional top margin for separation
-                                    onPress={handleLogout}
-                                >
-                                    <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 30, alignItems: 'center' }}>
-                                    <Ionicons name="settings-outline" size={26} color="#555" />
-                                </TouchableOpacity>
-
-
-
-                                {/* ✅ Add this block below the settings icon
-                                {user?.isQrDistributor && (
-                                    <TouchableOpacity
-                                    style={[styles.buttonContainer, { backgroundColor: '#007aff', marginTop: 36 }]}
-                                    onPress={() => navigation.navigate('DistributeQr')}
-                                    >
-                                    <Text style={styles.buttonText}>{i18n.t('distributeQrButton')}</Text>
-                                    </TouchableOpacity>
-                                )}
-
-                                {user?.isQrDistributor && (
-                                <TouchableOpacity
-                                    style={[styles.buttonContainer, { backgroundColor: '#388e3c' }]}
-                                    onPress={() => navigation.navigate('AdminApproval')}
-                                >
-                                    <Text style={styles.buttonText}>{i18n.t('reviewBusinessApplications')}</Text>
-                                    
-                                </TouchableOpacity>
-                                )} */}
-
-                                {user?.accountType === 'individual' && !user.businessVerified && (
-                                <TouchableOpacity
-                                    style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
-                                    onPress={() => navigation.navigate('ApplyBusiness')}
-                                >
-                                    <Text style={styles.buttonText}>{i18n.t('applyForBusiness')}</Text>
-                                    
-                                </TouchableOpacity>
-                                )}
-
-                                {user?.businessVerified && (
-                                <TouchableOpacity
-                                    style={[styles.buttonContainer, { backgroundColor: '#6A1B9A' }]}
-                                    onPress={() => navigation.navigate('EditBusinessProfile')}
-                                >
-                                    <Text style={styles.buttonText}>{i18n.t('editBusinessProfile')}</Text>
-                                </TouchableOpacity>
-                                )}
-
-                                <View style={styles.verificationButtonWrapper}>
-                                    { unverifiedTypes.length > 0 && nextType && (
-                                    <VerifyBusinessButton
-                                        type={nextType}
-                                        onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
-                                    />
                                     )}
                                 </View>
-
-                                {user?.claims?.admin && (
-                                <>
-                                    <View style={{ marginVertical: 20 }}>
-                                    <Text style={{ fontWeight: '600', fontSize: 16, marginBottom: 10 }}>
-                                        Admin Controls
-                                    </Text>
-                                    <TouchableOpacity
-                                        style={[styles.buttonContainer, { backgroundColor: '#222' }]}
-                                        onPress={() => navigation.navigate('AdminDashboard')}
-                                    >
-                                        <Text style={styles.buttonText}>🛠 Admin Dashboard</Text>
-                                    </TouchableOpacity>
-                                    </View>
-                                </>
+                                
+                                {isEditing && (
+                                    <Button title={i18n.t('updateProfileButton')} onPress={handleNameProfile} />
                                 )}
 
-                                <Modal transparent visible={showSettings} animationType="slide">
-                                    <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
-                                        <View style={styles.modalBox}>
-                                            <Text style={styles.modalTitle}>{i18n.t('settings.title')}</Text>
-                                            <TouchableOpacity style={styles.modalOption} onPress={() => {
-                                                setShowSettings(false);
-                                                navigation.navigate('DeleteAccount');
-                                            }}>
-                                                <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>{i18n.t('deleteAccount.button')}</Text>
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity
-                                                onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}
-                                                style={[styles.modalOption, { marginTop: 20 }]}
-                                            >
-                                            <Text style={{ color: '#007aff', textAlign: 'center' }}>
-                                                {i18n.t('privacyPolicy')}
-                                            </Text>
-                                            </TouchableOpacity>
-
-                                            <TouchableOpacity onPress={() => setShowSettings(false)}>
-                                                <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
-                                            </TouchableOpacity>
-
-                                        </View>
-                                    </TouchableOpacity>
-                                </Modal>
-                                
                             </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
+                            
+                            {/* 📝 Description Editor Section */}
+                            <View style={styles.descriptionWrapper}>
+                                <Text style={styles.label}>{i18n.t('yourNote')}</Text>
+
+                                {isEditingNote ? (
+                                    <>
+                                    <TextInput
+                                        style={styles.descriptionInput}
+                                        multiline
+                                        maxLength={150}
+                                        placeholder={i18n.t('descriptionPlaceholder')}
+                                        value={description}
+                                        onChangeText={setDescription}
+                                    />
+                                    <View style={styles.characterCountWrapper}>
+                                        <Text style={styles.characterCount}>{description.length}/150</Text>
+                                    </View>
+                                    <TouchableOpacity
+                                        onPress={handleSaveDescription}
+                                        style={styles.saveButton}
+                                        disabled={savingNote}
+                                    >
+                                        <Text style={styles.saveButtonText}>
+                                            {savingNote ? i18n.t('saving') : i18n.t('saveNote')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <View style={styles.noteRow}>
+                                        <Text style={styles.noteText}>
+                                            {description ? description : i18n.t('noNote')}
+                                        </Text>
+                                        <TouchableOpacity onPress={() => setIsEditingNote(true)}>
+                                            <Ionicons name="create-outline" size={20} color="#4A90E2" style={{ marginLeft: 8 }} />
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                                </View>
+
+                                <View style={styles.bottomSection}>
+
+                                    <TouchableOpacity
+                                        style={styles.buttonContainer} // Additional top margin for separation
+                                        onPress={handleLogout}
+                                    >
+                                        <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 30, alignItems: 'center' }}>
+                                        <Ionicons name="settings-outline" size={26} color="#555" />
+                                    </TouchableOpacity>
+
+                                    {user?.accountType === 'individual' && !user.businessVerified && (
+                                    <TouchableOpacity
+                                        style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
+                                        onPress={() => navigation.navigate('ApplyBusiness')}
+                                    >
+                                        <Text style={styles.buttonText}>{i18n.t('applyForBusiness')}</Text>
+                                        
+                                    </TouchableOpacity>
+                                    )}
+
+                                    {user?.businessVerified && (
+                                    <TouchableOpacity
+                                        style={[styles.buttonContainer, { backgroundColor: '#6A1B9A' }]}
+                                        onPress={() => navigation.navigate('EditBusinessProfile')}
+                                    >
+                                        <Text style={styles.buttonText}>{i18n.t('editBusinessProfile')}</Text>
+                                    </TouchableOpacity>
+                                    )}
+
+                                    <View style={styles.verificationButtonWrapper}>
+                                        { unverifiedTypes.length > 0 && nextType && (
+                                        <VerifyBusinessButton
+                                            type={nextType}
+                                            onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
+                                        />
+                                        )}
+                                    </View>
+
+                                    {user?.claims?.admin && (
+                                    <>
+                                        <View style={{ marginVertical: 20 }}>
+                                        <Text style={{ fontWeight: '600', fontSize: 16, marginBottom: 10 }}>
+                                            Admin Controls
+                                        </Text>
+                                        <TouchableOpacity
+                                            style={[styles.buttonContainer, { backgroundColor: '#222' }]}
+                                            onPress={() => navigation.navigate('AdminDashboard')}
+                                        >
+                                            <Text style={styles.buttonText}>🛠 Admin Dashboard</Text>
+                                        </TouchableOpacity>
+                                        </View>
+                                    </>
+                                    )}
+
+                                    <Modal transparent visible={showSettings} animationType="slide">
+                                        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
+                                            <View style={styles.modalBox}>
+                                                <Text style={styles.modalTitle}>{i18n.t('settings.title')}</Text>
+                                                <TouchableOpacity style={styles.modalOption} onPress={() => {
+                                                    setShowSettings(false);
+                                                    navigation.navigate('DeleteAccount');
+                                                }}>
+                                                    <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>{i18n.t('deleteAccount.button')}</Text>
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity
+                                                    onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}
+                                                    style={[styles.modalOption, { marginTop: 20 }]}
+                                                >
+                                                <Text style={{ color: '#007aff', textAlign: 'center' }}>
+                                                    {i18n.t('privacyPolicy')}
+                                                </Text>
+                                                </TouchableOpacity>
+
+                                                <TouchableOpacity onPress={() => setShowSettings(false)}>
+                                                    <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
+                                                </TouchableOpacity>
+
+                                            </View>
+                                        </TouchableOpacity>
+                                    </Modal>
+                                    
+                                </View>
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+            </SafeAreaView>
         </>
     );
 };

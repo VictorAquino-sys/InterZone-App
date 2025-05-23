@@ -517,6 +517,7 @@
     },
     "verify": {
         "title": "Verifica tu correo institucional",
+        "stayOpenNote": "No cierres InterZone mientras verificas tu correo.",
         "send": "Enviar Código",
         "verify": "Verificar",
         "sendLink": "Enviar link",

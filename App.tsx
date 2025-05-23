@@ -13,7 +13,7 @@ import limasunset from './assets/lima_sunset_image.png';
 import magicIcon from './assets/magic_icon_transparent.png';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
-// import Ionicons from '@expo/vector-icons/Ionicons';
+import { MusicHubProvider } from '@/components/category/musichubContext';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -33,6 +33,7 @@ import PeopleScreen from './screens/PeopleScreen';
 import FriendRequestsScreen from './screens/FriendRequestsScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
 import FriendsScreen from 'screens/FriendsScreen';
+import { VerifiedSchoolProvider } from '@/contexts/verifySchoolContext';
 import ChatScreen from 'screens/ChatScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
@@ -71,6 +72,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
 const linking = {
   prefixes: ['interzone://'],
   config: {
@@ -80,6 +82,7 @@ const linking = {
       UniversityScreen: 'verify',
     },
   },
+  
   async getInitialURL() {
     const url = await Linking.getInitialURL();
     if (url) return url;
@@ -87,15 +90,20 @@ const linking = {
     const response = await Notifications.getLastNotificationResponseAsync();
     return response?.notification.request.content.data.url;
   },
+
   subscribe(listener: (url: string) => void) {
-    const onReceiveURL = ({ url }: { url: string }) => listener(url);
+    const onReceiveURL = ({ url }: { url: string }) => {
+      listener(url);
+    };
 
     const linkingSubscription = Linking.addEventListener('url', onReceiveURL);
 
     const notificationSubscription =
       Notifications.addNotificationResponseReceivedListener(response => {
         const url = response.notification.request.content.data.url;
-        if (url) listener(url);
+        if (url) {
+          listener(url);
+        }
       });
 
     return () => {
@@ -115,7 +123,16 @@ function HomeStack(){
     <Stack.Navigator>
       <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-      <Stack.Screen name="CategoryScreen" component={CategoryScreen} options={({ route }) => ({ title: route.params.title })}/>
+
+      <Stack.Screen
+        name="CategoryScreen"
+        options={({ route }) => ({ title: route.params.title })}
+        children={(props) => (
+          <MusicHubProvider>
+            <CategoryScreen {...props} />
+          </MusicHubProvider>
+        )}
+      />
 
       <Stack.Screen name="FriendsHome" component={FriendsHomeScreen}   
         options={{ 
@@ -395,90 +412,34 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
-  // const navigationRef = useNavigationContainerRef();
-
-  useEffect(() => {
-    const checkEmailLink = async () => {
-      const url = await Linking.getInitialURL();
-      if (!url || !isSignInWithEmailLink(auth, url)) return;
-
-      const email = await AsyncStorage.getItem('emailForSchoolSignIn');
-      const schoolId = await AsyncStorage.getItem('schoolIdForSignIn');
-
-      if (!email || !schoolId) {
-        Alert.alert('Error', 'Missing stored school email or schoolId');
-        return;
-      }
-
-      try {
-        await signInWithEmailLink(auth, email, url);
-
-        if (!auth.currentUser) {
-          Alert.alert('Verification Error', 'No user is currently signed in.');
-          return;
-        }
-
-        await setDoc(doc(db, 'schoolEmailIndex', email), {
-          uid: auth.currentUser!.uid,
-          schoolId,
-          verifiedAt: new Date().toISOString()
-        });
-
-        const userRef = doc(db, 'users', auth.currentUser!.uid);
-        await setDoc(userRef, {
-          verifiedSchools: arrayUnion(schoolId),
-          verifiedEmails: arrayUnion(email),
-        }, { merge: true });
-
-        await AsyncStorage.multiRemove(['emailForSchoolSignIn', 'schoolIdForSignIn']);
-
-        // ✅ Add this toast before navigation
-        Toast.show({
-          type: 'success',
-          text1: i18n.t('verify.verifiedTitle'),
-          text2: i18n.t('verify.verifiedMessage'), // e.g. "You've been verified successfully!"
-          position: 'bottom',
-        });
-        await AsyncStorage.removeItem('schoolEmailCooldown');
-        navigationRef.current?.navigate('UniversityScreen', {
-          universityId: schoolId,
-          universityName: schoolId === 'upc' ? 'UPC' : 'Villareal',
-        });
-
-      } catch (error) {
-        console.error('Error verifying email link:', error);
-        Alert.alert('Verification Failed', 'Something went wrong verifying your email.');
-      }
-    };
-
-    checkEmailLink();
-  }, []);
 
   return (
     <UserProvider> 
-      <PostsProvider>
-        <TriviaProvider>
-          <HistoryTriviaProvider>
-            <ChatProvider>
-              <NavigationContainer 
-                ref={navigationRef}
-                linking={linking}
-                onReady={() => {
-                  const route = navigationRef.getCurrentRoute();
-                  if (route) logScreen(route.name);
-                }}
-                onStateChange={() => {
-                  const route = navigationRef.getCurrentRoute();
-                  if (route) logScreen(route.name);
-                }}
-              >
-                <AuthenticatedApp />
-              </NavigationContainer>
-              <Toast />
-            </ChatProvider>
-          </HistoryTriviaProvider>
-        </TriviaProvider>
-      </PostsProvider>
+      <VerifiedSchoolProvider>
+        <PostsProvider>
+          <TriviaProvider>
+            <HistoryTriviaProvider>
+              <ChatProvider>
+                <NavigationContainer 
+                  ref={navigationRef}
+                  linking={linking}
+                  onReady={() => {
+                    const route = navigationRef.getCurrentRoute();
+                    if (route) logScreen(route.name);
+                  }}
+                  onStateChange={() => {
+                    const route = navigationRef.getCurrentRoute();
+                    if (route) logScreen(route.name);
+                  }}
+                >
+                  <AuthenticatedApp />
+                </NavigationContainer>
+                <Toast />
+              </ChatProvider>
+            </HistoryTriviaProvider>
+          </TriviaProvider>
+        </PostsProvider>
+      </VerifiedSchoolProvider>
     </UserProvider>
   );
 }

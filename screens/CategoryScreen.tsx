@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { Modal, View, Text, StyleSheet, Alert, FlatList, Image, TouchableOpacity, ActivityIndicator, Pressable, Platform } from 'react-native';
+import { Modal, View, Text, StyleSheet, Alert, FlatList, Image, TouchableOpacity, ActivityIndicator, Pressable, Platform, ScrollView } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { usePosts } from '@/contexts/PostsContext';
 import i18n from '@/i18n';
@@ -9,61 +9,71 @@ import { useUser } from '../src/contexts/UserContext';
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { deleteDoc, doc, getDoc} from "firebase/firestore";
 import LikeButton from '../src/components/LikeButton';
+import DefaultCategoryContent from '@/components/category/DefaultCategoryContent';
+import MusicHubContent from '@/components/category/musichubContent';
 import Avatar from '../src/components/Avatar';
 import { categories } from '@/config/categoryData';
-import Trivia from '../src/components/Trivia';
 import HistoryTrivia from '@/components/HistoryTrivia';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTrivia } from '../src/contexts/TriviaContext'; // Make sure this is imported
 import NewsFeedContent from '@/components/NewsFeedContent';
 import { logEvent } from '@/utils/analytics';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RootStackParamList } from '@/navigationTypes';
-import StudyHubContent from '../src/category/studyHubContent';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigationTypes'
+import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
+import StudyHubContent from '@/components/category/studyHubContent';
 
-type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
+// type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
-const CategoryScreen = () => {
-    const route = useRoute<CategoryScreenRouteProp>();
+const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'CategoryScreen'>> = ({ route, navigation }) => {
     const { posts, setPosts } = usePosts();
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const { categoryKey } = route.params;
     const category = categories.find(cat => cat.key === categoryKey);
     const { user } = useUser();
-    const { trivia } = useTrivia(); // Using the trivia context
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-    const [triviaActive, setTriviaActive] = useState(false);
     const [historyTriviaActive, setHistoryTriviaActive] = useState(false);
     const [isPeruvian, setIsPeruvian] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [showAdminOverrideMsg, setShowAdminOverrideMsg] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useFocusEffect(
         React.useCallback(() => {
-          const checkUserCountry = async () => {
-            if (user?.uid) {
-              const userRef = doc(db, "users", user.uid);
-              const userSnap = await getDoc(userRef);
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    // console.log("Fetched user data on focus:", userData);
-                    setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
-                }
-            }
+            const checkUserPermissions = async () => {
+                if (user?.uid) {
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
+            
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
 
-            if (user?.uid && categoryKey) {
-                 await logEvent('category_viewed', {
-                  category: categoryKey,
-                  user_id: user.uid,
-                });
-            }
-          };
-      
-          checkUserCountry();
-        }, [user?.uid, categoryKey])
+                        const isFromPeru = userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru';
+                        const isAdminUser = user?.claims?.admin === true;
+              
+                        setIsPeruvian(isFromPeru);
+                        setIsAdmin(isAdminUser);
+              
+                        if (!isFromPeru && isAdminUser) {
+                          setShowAdminOverrideMsg(true);
+                        } else {
+                          setShowAdminOverrideMsg(false);
+                        }
+                      }
+                    }
+              
+                    if (user?.uid && categoryKey) {
+                      await logEvent('category_viewed', {
+                        category: categoryKey,
+                        user_id: user.uid,
+                      });
+                    }
+                  };
+              
+                  checkUserPermissions();
+              }, [user?.uid, categoryKey])
     );
 
     // Assuming each post has a 'timestamp' field that's a Date or a number
@@ -87,13 +97,11 @@ const CategoryScreen = () => {
         setModalVisible(false);
     };
 
-    const toggleTrivia = () => {
-        setTriviaActive(!triviaActive);
-    };
-
     const toggleHistoryTrivia = () => {
+        const isAdmin = user?.claims?.admin === true;
+
         console.log("History Trivia button pressed. Current isPeruvian:", isPeruvian);
-        if (!isPeruvian) {
+        if (!isPeruvian && !isAdmin) {
             alert("History Trivia is not available in your location");
         } else {
             setHistoryTriviaActive(!historyTriviaActive);
@@ -109,26 +117,6 @@ const CategoryScreen = () => {
     useEffect(() => {
         console.log("Current user language:", user?.language);  // Check what language is being set
       }, [user?.language]);
-
-    // Render Trivia with language settings
-    const renderTrivia = () => {
-        const language = (user?.language || 'en') as 'en' | 'es'; // Assert the type directly here
-        console.log("Rendering trivia in language:", language); // Check the actual language being passed
-        const triviaData = trivia.filter(t => t.category === "Entertainment: Music"); // You might need to adjust this string
-    
-        if (triviaData.length === 0) {
-            console.log("No trivia data available for category:", categoryKey);
-            return <Text>No trivia questions available</Text>;
-        }
-
-        return (
-            <Trivia 
-                triviaData={triviaData} 
-                language={language} 
-                onTriviaComplete={toggleTrivia} 
-            />
-        );
-    };
 
     const handleDeletePost = (postId: string, imageUrl: string | null) => {
         Alert.alert(
@@ -188,77 +176,35 @@ const CategoryScreen = () => {
     return (
         <SafeAreaView  style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
         
-            {/* MUSIC Trivia Feature */}
-            {categoryKey === 'music' && !triviaActive && (
-                <TouchableOpacity style={styles.triviaButton} onPress={toggleTrivia}>
-                    <Text style={styles.triviaButtonText}>{i18n.t('testYourKnowledgeMusic')}</Text>
-                </TouchableOpacity>
-            )}
 
             {/* STUDY HUB: show Peruvian universities instead of post list */}
-            {categoryKey === 'study hub' && (isPeruvian || user?.claims?.admin ) && !historyTriviaActive && (
-                <>
-
-                {user?.claims?.admin && !isPeruvian && (
-                    <Text style={{ textAlign: 'center', marginVertical: 10, color: 'orange', fontWeight: '600' }}>
-                        {i18n.t('studyHubAdminNote', 'Note: This content is primarily for Peruvian users.')}
-                    </Text>
+            {categoryKey === 'study hub' && (isPeruvian || isAdmin) && !historyTriviaActive && (
+            <ScrollView 
+                contentContainerStyle={{ paddingBottom: 80 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {showAdminOverrideMsg && (
+                <Text style={{ textAlign: 'center', color: 'orange', marginBottom: 10 }}>
+                    You are seeing this as Admin. This screen is only available for Peruvian users.
+                </Text>
                 )}
-
-                    <StudyHubContent toggleHistoryTrivia={toggleHistoryTrivia} />
-                </>
+                <StudyHubContent toggleHistoryTrivia={toggleHistoryTrivia} />
+            </ScrollView>
             )}
 
-            {triviaActive ? (
-                renderTrivia() // Here we call renderTrivia instead of directly using the Trivia component
+            {categoryKey === 'music' ? (
+            <MusicHubContent />
             ) : historyTriviaActive ? (
-                <HistoryTrivia onTriviaComplete={toggleHistoryTrivia} />
+            <HistoryTrivia onTriviaComplete={toggleHistoryTrivia} />
             ) : categoryKey === 'news' ? (
                 <NewsFeedContent /> // ✅ This renders RSS-based news!
             ) : (
-                <FlatList
-                    data={filteredPosts}
-                    keyExtractor={item => item.id}
-                    renderItem={({ item }) => (
-                        <View style={styles.postItem}>
-                            <View style={styles.userContainer}>
-                                <TouchableOpacity onPress={() => openImageModal(item.user?.avatar ?? null)}>
-                                    {/* <Image source={{ uri: item.user.avatar || undefined }} style={styles.avatar} /> */}
-                                    <Avatar key={item.id} name={item.user?.name} imageUri={item.user?.avatar}/>
-                                </TouchableOpacity>
-
-                                <View style={styles.postDetails}>
-                                    <Text style={styles.userName}>{item.user.name}</Text>   
-                                    <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-                                    <Text style={styles.postTimestamp}>{formatDate(item.timestamp || undefined)}</Text>
-                                </View>
-                                
-                            </View>
-
-                            <Text style={styles.postText}>{item.content}</Text>
-
-                            {item.imageUrl && (
-                                <TouchableOpacity onPress={() => openImageModal(item.imageUrl)}>
-                                    <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-                                </TouchableOpacity>
-                            )}
-
-                            {/* Like Button Component */}
-                            <LikeButton postId={item.id} userId={user?.uid || ''} />
-
-                            {/* Allow users to delete their own posts */}
-                            {user?.uid == item.user?.uid && (
-                                <TouchableOpacity onPress={() => handleDeletePost(item.id, item.imageUrl)} style={styles.deleteButton}>
-                                    <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    )}
-                    ListEmptyComponent={
-                        categoryKey === 'study hub'
-                          ? null
-                          : <Text style={styles.emptyCategoryText}>{i18n.t('EmptyCategoryScreen')}</Text>
-                      }
+                <DefaultCategoryContent
+                    posts={filteredPosts}
+                    currentUserId={user?.uid || ''}
+                    onDeletePost={handleDeletePost}
+                    onOpenImageModal={openImageModal}
+                    categoryKey={categoryKey}
                 />
             )}
 
@@ -307,6 +253,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 10
+    },
+    videoWrapper: {
+        marginTop: 10,
+        width: '100%',
+        height: 200,
+        backgroundColor: 'black', // optional, for loading experience
+        borderRadius: 10,
+        overflow: 'hidden',
+    },
+    video: {
+        width: '100%',
+        height: '100%',
     },
     avatar: {
         width: 50,
