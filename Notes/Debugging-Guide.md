@@ -41,6 +41,7 @@
     npx pod-install
     Then:
     npx eas build --platform ios --profile ios-simulator
+    
     To test on android device:
     npx expo start --dev-client --host lan
     connect through:

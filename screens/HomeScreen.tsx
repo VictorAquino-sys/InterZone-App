@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useLayoutEffect, useRef, useState, FunctionComponent, useCallback } from 'react';
-import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert, StatusBar, Platform } from 'react-native';
 // import { Image } from 'expo-image';
 import { Image } from 'react-native';
@@ -187,7 +187,6 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     }
     prevHasUnread.current = hasUnreadMessages;
   }, [hasUnreadMessages]);
-
 
   useFocusEffect(
     React.useCallback(() => {
@@ -586,13 +585,16 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
     ]
   );
   
+  const isFocused = useIsFocused();
 
   return (
     <>
+      {isFocused && (
       <StatusBar
         backgroundColor={Platform.OS === 'android' ? '#ECEFF4' : 'transparent'}
         barStyle="dark-content"
         />
+      )}
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
           {/* Top Bar with Profile Icon and Search Bar */}
@@ -747,7 +749,7 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ECEFF4' // or any other background color you want
+    backgroundColor: '#ECEFF4', // or any other background color you want
   },
   container: {
     flex: 1,
@@ -875,7 +877,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginBottom: 5,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ECEFF4',
     shadowColor: '#000',
     // shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

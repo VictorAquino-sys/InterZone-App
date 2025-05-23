@@ -10,6 +10,7 @@ import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc, query, getDocs, where } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
+import { useIsFocused } from '@react-navigation/native';
 import i18n from '@/i18n';
 import { Accuracy } from 'expo-location';
 import { Picker } from '@react-native-picker/picker';
@@ -84,6 +85,22 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const storage = getStorage(app);
 
   console.log("PostScreen");
+
+  useEffect(() => {
+    // Set the custom StatusBar for PostScreen
+    StatusBar.setBarStyle('dark-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('#b2dfdb'); // Your custom PostScreen color
+    }
+  
+    return () => {
+      // Reset StatusBar when leaving PostScreen
+      StatusBar.setBarStyle('dark-content');
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor('#ECEFF4'); // HomeScreen background
+      }
+    };
+  }, []);
 
   // Asynchronous function to upload image and return the download URL
   const uploadImageToStorage = async (uri: string): Promise<string | null> => {
@@ -642,13 +659,17 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
     }
   };
 
+  const isFocused = useIsFocused();
+
   return (
     <>
+    {isFocused && (
       <StatusBar
-        backgroundColor={Platform.OS === 'android' ? 'seashell' : 'transparent'}
+        backgroundColor={Platform.OS === 'android' ? '#b2dfdb' : 'transparent'}
         barStyle="dark-content"
         />
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'seashell' }}>
+    )}
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#b2dfdb' }}>
           <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS === 'ios' ? "padding": undefined}>
             <ScrollView contentContainerStyle={{ flexGrow: 1}}>
               <View style={styles.container}>
@@ -739,7 +760,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                       {locationLoading ? (
                         <ActivityIndicator size="small" color="blue" />
                       ) : (
-                        <Ionicons name="location-outline" size={28} color="#009999" />
+                        <Ionicons name="location-outline" size={28} color="#b388ff" />
                       )}
                     </TouchableOpacity>
                   ) : (
@@ -845,7 +866,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     paddingTop: '2%',
-    backgroundColor: 'seashell',
+    backgroundColor: '#b2dfdb',
   },
   screenTitle: {
     fontSize: 24,
@@ -906,7 +927,7 @@ const styles = StyleSheet.create({
     marginBottom: Platform.OS === 'ios' ? '20%' : 30,
     marginHorizontal: 20,
     borderWidth: Platform.OS === 'ios' ? 0 : 1,
-    borderColor: '#ccc',
+    borderColor: '#4fc',
     backgroundColor: Platform.OS === 'ios' ? 'transparent': 'azure', // Background color for the picker container
   },
   buttonContainer: {
