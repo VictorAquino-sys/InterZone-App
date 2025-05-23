@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef, useCallback} from 'react';
 import { View, Text, StyleSheet, ActionSheetIOS, TouchableOpacity, Image, Alert, TextInput, Button, Modal, ViewStyle, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Avatar from './Avatar';
@@ -371,6 +371,10 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
+  const handlePressUserProfile = useCallback((userId: string) => {
+    handleUserProfileNavigation(userId);
+  }, [handleUserProfileNavigation]);
+
   return (
     <View style={[styles.postItem, isShowcase && styles.showcaseBorder]}>
       <View style={styles.postHeader}>
@@ -556,7 +560,7 @@ const PostCard: React.FC<PostCardProps> = ({
           {comments.map(comment => (
             <View key={comment.id} style={styles.commentItem}>
               <View style={styles.commentHeader}>
-              <TouchableOpacity onPress={() => handleUserProfileNavigation(comment.userId)}>
+                <TouchableOpacity onPress={() => handlePressUserProfile(comment.userId)}>
                   <Text style={styles.commentAuthor}>{comment.userName || i18n.t('anonymous')}</Text>
                 </TouchableOpacity>
                 {(() => {
@@ -726,7 +730,17 @@ const PostCard: React.FC<PostCardProps> = ({
   );
 };
 
-export default React.memo(PostCard);
+function areEqual(prev: PostCardProps, next: PostCardProps) {
+  return (
+    prev.item.id === next.item.id &&
+    // prev.item.updatedAt === next.item.updatedAt && // optional: only if you store post update timestamps
+    prev.userId === next.userId &&
+    prev.user.uid === next.user.uid &&
+    prev.isFullScreen === next.isFullScreen
+  );
+}
+
+export default React.memo(PostCard, areEqual);
 
 const styles = StyleSheet.create({
   postItem: {

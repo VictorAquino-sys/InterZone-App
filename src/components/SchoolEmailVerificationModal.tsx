@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
 import { auth, db } from '@/config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '@/i18n';
 import { User } from '@/contexts/UserContext';
@@ -10,7 +10,7 @@ import { sendSignInLinkToEmail } from 'firebase/auth';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  schoolId: 'upc' | 'villareal';
+  schoolId: 'upc' | 'villareal' | "sanMarcos" | "catolica";
   onSuccess: (email: string) => void;
   user: User | null;
 };
@@ -22,7 +22,12 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
   const [cooldown, setCooldown] = useState<number>(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
-  const domain = schoolId === 'upc' ? 'upc.edu.pe' : 'unfv.edu.pe';
+  const allowedDomains: string[] =
+  schoolId === 'upc' ? ['upc.edu.pe', 'gmail.com'] :
+  schoolId === 'villareal' ? ['unfv.edu.pe'] :
+  schoolId === 'sanMarcos' ? ['unmsm.edu.pe'] :
+  schoolId === 'catolica' ? ['pucp.edu.pe'] :
+  [];
 
   useEffect(() => {
     if (visible && user?.claims?.admin) {
@@ -45,7 +50,25 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
   }, [intervalId]);
 
   useEffect(() => {
-    const checkCooldown = async () => {
+    const checkVerificationAndCooldown = async () => {
+      if (!user?.uid) return;
+  
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+      const data = snap.data();
+  
+      if (data?.verifiedSchools?.includes(schoolId)) {
+        // onSuccess(data?.verifiedEmails?.find((e: string) => e.endsWith(`@${allowedDomains }`)) || '');
+        onSuccess(
+          data?.verifiedEmails?.find((e: string) =>
+            allowedDomains.some(domain => e.endsWith(`@${domain}`))
+          ) || ''
+        );
+
+        onClose();
+        return;
+      }
+  
       const lastSent = await AsyncStorage.getItem('schoolEmailCooldown');
       if (lastSent) {
         const elapsed = Math.floor((Date.now() - parseInt(lastSent)) / 1000);
@@ -59,14 +82,33 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
   
     if (visible) {
       setEmail('');
-      // ⛔ Don't reset cooldown if it’s already active
-      if (!linkSent) {
-        setCooldown(0);
-      }
       setLinkSent(false);
-      checkCooldown();
+      checkVerificationAndCooldown();
     }
   }, [visible]);
+
+  useEffect(() => {
+    if (!linkSent || !user) return;
+  
+    const interval = setInterval(async () => {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const data = snap.data();
+  
+      if (data?.verifiedSchools?.includes(schoolId)) {
+        clearInterval(interval);
+        // onSuccess(data?.verifiedEmails?.find((e: string) => e.endsWith(`@${domain}`)) || '');
+        onSuccess(
+          data?.verifiedEmails?.find((e: string) =>
+            allowedDomains.some(domain => e.endsWith(`@${domain}`))
+          ) || ''
+        );
+
+        onClose();
+      }
+    }, 3000);
+  
+    return () => clearInterval(interval);
+  }, [linkSent, user]);
 
   const actionCodeSettings = {
     url: 'https://interzone-production.web.app/schoolverify', // ✅ Your deployed Firebase hosting
@@ -86,6 +128,34 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
     }, 1000);
     setIntervalId(id);
   };
+
+  const resetVerificationTestState = async () => {
+    try {
+      await AsyncStorage.multiRemove([
+        'emailForSchoolSignIn',
+        'schoolIdForSignIn',
+        'schoolEmailCooldown',
+      ]);
+  
+      if (user?.uid) {
+        const userRef = doc(db, 'users', user.uid);
+        const snap = await getDoc(userRef);
+        const data = snap.data();
+  
+        if (data?.verifiedSchools?.includes(schoolId)) {
+          const updatedSchools = data.verifiedSchools.filter((id: string) => id !== schoolId);
+          await setDoc(userRef, {
+            verifiedSchools: updatedSchools,
+          }, { merge: true });
+        }
+      }
+  
+      Alert.alert('✅ Reset Complete', 'Test data cleared. You can now simulate a fresh verification.');
+    } catch (err) {
+      console.error('❌ Reset error:', err);
+      Alert.alert('Reset Failed', 'An error occurred while resetting verification state.');
+    }
+  };
   
   const handleSendVerificationEmail = async () => {
     const cleanEmail = email.trim().toLowerCase();
@@ -101,8 +171,18 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
       return;
     }
   
-    if (!cleanEmail.endsWith(`@${domain}`)) {
-      Alert.alert(i18n.t('verify.invalidTitle'), i18n.t('verify.invalidEmail', { domain }));
+    // if (!cleanEmail.endsWith(`@${domain}`)) {
+    //   Alert.alert(i18n.t('verify.invalidTitle'), i18n.t('verify.invalidEmail', { domain }));
+    //   return;
+    // }
+
+    const emailDomain = cleanEmail.split('@')[1];
+
+    if (!allowedDomains.includes(emailDomain)) {
+      Alert.alert(
+        i18n.t('verify.invalidTitle'),
+        `${i18n.t('verify.invalidEmail', { domain: allowedDomains.join(' or ') })}`
+      );
       return;
     }
   
@@ -141,7 +221,7 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
           {!linkSent ? (
             <>
               <TextInput
-                placeholder={`you@${domain}`}
+                placeholder={`you@${allowedDomains[0] || 'school.edu'}`}
                 value={email}
                 onChangeText={setEmail}
                 style={styles.input}
@@ -179,6 +259,15 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
           <TouchableOpacity onPress={onClose} disabled={loading}>
             <Text style={[styles.cancel, loading && { color: '#ccc' }]}>{i18n.t('verify.cancel')}</Text>
           </TouchableOpacity>
+
+          {__DEV__ && (
+            <TouchableOpacity onLongPress={resetVerificationTestState}>
+              <Text style={{ fontSize: 10, color: '#bbb', marginTop: 8 }}>
+                Long press here to reset test state
+              </Text>
+            </TouchableOpacity>
+          )}
+
         </View>
       </View>
     </Modal>

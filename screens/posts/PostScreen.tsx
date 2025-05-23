@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect, useRef, FunctionComponent } from 'react';
 import { ScrollView, KeyboardAvoidingView, View, TextInput, TouchableOpacity, Text, StyleSheet, Button, Alert, Image, ActivityIndicator, Platform, NativeEventEmitter, NativeModules, Switch, StatusBar } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { usePosts } from '../../src/contexts/PostsContext';
 import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
@@ -647,6 +648,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         backgroundColor={Platform.OS === 'android' ? 'seashell' : 'transparent'}
         barStyle="dark-content"
         />
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'seashell' }}>
           <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS === 'ios' ? "padding": undefined}>
             <ScrollView contentContainerStyle={{ flexGrow: 1}}>
               <View style={styles.container}>
@@ -831,6 +833,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
             </View>
           )}
         </KeyboardAvoidingView>
+    </SafeAreaView>
     </>
   );
 };

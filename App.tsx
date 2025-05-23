@@ -13,6 +13,7 @@ import limasunset from './assets/lima_sunset_image.png';
 import magicIcon from './assets/magic_icon_transparent.png';
 import { Ionicons } from '@expo/vector-icons';
 // import Ionicons from '@expo/vector-icons/Ionicons';
+import { MusicHubProvider } from '@/components/category/musichubContext';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
@@ -113,7 +114,16 @@ function HomeStack(){
     <Stack.Navigator>
       <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-      <Stack.Screen name="CategoryScreen" component={CategoryScreen} options={({ route }) => ({ title: route.params.title })}/>
+
+      <Stack.Screen
+        name="CategoryScreen"
+        options={({ route }) => ({ title: route.params.title })}
+        children={(props) => (
+          <MusicHubProvider>
+            <CategoryScreen {...props} />
+          </MusicHubProvider>
+        )}
+      />
 
       <Stack.Screen name="FriendsHome" component={FriendsHomeScreen}   
         options={{ 
@@ -395,63 +405,95 @@ function AuthenticatedApp() {
 export default function App() {
   // const navigationRef = useNavigationContainerRef();
 
+  const getUniversityName = (id: string) => {
+    switch (id) {
+      case 'upc': return 'UPC';
+      case 'villareal': return 'Villareal';
+      case 'sanMarcos': return 'San Marcos';
+      case 'catolica': return 'PUCP';
+      default: return 'Universidad';
+    }
+  };
+
   useEffect(() => {
     const checkEmailLink = async () => {
       const url = await Linking.getInitialURL();
       if (!url || !isSignInWithEmailLink(auth, url)) return;
-
-      const email = await AsyncStorage.getItem('emailForSchoolSignIn');
-      const schoolId = await AsyncStorage.getItem('schoolIdForSignIn');
-
-      if (!email || !schoolId) {
+  
+      const storedEmail = await AsyncStorage.getItem('emailForSchoolSignIn');
+      const storedSchoolId = await AsyncStorage.getItem('schoolIdForSignIn');
+  
+      if (!storedEmail || !storedSchoolId) {
         Alert.alert('Error', 'Missing stored school email or schoolId');
         return;
       }
-
-      try {
-        await signInWithEmailLink(auth, email, url);
-
-        if (!auth.currentUser) {
-          Alert.alert('Verification Error', 'No user is currently signed in.');
-          return;
+  
+      const finishVerification = async () => {
+        try {
+          await signInWithEmailLink(auth, storedEmail, url);
+  
+          // Wait for auth.currentUser to be ready
+          const waitUntilUser = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Timed out waiting for Firebase user')), 5000);
+            const interval = setInterval(() => {
+              if (auth.currentUser) {
+                clearTimeout(timeout);
+                clearInterval(interval);
+                resolve(auth.currentUser);
+              }
+            }, 300);
+          });
+  
+          await waitUntilUser;
+  
+          const uid = auth.currentUser!.uid;
+  
+          // Save to schoolEmailIndex
+          await setDoc(doc(db, 'schoolEmailIndex', storedEmail), {
+            uid,
+            schoolId: storedSchoolId,
+            verifiedAt: new Date().toISOString(),
+          });
+  
+          // Merge into user profile
+          await setDoc(doc(db, 'users', uid), {
+            verifiedSchools: arrayUnion(storedSchoolId),
+            verifiedEmails: arrayUnion(storedEmail),
+          }, { merge: true });
+  
+          // Clean up
+          await AsyncStorage.multiRemove([
+            'emailForSchoolSignIn',
+            'schoolIdForSignIn',
+            'schoolEmailCooldown',
+          ]);
+  
+          Toast.show({
+            type: 'success',
+            text1: i18n.t('verify.verifiedTitle'),
+            text2: i18n.t('verify.verifiedMessage'),
+            position: 'bottom',
+          });
+  
+          // Small delay before navigating
+          setTimeout(() => {
+            navigationRef.current?.navigate('UniversityScreen', {
+              universityId: storedSchoolId,
+              universityName: getUniversityName(storedSchoolId),
+            });
+          }, 1000);
+        } catch (err) {
+          console.error('❌ Error completing verification:', err);
+          Alert.alert('Verification Failed', 'Something went wrong verifying your email.');
         }
-
-        await setDoc(doc(db, 'schoolEmailIndex', email), {
-          uid: auth.currentUser!.uid,
-          schoolId,
-          verifiedAt: new Date().toISOString()
-        });
-
-        const userRef = doc(db, 'users', auth.currentUser!.uid);
-        await setDoc(userRef, {
-          verifiedSchools: arrayUnion(schoolId),
-          verifiedEmails: arrayUnion(email),
-        }, { merge: true });
-
-        await AsyncStorage.multiRemove(['emailForSchoolSignIn', 'schoolIdForSignIn']);
-
-        // ✅ Add this toast before navigation
-        Toast.show({
-          type: 'success',
-          text1: i18n.t('verify.verifiedTitle'),
-          text2: i18n.t('verify.verifiedMessage'), // e.g. "You've been verified successfully!"
-          position: 'bottom',
-        });
-        await AsyncStorage.removeItem('schoolEmailCooldown');
-        navigationRef.current?.navigate('UniversityScreen', {
-          universityId: schoolId,
-          universityName: schoolId === 'upc' ? 'UPC' : 'Villareal',
-        });
-
-      } catch (error) {
-        console.error('Error verifying email link:', error);
-        Alert.alert('Verification Failed', 'Something went wrong verifying your email.');
-      }
+      };
+  
+      finishVerification();
     };
-
+  
     checkEmailLink();
   }, []);
-
+  
   return (
     <UserProvider> 
       <PostsProvider>

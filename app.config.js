@@ -12,8 +12,8 @@ export default {
     userInterfaceStyle: "light",
     splash: {
       image: "./assets/lima_sunset_image.png",
-      resizeMode: "contain",
-      "imageWidth": 200
+      resizeMode: "cover",
+      backgroundColor: "#000000"
     },
     assetBundlePatterns: ["**/*"],
     ios: {

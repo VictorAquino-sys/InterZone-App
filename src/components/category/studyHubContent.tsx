@@ -8,10 +8,12 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import i18n from '@/i18n';
 import villarealLogo from '@/../assets/federico_logo.png';
+import sanMarcosLogo from '@/../assets/sanmarcos_logo.png';
+import catolicaLogo from '@/../assets/catolica_logo.png';
 import upcLogo from '@/../assets/upc_logo.png';
 import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationModal';
 
-type StudyHubContentProps = {
+  type StudyHubContentProps = {
     toggleHistoryTrivia: () => void;
   };
 
@@ -20,18 +22,18 @@ type StudyHubContentProps = {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const [showVerificationModal, setShowVerificationModal] = useState(false);
-    const [selectedSchoolId, setSelectedSchoolId] = useState<'villareal' | 'upc' | null>(null);
-    const [loadingSchoolId, setLoadingSchoolId] = useState<'villareal' | 'upc' | null>(null);
+    const [selectedSchoolId, setSelectedSchoolId] = useState<'villareal' | 'upc' | 'catolica' | 'sanMarcos' | null>(null);
+    const [loadingSchoolId, setLoadingSchoolId] = useState<'villareal' | 'upc' | 'catolica' | 'sanMarcos' | null>(null);
     const [fadeAnimVilla] = useState(new Animated.Value(1));
     const [fadeAnimUPC] = useState(new Animated.Value(1));
 
-    const handleUniversityTap = async (universityId: 'villareal' | 'upc', universityName: string) => {
+    const handleUniversityTap = async (universityId: 'villareal' | 'upc' | 'catolica' | 'sanMarcos', universityName: string) => {
         if (!user?.uid) {
             Alert.alert('Error', 'You must be signed in to access this feature.');
             return;
         }
 
-          // Trigger fade animation
+        // Trigger fade animation
         const fadeTarget = universityId === 'villareal' ? fadeAnimVilla : fadeAnimUPC;
         Animated.timing(fadeTarget, {
             toValue: 0.4,
@@ -52,7 +54,7 @@ type StudyHubContentProps = {
           if (verifiedSchools.includes(universityId)) {
             navigation.navigate('UniversityScreen', { universityId, universityName });
           } else {
-            if (universityId === 'upc' || universityId === 'villareal') {
+            if (universityId === 'upc' || universityId === 'villareal' || universityId === 'sanMarcos' || universityId === 'catolica') {
                 setSelectedSchoolId(universityId);
                 setShowVerificationModal(true);
               } else {
@@ -116,6 +118,45 @@ type StudyHubContentProps = {
         </View>
         </Pressable>
 
+        <Pressable
+            android_ripple={{ color: '#e0e0e0', borderless: false }}
+            style={({ pressed }) => [styles.logoCard, pressed && Platform.OS === 'ios' && { opacity: 0.6 }]}
+            onPress={() => handleUniversityTap('catolica', 'Catolica')}
+            disabled={loadingSchoolId !== null}
+        >
+        <View style={styles.logoWrapper}>
+            <Animated.View style={[styles.logoImageWrapper, { opacity: fadeAnimUPC }]}>
+            <Image source={catolicaLogo} style={styles.logoImageUPC} resizeMode="contain" />
+            </Animated.View>
+
+            {loadingSchoolId === 'catolica' && (
+            <View style={styles.activityOverlay}>
+                <ActivityIndicator size="large" color="#26c6da" />
+            </View>
+            )}
+        </View>
+        </Pressable>
+
+        <Pressable
+            android_ripple={{ color: '#e0e0e0', borderless: false }}
+            style={({ pressed }) => [styles.logoCard, pressed && Platform.OS === 'ios' && { opacity: 0.6 }]}
+            onPress={() => handleUniversityTap('sanMarcos', 'sanMarcos')}
+            disabled={loadingSchoolId !== null}
+        >
+        <View style={styles.logoWrapper}>
+            <Animated.View style={[styles.logoImageWrapper, { opacity: fadeAnimUPC }]}>
+            <Image source={sanMarcosLogo} style={styles.logoImageUPC} resizeMode="contain" />
+            </Animated.View>
+
+            {loadingSchoolId === 'sanMarcos' && (
+            <View style={styles.activityOverlay}>
+                <ActivityIndicator size="large" color="#26c6da" />
+            </View>
+            )}
+        </View>
+        </Pressable>
+
+
         <View style={styles.testTitleContainer}>
             <Text style={styles.testTitle}>🧠 {i18n.t('testYourKnowledge')}</Text>
             <TouchableOpacity style={styles.triviaButton} onPress={toggleHistoryTrivia}>
@@ -134,10 +175,27 @@ type StudyHubContentProps = {
             setSelectedSchoolId(null);
           }}
           onSuccess={() => {
+            if (!selectedSchoolId) {
+              Alert.alert('Error', 'No university selected.');
+              return;
+            }
+
             setShowVerificationModal(false);
+
+            const universityName =
+              selectedSchoolId === 'upc'
+                ? 'UPC'
+                : selectedSchoolId === 'villareal'
+                ? 'Villareal'
+                : selectedSchoolId === 'catolica'
+                ? 'PUCP'
+                : selectedSchoolId === 'sanMarcos'
+                ? 'San Marcos'
+                : 'Universidad';
+          
             navigation.navigate('UniversityScreen', {
               universityId: selectedSchoolId,
-              universityName: selectedSchoolId === 'upc' ? 'UPC' : 'Villareal',
+              universityName,
             });
           }}
         />

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useLayoutEffect, useRef, useState, FunctionComponent } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useRef, useState, FunctionComponent, useCallback } from 'react';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert, StatusBar, Platform } from 'react-native';
 // import { Image } from 'expo-image';
@@ -547,32 +547,43 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   });
   
 
-  const renderItem = ({ item }: { item: Post }) => (
-    <PostCard
-      item={item}
-      userId={user?.uid ?? ''} // fallback to empty string
-      user={{
-        uid: user?.uid ?? '',
-        name: user?.name ?? '',
-        avatar: user?.avatar ?? '',
-      }}
-      onDelete={handleDeletePost}
-      onReport={handleReportPress}
-      onOpenImage={openImageModal}
-      onUserProfile={(userId) => {
-        if (item.user.mode === 'business') {
-          navigation.navigate('BusinessChannel', { businessUid: userId });
-        } else {
-          navigation.navigate('UserProfile', { userId });
-        }
-      }}      
-      
-      formatDate={formatDate}
-      isFullScreen={isFullScreen} // Pass full-screen state
-      toggleFullScreen={toggleFullScreen} // Pass the function to toggle full-screen mode
-      // onVideoClick={handleVideoClick} // Pass the function to handle video click
-
-    />
+  const memoizedRenderItem = React.useCallback(
+    ({ item }: { item: Post }) => (
+      <PostCard
+        item={item}
+        userId={user?.uid ?? ''}
+        user={{
+          uid: user?.uid ?? '',
+          name: user?.name ?? '',
+          avatar: user?.avatar ?? '',
+        }}
+        onDelete={handleDeletePost}
+        onReport={handleReportPress}
+        onOpenImage={openImageModal}
+        onUserProfile={(userId: string) => {
+          if (item.user.mode === 'business') {
+            navigation.navigate('BusinessChannel', { businessUid: userId });
+          } else {
+            navigation.navigate('UserProfile', { userId });
+          }
+        }}
+        formatDate={formatDate}
+        isFullScreen={isFullScreen}
+        toggleFullScreen={toggleFullScreen}
+      />
+    ),
+    [
+      user?.uid,
+      user?.name,
+      user?.avatar,
+      handleDeletePost,
+      handleReportPress,
+      openImageModal,
+      formatDate,
+      isFullScreen,
+      toggleFullScreen,
+      navigation,
+    ]
   );
   
 
@@ -643,6 +654,11 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
               <Animated.FlatList
                 onScroll={scrollHandler}
                 scrollEventThrottle={16}
+                removeClippedSubviews={true} // Detach offscreen views to save processing
+                maxToRenderPerBatch={6} // Reduce JS execution load per batch
+                updateCellsBatchingPeriod={50} // Delay between batch renders
+                initialNumToRender={5} // Faster initial render
+                windowSize={7} // Limit how many items are mounted around the viewport
                 ListHeaderComponent={
                   <View>
                       {/* Categories (Now Scrollable) */}
@@ -659,7 +675,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                 }
                 data={posts}
                 keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
-                renderItem={renderItem}
+                renderItem={memoizedRenderItem}
                 contentContainerStyle={styles.listContent}
                 style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
               />
@@ -1012,16 +1028,47 @@ const styles = StyleSheet.create({
     zIndex: 999,
     backgroundColor: 'black', // Optionally, add a background color for full-screen
   },
-  // Regular video style
-  // video: {
-  //   width: '100%',
-  //   height: '100%',  // Make the video fill the container
-  // },
-
-  // Full-screen video style
-  // fullScreenVideo: {
-  //   width: '90%',
-  //   height: '90%',  // Full-screen video size
-  // },
   
 });
+
+const renderPostItem = (
+  user: any,
+  onDelete: any,
+  onReport: any,
+  onOpenImage: any,
+  onUserProfile: any,
+  formatDate: any,
+  isFullScreen: boolean,
+  toggleFullScreen: () => void
+) => useCallback(
+  ({ item }: { item: Post }) => (
+    <PostCard
+      item={item}
+      userId={user?.uid ?? ''}
+      user={{
+        uid: user?.uid ?? '',
+        name: user?.name ?? '',
+        avatar: user?.avatar ?? '',
+      }}
+      onDelete={onDelete}
+      onReport={onReport}
+      onOpenImage={onOpenImage}
+      onUserProfile={onUserProfile}
+      formatDate={formatDate}
+      isFullScreen={isFullScreen}
+      toggleFullScreen={toggleFullScreen}
+    />
+  ),
+  [
+    user?.uid,
+    user?.name,
+    user?.avatar,
+    onDelete,
+    onReport,
+    onOpenImage,
+    onUserProfile,
+    formatDate,
+    isFullScreen,
+    toggleFullScreen,
+  ]
+);
