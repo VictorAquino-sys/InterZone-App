@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { collection, addDoc, getDocs, serverTimestamp, orderBy, query, updateDoc, doc, where, Timestamp, limit, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { ActivityIndicator } from 'react-native';
 import { db } from '@/config/firebase';
 import { useUser } from '@/contexts/UserContext';
 import i18n from '@/i18n';
+import { useVerifiedSchool } from '@/contexts/verifiedSchoolContext';
 
 type Props = {
   universityId: string;
@@ -15,6 +17,7 @@ type DiscussionPost = {
   content: string;
   createdAt: any;
   createdBy: string;
+  createdByName?: string;
 };
 
 const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
@@ -25,11 +28,17 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
   const [editingText, setEditingText] = useState('');
   const flatListRef = useRef<FlatList>(null);
   const [firstLoad, setFirstLoad] = useState(true);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
+  const { school, loading: schoolLoading } = useVerifiedSchool();
+
+  const resolvedUniversityId = universityId || school?.universityId;
+  const resolvedUniversityName = universityName || school?.universityName;
 
   useEffect(() => {
-    setLoading(true);
-    const ref = collection(db, 'universities', universityId, 'discussions');
+    if (!resolvedUniversityId ) return;
+
+    // setLoading(true);
+    const ref = collection(db, 'universities', resolvedUniversityId , 'discussions');
     const q = query(ref, orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snap) => {
       const result: DiscussionPost[] = [];
@@ -37,17 +46,26 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
         result.push({ id: docSnap.id, ...(docSnap.data() as Omit<DiscussionPost, 'id'>) });
       });
       setPosts(result);
-      setLoading(false);
+      // setLoading(false);
     });
     return unsubscribe;
-  }, [universityId]);
+  }, [resolvedUniversityId ]);
 
   useEffect(() => {
     if (flatListRef.current && posts.length > 0) {
-      flatListRef.current.scrollToEnd({ animated: !firstLoad });
-      if (firstLoad) setFirstLoad(false);
+        flatListRef.current.scrollToEnd({ animated: !firstLoad });
+      if (firstLoad)  { 
+        setFirstLoad(false);
+      }
     }
   }, [posts]);
+
+  useEffect(() => {
+    if (!editingPostId) {
+      setEditingText('');
+    }
+  }, [editingPostId]);
+
 
   const handlePost = async () => {
     if (!user?.uid || newPost.trim().length < 2) {
@@ -55,7 +73,7 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
       return;
     }
   
-    const collectionRef = collection(db, 'universities', universityId, 'discussions');
+    const collectionRef = collection(db, 'universities', resolvedUniversityId! , 'discussions');
   
     // Check current count
     const q = query(collectionRef, orderBy('createdAt', 'asc'));
@@ -70,6 +88,7 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
     const newDoc = {
       content: newPost.trim(),
       createdBy: user.uid,
+      createdByName: user.name ?? 'Anonymous',
       createdAt: serverTimestamp(),
     };
   
@@ -78,37 +97,44 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
   };
 
   const handleDeletePost = async (postId: string) => {
-    await deleteDoc(doc(db, 'universities', universityId, 'discussions', postId));
+    await deleteDoc(doc(db, 'universities', resolvedUniversityId! , 'discussions', postId));
   };
 
   const renderItem = ({ item }: { item: DiscussionPost }) => {
     const isCurrentUser = user?.uid === item.createdBy;
     return (
-      <View
-        style={[styles.chatBubble, isCurrentUser ? styles.myMessage : styles.otherMessage]}
-      >
-        <Text style={styles.username}>{isCurrentUser ? i18n.t('discussion.you') : item.createdBy}</Text>
-        <Text style={styles.messageText}>{item.content}</Text>
-        <Text style={styles.timestampText}>
-          {item.createdAt?.toDate ?
-            new Date(item.createdAt.toDate()).toLocaleTimeString([], {
-              hour: '2-digit', minute: '2-digit',
-            }) : ''}
-        </Text>
+      <View style={[styles.messageContainer, isCurrentUser ? styles.myMessageContainer : styles.otherMessageContainer]}>
+        <View style={[styles.chatBubble, isCurrentUser ? styles.myMessage : styles.otherMessage]}>
+          <Text style={styles.username}>
+            {isCurrentUser
+              ? i18n.t('discussion.you')
+              : item.createdByName && item.createdByName.trim()
+                ? item.createdByName
+                : item.createdBy}
+          </Text>
+          <Text style={styles.messageText}>{item.content}</Text>
+          <Text style={styles.timestampText}>
+            {item.createdAt?.toDate &&
+              new Date(item.createdAt.toDate()).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+          </Text>
 
-        {isCurrentUser && (
-          <View style={styles.messageActions}>
-            <TouchableOpacity onPress={() => {
-              setEditingPostId(item.id);
-              setEditingText(item.content);
-            }}>
-              <Text style={styles.action}>✏️</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDeletePost(item.id)}>
-              <Text style={[styles.action, { color: 'red' }]}>🗑️</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          {isCurrentUser && (
+            <View style={styles.messageActions}>
+              <TouchableOpacity onPress={() => {
+                setEditingPostId(item.id);
+                setEditingText(item.content);
+              }}>
+                <Text style={styles.action}>✏️</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleDeletePost(item.id)}>
+                <Text style={[styles.action, { color: 'red' }]}>🗑️</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </View>
     );
   };
@@ -117,70 +143,74 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
     <View style={styles.container}>
       <Text style={styles.header}>{i18n.t('discussion.header', { name: universityName })}</Text>
 
-      {loading ? (
-          <Text style={styles.loadingText}>{i18n.t('discussion.loading')}</Text>
-        ) : (
-          <FlatList
-            ref={flatListRef}
-            data={posts}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 80 }}
-          />
-      )}
+        <FlatList
+          ref={flatListRef}
+          data={posts}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 80 }}
+        />
 
-      {editingPostId ? (
-        <>
-          <Text style={{ color: '#888', fontStyle: 'italic', marginBottom: 4 }}>
-            {i18n.t('discussion.editing')}
-          </Text>
-          <TextInput
-            placeholder={i18n.t('discussion.editPlaceholder')}
-            style={styles.input}
-            value={editingText}
-            onChangeText={setEditingText}
-            multiline
-          />
-          <TouchableOpacity
-            style={styles.postButton}
-            onPress={async () => {
-              if (editingText.trim().length < 2) {
-                Alert.alert(i18n.t('discussion.tooShortTitle'), i18n.t('discussion.tooShortEdit'));
-                return;
-              }
-              await updateDoc(doc(db, 'universities', universityId, 'discussions', editingPostId!), {
-                content: editingText.trim(),
-              });
-              setEditingPostId(null);
-              setEditingText('');
-            }}
-          >
-            <Text style={styles.postButtonText}>{i18n.t('discussion.save')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.postButton, { backgroundColor: '#ccc' }]}
-            onPress={() => {
-              setEditingPostId(null);
-              setEditingText('');
-            }}
-          >
-            <Text style={[styles.postButtonText, { color: '#333' }]}>{i18n.t('discussion.cancel')}</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
-        <>
-          <TextInput
-            placeholder={i18n.t('discussion.placeholder')}
-            style={styles.input}
-            value={newPost}
-            onChangeText={setNewPost}
-            multiline
-          />
-          <TouchableOpacity style={styles.postButton} onPress={handlePost}>
-            <Text style={styles.postButtonText}>{i18n.t('discussion.send')}</Text>
-          </TouchableOpacity>
-        </>
-      )}
+        {editingPostId ? (
+          <>
+            <Text style={{ color: '#888', fontStyle: 'italic', marginBottom: 4 }}>
+              {i18n.t('discussion.editing')} ({user?.name || i18n.t('discussion.you')})
+            </Text>
+            <TextInput
+              editable={!schoolLoading}
+              autoFocus={!!editingPostId}
+              placeholder={i18n.t('discussion.editPlaceholder')}
+              style={styles.input}
+              value={editingText}
+              onChangeText={setEditingText}
+              multiline
+            />
+            <TouchableOpacity
+              style={styles.postButton}
+              onPress={async () => {
+                if (editingText.trim().length < 2) {
+                  Alert.alert(i18n.t('discussion.tooShortTitle'), i18n.t('discussion.tooShortEdit'));
+                  return;
+                }
+                await updateDoc(doc(db, 'universities', resolvedUniversityId! , 'discussions', editingPostId!), {
+                  content: editingText.trim(),
+                });
+                setEditingPostId(null);
+                setEditingText('');
+              }}
+            >
+              <Text style={styles.postButtonText}>{i18n.t('discussion.save')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.postButton, { backgroundColor: '#ccc' }]}
+              onPress={() => {
+                setEditingPostId(null);
+                setEditingText('');
+              }}
+            >
+              <Text style={[styles.postButtonText, { color: '#333' }]}>{i18n.t('discussion.cancel')}</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TextInput
+              placeholder={i18n.t('discussion.placeholder')}
+              style={styles.input}
+              value={newPost}
+              onChangeText={setNewPost}
+              multiline
+            />
+
+            <TouchableOpacity
+              style={[styles.postButton, newPost.trim().length < 2 && { backgroundColor: '#ccc' }]}
+              onPress={handlePost}
+              disabled={newPost.trim().length < 2}
+            >
+              <Text style={styles.postButtonText}>{i18n.t('discussion.send')}</Text>
+            </TouchableOpacity>
+
+          </>
+        )}
     </View>
   );
 };
@@ -202,6 +232,23 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 6,
     borderRadius: 12,
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start', // default for other users
+    marginVertical: 6,
+    paddingHorizontal: 8,
+  },
+  myMessageContainer: {
+    justifyContent: 'flex-end',
+  },
+  otherMessageContainer: {
+    justifyContent: 'flex-start',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   myMessage: {
     alignSelf: 'flex-end',

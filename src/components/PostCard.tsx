@@ -20,7 +20,6 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigationTypes';
 
-
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
     userId: string;

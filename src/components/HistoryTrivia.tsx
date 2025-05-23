@@ -1,43 +1,39 @@
-// HistoryTrivia.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { useHistoryTrivia } from '@/contexts/HistoryTriviaContext'; // This would be your new or adapted context for history trivia
-import { useUser } from '@/contexts/UserContext'; // Context that provides user data
+import { useUser } from '@/contexts/UserContext';
+import { useHistoryTrivia } from '@/contexts/HistoryTriviaContext';
 
 const HistoryTrivia = ({ onTriviaComplete }: { onTriviaComplete: () => void }) => {
-    const { trivia, loading, error } = useHistoryTrivia();
     const { user } = useUser();
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [isPermitted, setIsPermitted] = useState(false);
-    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+    const [shouldFetch, setShouldFetch] = useState(false);
 
     useEffect(() => {
-        // Check if the user's country is Peru
-        if (user?.country === 'Peru') {
-            setIsPermitted(true);
+        if (user?.uid) {
+            setShouldFetch(true);
         }
     }, [user]);
 
-    const handleAnswer = (answer: string) => {
-        setSelectedAnswer(answer); // Set selected answer for UI feedback
-        setTimeout(() => {
-            if (answer === trivia[currentQuestionIndex].correct_answer) {
-                alert('Correct!');
-            } else {
-                alert('Wrong Answer!');
-            }
+    const { trivia, loading, error } = useHistoryTrivia();
 
-            const nextQuestionIndex = currentQuestionIndex + 1;
-            if (nextQuestionIndex < trivia.length) {
-                setCurrentQuestionIndex(nextQuestionIndex);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+
+    const handleAnswer = (answer: string) => {
+        setSelectedAnswer(answer);
+        setTimeout(() => {
+            const isCorrect = answer === trivia[currentQuestionIndex].correct_answer;
+            alert(isCorrect ? 'Correct!' : 'Wrong Answer!');
+
+            const next = currentQuestionIndex + 1;
+            if (next < trivia.length) {
+                setCurrentQuestionIndex(next);
             } else {
                 onTriviaComplete();
             }
-            setSelectedAnswer(null); // Reset selected answer
+            setSelectedAnswer(null);
         }, 500);
     };
 
-    // if (!isPermitted) return <Text>History Trivia is not available in your location.</Text>;
     if (loading) return <ActivityIndicator />;
     if (error) return <Text style={styles.errorText}>{error}</Text>;
     if (!trivia.length) return <Text>No history trivia questions available</Text>;

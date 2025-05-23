@@ -33,6 +33,7 @@ import PeopleScreen from './screens/PeopleScreen';
 import FriendRequestsScreen from './screens/FriendRequestsScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
 import FriendsScreen from 'screens/FriendsScreen';
+import { VerifiedSchoolProvider } from '@/contexts/verifiedSchoolContext';
 import ChatScreen from 'screens/ChatScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
@@ -70,6 +71,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
 const linking = {
   prefixes: ['interzone://'],
   config: {
@@ -79,6 +81,7 @@ const linking = {
       UniversityScreen: 'verify',
     },
   },
+  
   async getInitialURL() {
     const url = await Linking.getInitialURL();
     if (url) return url;
@@ -86,15 +89,20 @@ const linking = {
     const response = await Notifications.getLastNotificationResponseAsync();
     return response?.notification.request.content.data.url;
   },
+
   subscribe(listener: (url: string) => void) {
-    const onReceiveURL = ({ url }: { url: string }) => listener(url);
+    const onReceiveURL = ({ url }: { url: string }) => {
+      listener(url);
+    };
 
     const linkingSubscription = Linking.addEventListener('url', onReceiveURL);
 
     const notificationSubscription =
       Notifications.addNotificationResponseReceivedListener(response => {
         const url = response.notification.request.content.data.url;
-        if (url) listener(url);
+        if (url) {
+          listener(url);
+        }
       });
 
     return () => {
@@ -403,122 +411,34 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
-  // const navigationRef = useNavigationContainerRef();
 
-  const getUniversityName = (id: string) => {
-    switch (id) {
-      case 'upc': return 'UPC';
-      case 'villareal': return 'Villareal';
-      case 'sanMarcos': return 'San Marcos';
-      case 'catolica': return 'PUCP';
-      default: return 'Universidad';
-    }
-  };
-
-  useEffect(() => {
-    const checkEmailLink = async () => {
-      const url = await Linking.getInitialURL();
-      if (!url || !isSignInWithEmailLink(auth, url)) return;
-  
-      const storedEmail = await AsyncStorage.getItem('emailForSchoolSignIn');
-      const storedSchoolId = await AsyncStorage.getItem('schoolIdForSignIn');
-  
-      if (!storedEmail || !storedSchoolId) {
-        Alert.alert('Error', 'Missing stored school email or schoolId');
-        return;
-      }
-  
-      const finishVerification = async () => {
-        try {
-          await signInWithEmailLink(auth, storedEmail, url);
-  
-          // Wait for auth.currentUser to be ready
-          const waitUntilUser = new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Timed out waiting for Firebase user')), 5000);
-            const interval = setInterval(() => {
-              if (auth.currentUser) {
-                clearTimeout(timeout);
-                clearInterval(interval);
-                resolve(auth.currentUser);
-              }
-            }, 300);
-          });
-  
-          await waitUntilUser;
-  
-          const uid = auth.currentUser!.uid;
-  
-          // Save to schoolEmailIndex
-          await setDoc(doc(db, 'schoolEmailIndex', storedEmail), {
-            uid,
-            schoolId: storedSchoolId,
-            verifiedAt: new Date().toISOString(),
-          });
-  
-          // Merge into user profile
-          await setDoc(doc(db, 'users', uid), {
-            verifiedSchools: arrayUnion(storedSchoolId),
-            verifiedEmails: arrayUnion(storedEmail),
-          }, { merge: true });
-  
-          // Clean up
-          await AsyncStorage.multiRemove([
-            'emailForSchoolSignIn',
-            'schoolIdForSignIn',
-            'schoolEmailCooldown',
-          ]);
-  
-          Toast.show({
-            type: 'success',
-            text1: i18n.t('verify.verifiedTitle'),
-            text2: i18n.t('verify.verifiedMessage'),
-            position: 'bottom',
-          });
-  
-          // Small delay before navigating
-          setTimeout(() => {
-            navigationRef.current?.navigate('UniversityScreen', {
-              universityId: storedSchoolId,
-              universityName: getUniversityName(storedSchoolId),
-            });
-          }, 1000);
-        } catch (err) {
-          console.error('❌ Error completing verification:', err);
-          Alert.alert('Verification Failed', 'Something went wrong verifying your email.');
-        }
-      };
-  
-      finishVerification();
-    };
-  
-    checkEmailLink();
-  }, []);
-  
   return (
     <UserProvider> 
-      <PostsProvider>
-        <TriviaProvider>
-          <HistoryTriviaProvider>
-            <ChatProvider>
-              <NavigationContainer 
-                ref={navigationRef}
-                linking={linking}
-                onReady={() => {
-                  const route = navigationRef.getCurrentRoute();
-                  if (route) logScreen(route.name);
-                }}
-                onStateChange={() => {
-                  const route = navigationRef.getCurrentRoute();
-                  if (route) logScreen(route.name);
-                }}
-              >
-                <AuthenticatedApp />
-              </NavigationContainer>
-              <Toast />
-            </ChatProvider>
-          </HistoryTriviaProvider>
-        </TriviaProvider>
-      </PostsProvider>
+      <VerifiedSchoolProvider>
+        <PostsProvider>
+          <TriviaProvider>
+            <HistoryTriviaProvider>
+              <ChatProvider>
+                <NavigationContainer 
+                  ref={navigationRef}
+                  linking={linking}
+                  onReady={() => {
+                    const route = navigationRef.getCurrentRoute();
+                    if (route) logScreen(route.name);
+                  }}
+                  onStateChange={() => {
+                    const route = navigationRef.getCurrentRoute();
+                    if (route) logScreen(route.name);
+                  }}
+                >
+                  <AuthenticatedApp />
+                </NavigationContainer>
+                <Toast />
+              </ChatProvider>
+            </HistoryTriviaProvider>
+          </TriviaProvider>
+        </PostsProvider>
+      </VerifiedSchoolProvider>
     </UserProvider>
   );
 }
