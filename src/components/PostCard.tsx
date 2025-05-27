@@ -181,6 +181,20 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const getVerificationBadge = () => {
+    // Only business post: show "Negocio verificado" if business is verified
+    if (item.user?.mode === 'business') {
+      if (item.verifications?.business) {
+        // Show only one badge, matching BusinessChannelScreen style
+        return (
+            <View style={styles.badge}>
+              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+              <Text style={styles.badgeText}>{i18n.t('businessChannel.verifiedBusiness')}</Text>
+          </View>
+        );
+      }
+      return null; // Not verified business, show nothing
+    }
+
     const verification = item.verifications;
     if (!verification) return null;
   

@@ -123,6 +123,7 @@ const RateProfessorScreen = () => {
         placeholder={i18n.t('rateOne.placeholder')}
         value={comment}
         onChangeText={setComment}
+        maxLength={200}
       />
 
       <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>

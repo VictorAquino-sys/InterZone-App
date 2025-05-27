@@ -29,6 +29,8 @@
     "@react-navigation/material-top-tabs": "^6.6.14",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.9.26",
+    "@rneui/themed": "^4.0.0-rc.8",
+    "@shopify/flash-list": "^1.8.1",
     "@types/body-parser": "^1.19.5",
     "@types/react": "~18.2.79",
     "constants": "^0.0.2",
@@ -79,6 +81,7 @@
     "react-native-image-zoom-viewer": "^3.0.1",
     "react-native-localize": "^3.2.1",
     "react-native-modal": "^13.0.1",
+    "react-native-pager-view": "6.3.0",
     "react-native-paper": "^5.14.4",
     "react-native-picker-select": "^9.3.1",
     "react-native-qrcode-svg": "^6.3.15",
@@ -96,8 +99,7 @@
     "react-native-vision-camera": "^4.6.4",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
-    "uuid": "^7.0.3",
-    "react-native-pager-view": "6.3.0"
+    "uuid": "^7.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

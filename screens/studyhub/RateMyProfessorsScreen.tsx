@@ -7,6 +7,7 @@ import { RootStackParamList } from '../../src/navigationTypes'; // update path i
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { db } from '@/config/firebase';
 import i18n from '@/i18n';
+import normalizeString from '@/utils/normalizeString';
 
 type Props = {
   universityId: string;
@@ -31,11 +32,12 @@ const RateMyProfessorsScreen = ({ universityId, universityName }: Props) => {
   const fetchProfessors = async () => {
     setLoading(true);
     const profRef = collection(db, 'universities', universityId, 'professors');
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = normalizeString(searchTerm.trim());
+    
     const q = query(
       profRef,
-      where('nameLower', '>=', searchLower),
-      where('nameLower', '<=', searchLower + '\uf8ff')
+      where('nameSearch', '>=', searchLower),
+      where('nameSearch', '<=', searchLower + '\uf8ff')
     );
 
     const querySnapshot = await getDocs(q);
@@ -145,6 +147,7 @@ const RateMyProfessorsScreen = ({ universityId, universityName }: Props) => {
         placeholder={i18n.t('rateProfessors.placeholder')}
         value={searchTerm}
         onChangeText={setSearchTerm}
+        maxLength={35}
       />
 
       {professors.length === 0 && searchTerm.length >= 3 && !loading && (

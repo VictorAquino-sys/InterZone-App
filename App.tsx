@@ -1,21 +1,22 @@
 import React, { createContext, useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Alert, Dimensions, Platform,  ImageBackground, StatusBar } from 'react-native';
+import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Dimensions, Platform, ImageBackground, StatusBar, Alert, Pressable } from 'react-native';
 import { getLocales } from 'expo-localization';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/i18n';
+import { auth, db } from '@/config/firebase';
 import { NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import homeIcon from './assets/home_icon_transparent.png';
 import limasunset from './assets/lima_sunset_image.png';
 import magicIcon from './assets/magic_icon_transparent.png';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
+// import Ionicons from '@expo/vector-icons/Ionicons';
 import { MusicHubProvider } from '@/components/category/musichubContext';
 import LoginScreen from './screens/auth/LoginScreen';
-import HomeScreen from './screens/HomeScreen';
+import HomeScreen, { HomeScreenRef } from './screens/HomeScreen';
+import type { HomeScreenProps } from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PostScreen from './screens/posts/PostScreen';
 import TermsScreen from 'screens/TermsScreen';
@@ -33,7 +34,7 @@ import PeopleScreen from './screens/PeopleScreen';
 import FriendRequestsScreen from './screens/FriendRequestsScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
 import FriendsScreen from 'screens/FriendsScreen';
-import { VerifiedSchoolProvider } from '@/contexts/verifySchoolContext';
+import { VerifiedSchoolProvider } from '@/contexts/verifiedSchoolContext';
 import ChatScreen from 'screens/ChatScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
@@ -41,13 +42,12 @@ import DeleteAccountScreen from 'screens/DeleteAccountScreen';
 import { registerForPushNotificationsAsync, setupNotificationChannelAsync } from './services/notifications';
 import * as Notifications from 'expo-notifications';
 import { doc, updateDoc, setDoc, arrayUnion } from 'firebase/firestore';
-import { auth, db } from '@/config/firebase'; // adjust path if needed
 import * as Linking from 'expo-linking';
 import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
-import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import Toast from 'react-native-toast-message';
 import { logScreen } from '@/utils/analytics';
+import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
 import VerifyBusinessScreen from 'screens/business/VerifyBusinessScreen';
 import Animated, { BounceIn} from 'react-native-reanimated';
@@ -63,6 +63,7 @@ import ProfessorSuggestionsReviewScreen from 'screens/studyhub/professorSuggesti
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
 import { createNavigationContainerRef } from '@react-navigation/native';
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+export const homeScreenRef = React.createRef<HomeScreenRef>();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -121,7 +122,15 @@ const Tab = createBottomTabNavigator<TabParamList>();
 function HomeStack(){
   return (
     <Stack.Navigator>
-      <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="HomeScreen" 
+        options={{ headerShown: false }} 
+      >
+        {(props: HomeScreenProps) => (
+          <HomeScreen ref={homeScreenRef} {...props} />
+        )}
+      </Stack.Screen>
+
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
 
       <Stack.Screen
@@ -173,7 +182,7 @@ function BottomTabs() {
       screenOptions={{ 
         headerShown: false,
         tabBarStyle: {
-          position: 'absolute',
+          ...(Platform.OS === 'ios' ? { position: 'absolute' } : {}),
           height: 35,
           backgroundColor: '#e8f5e9',
         },
@@ -190,7 +199,7 @@ function BottomTabs() {
                 {...props}
                 style={{
                   position: 'absolute',
-                  bottom: insets.bottom - 40,
+                  bottom: Platform.OS === 'ios' ? insets.bottom - 40 : insets.bottom + 12,
                   left: iconSpacing,
                   backgroundColor: 'white',
                   borderRadius: 20,
@@ -200,6 +209,17 @@ function BottomTabs() {
                   shadowOpacity: 0.3,
                   shadowRadius: 10,
                   elevation: 10,
+                }}
+                onPress={() => {
+                  // Access your navigation container ref!
+                  const currentRoute = navigationRef.getCurrentRoute?.();
+                  if (currentRoute?.name === 'HomeScreen') {
+                    // If already on Home, scroll to top!
+                    homeScreenRef.current?.scrollToTop?.();
+                  } else {
+                    // Otherwise, navigate to Home
+                    navigationRef.navigate('HomeScreen');
+                  }
                 }}
               >
                 <Image
@@ -224,7 +244,7 @@ function BottomTabs() {
                 {...props}
                 style={{
                   position: 'absolute',
-                  bottom: insets.bottom - 40,
+                  bottom: Platform.OS === 'ios' ? insets.bottom - 40 : insets.bottom + 12,
                   left: postIconLeft,
                   backgroundColor: 'white',
                   borderRadius: 20,
@@ -280,7 +300,8 @@ function AuthenticatedApp() {
         }
       }
     };
-  
+
+
     setupNotifications();
   
     const subscription = Notifications.addNotificationReceivedListener(notification => {
@@ -303,6 +324,8 @@ function AuthenticatedApp() {
     return () => subscription.remove();
 
   }, [user?.uid, activeConversationId]); // Depend on activeConversationId
+
+
 
   if (loading) {
     console.log("🔄 Waiting for Firebase and User data..."); 
@@ -340,18 +363,15 @@ function AuthenticatedApp() {
       ) : (
         <>
           <Stack.Screen name="BottomTabs" component={BottomTabs} options={{ headerShown: false }} />
-
           <Stack.Screen name="ChatScreen" component={ChatScreen} options={({ route }) => ({
             title: (route.params as any)?.friendName || i18n.t('chat.title'),
             headerShown: true,
           })} />
-
           <Stack.Screen
             name="MessagesScreen"
             component={MessagesScreen}
             options={{ title: i18n.t('messages.title') }}
-            />
-
+          />
           <Stack.Screen
             name="BlockedUsers"
             component={BlockedUsersScreen}
@@ -397,12 +417,13 @@ function AuthenticatedApp() {
 
           <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
 
+
           {user?.isQrDistributor && (
             <Stack.Screen
               name="AdminApproval"
               component={AdminApprovalScreen}
               options={{ title: i18n.t('admin.reviewApplications') }}
-            />
+              />
           )}
 
         </>

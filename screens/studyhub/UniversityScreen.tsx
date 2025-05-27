@@ -5,7 +5,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import RateMyProfessorsScreen from './RateMyProfessorsScreen';
 import SchoolDiscussionScreen from './SchoolDiscussionScreen';
 import i18n from '@/i18n';
-import { useVerifiedSchool } from '@/contexts/verifySchoolContext';
+import { useVerifiedSchool } from '@/contexts/verifiedSchoolContext';
 
 const Tab = createMaterialTopTabNavigator();
 

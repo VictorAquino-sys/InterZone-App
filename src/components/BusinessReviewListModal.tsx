@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import { Modal, View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import Ionicons from '@expo/vector-icons/Ionicons'; // Add this if not already
 import Avatar from './Avatar';
 import { Timestamp } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
@@ -62,50 +61,46 @@ const BusinessReviewListModal: React.FC<Props> = ({ visible, onClose, businessId
   };
 
   return (
-    <Modal visible={visible} animationType="slide">
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <Modal visible={visible} animationType="slide">
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+              <View style={styles.header}>
+                  <View style={styles.flexSpacer} />
+                      <Text style={styles.headerText}>{i18n.t('businessReviews.title')}</Text>
+                  <TouchableOpacity onPress={onClose}>
+                      <Text style={styles.closeText}>{i18n.t('close')}</Text>
+                  </TouchableOpacity>
+              </View>
 
-            <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={onClose}>
-                <Ionicons name="chevron-back" size={24} color="#007aff" />
-            </TouchableOpacity>
+              {loading ? (
+                  <ActivityIndicator style={{ marginTop: 40 }} size="large" />
+              ) : (
+                  <FlatList
+                  data={reviews}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={{ padding: 16 }}
+                  renderItem={({ item }) => (
+                      <View style={styles.reviewCard}>
+                      <View style={styles.userRow}>
+                          <Avatar name={item.userName ?? 'Anonymous'} imageUri={item.userAvatar} size={40} />
+                          <View style={{ marginLeft: 10 }}>
+                          <Text style={styles.userName}>{item.userName}</Text>
+                          <Text style={styles.timestamp}>
+                              {formatDistanceToNow(item.timestamp?.toDate?.() || new Date(), { addSuffix: true })}
+                          </Text>
+                          </View>
+                      </View>
 
-            <Text style={styles.headerText}>{i18n.t('businessReviews.title')}</Text>
+                      <Text style={styles.stars}>{"★".repeat(item.stars)}{"☆".repeat(5 - item.stars)}</Text>
 
-            {/* Placeholder to balance layout */}
-            <View style={styles.backButton} />
-            </View>
-
-            {loading ? (
-                <ActivityIndicator style={{ marginTop: 40 }} size="large" />
-            ) : (
-                <FlatList
-                data={reviews}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ padding: 16 }}
-                renderItem={({ item }) => (
-                    <View style={styles.reviewCard}>
-                    <View style={styles.userRow}>
-                        <Avatar name={item.userName ?? 'Anonymous'} imageUri={item.userAvatar} size={40} />
-                        <View style={{ marginLeft: 10 }}>
-                        <Text style={styles.userName}>{item.userName}</Text>
-                        <Text style={styles.timestamp}>
-                            {formatDistanceToNow(item.timestamp?.toDate?.() || new Date(), { addSuffix: true })}
-                        </Text>
-                        </View>
-                    </View>
-
-                    <Text style={styles.stars}>{"★".repeat(item.stars)}{"☆".repeat(5 - item.stars)}</Text>
-
-                    {item.review ? (
-                        <Text style={styles.comment}>{item.review}</Text>
-                    ) : null}
-                    </View>
-                )}
-                />
-            )}
-        </SafeAreaView>        
-    </Modal>
+                      {item.review ? (
+                          <Text style={styles.comment}>{item.review}</Text>
+                      ) : null}
+                      </View>
+                  )}
+                  />
+              )}
+          </SafeAreaView>        
+      </Modal>
   );
 };
 
@@ -113,7 +108,7 @@ export default BusinessReviewListModal;
 
 const styles = StyleSheet.create({
     header: {
-        paddingTop: Platform.OS === 'ios' ? 44 : 24, // Adjusts for status bar
+        // paddingTop: 10,
         paddingBottom: 14,
         paddingHorizontal: 16,
         backgroundColor: '#f9f9f9',
@@ -122,7 +117,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-      },
+    },
     flexSpacer: {
         width: 60, 
     },
@@ -169,10 +164,4 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#333',
     },
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
 });

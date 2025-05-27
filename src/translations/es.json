@@ -136,7 +136,9 @@
         "ruteros": "Ruteros",
         "hotels": "Hoteles",
         "business": "Emprendimientos",
-        "tutors": "Tutores"
+        "tutors": "Tutores",
+        "sports": "Deportes",
+        "universities": "Universidades"
     },
     "testYourKnowledgeMusic": "Cuanto sabes sobre musica?",
     "testYourKnowledge": "Pon a prueba tu conocimiento",
@@ -409,7 +411,6 @@
         "viewAllReviews": "Ver todas las reseñas"
     },
 
-    "studyHubAdminNote": "Admin:Solo disponible para Peru",
     "delete": "Eliminar",
     "postAs": "Publicar como:",
     "featureOnChannel": "Destacar en el canal",
@@ -517,7 +518,6 @@
     },
     "verify": {
         "title": "Verifica tu correo institucional",
-        "stayOpenNote": "No cierres InterZone mientras verificas tu correo.",
         "send": "Enviar Código",
         "verify": "Verificar",
         "sendLink": "Enviar link",

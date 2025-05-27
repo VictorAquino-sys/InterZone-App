@@ -4,7 +4,7 @@ import { auth, db } from '@/config/firebase';
 import { doc, getDoc, setDoc, arrayUnion } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '@/i18n';
-import { useVerifiedSchool } from '@/contexts/verifySchoolContext';
+import { useVerifiedSchool } from '@/contexts/verifiedSchoolContext';
 import Toast from 'react-native-toast-message';
 import { User } from '@/contexts/UserContext';
 import * as Linking from 'expo-linking';
@@ -13,7 +13,7 @@ import { sendSignInLinkToEmail, signInWithEmailLink, isSignInWithEmailLink } fro
 type Props = {
   visible: boolean;
   onClose: () => void;
-  schoolId: 'upc' | 'villareal' | "sanMarcos" | "catolica";
+  schoolId: 'upc' | 'villareal' | "sanMarcos" | "cesarVallejo" | "catolica" ;
   onSuccess: (email: string) => void;
   user: User | null;
 };
@@ -32,14 +32,16 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
   schoolId === 'upc' ? ['upc.edu.pe'] :
   schoolId === 'villareal' ? ['unfv.edu.pe'] :
   schoolId === 'sanMarcos' ? ['unmsm.edu.pe'] :
+  schoolId === 'cesarVallejo' ? ['ucv.edu.pe'] :
   schoolId === 'catolica' ? ['pucp.edu.pe'] :
   [];
 
   const getUniversityName = (id: string): string => {
     switch (id) {
       case 'upc': return 'UPC';
-      case 'villareal': return 'Universidad Nacional Federico Villarreal';
-      case 'sanMarcos': return 'Universidad Nacional Mayor de San Marcos';
+      case 'villareal': return 'UNFV';
+      case 'sanMarcos': return 'UNMSM';
+      case 'cesarVallejo' : return "UCV";
       case 'catolica': return 'PUCP';
       default: return 'Unknown';
     }
@@ -187,6 +189,7 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
           'schoolEmailCooldown',
         ]);
 
+  
         Toast.show({
           type: 'success',
           text1: i18n.t('verify.verifiedTitle'),
@@ -296,10 +299,7 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
       setLinkSent(true);
       startCooldown(); // ⬅️ start timer
 
-      Alert.alert(
-        i18n.t('verify.linkSentTitle'),
-        `${i18n.t('verify.linkSentMsg')}\n\n${i18n.t('verify.stayOpenNote')}`
-      );
+      Alert.alert(i18n.t('verify.linkSentTitle'), i18n.t('verify.linkSentMsg'));
       // onClose();
     } catch (error: any) {
       console.error('Failed to send sign-in link:', error);

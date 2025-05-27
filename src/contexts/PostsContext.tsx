@@ -16,12 +16,13 @@ export interface Post {
         avatar: string;
         description?: string;
         mode?: 'business' | 'individual'; // ✅ Add this to distinguish who posted
-    };
+        businessVerified?: boolean;
+      };
     likedBy?: string[];
     categoryKey: string;
     commentCount?: number;
     commentsEnabled: boolean;
-    verifications?: User['verifications'];
+    verifications?: User['verifications']
 }
 
 // Define the type for the posts and the context structure

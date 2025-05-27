@@ -8,25 +8,20 @@ import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { deleteDoc, doc, getDoc} from "firebase/firestore";
-import LikeButton from '../src/components/LikeButton';
 import DefaultCategoryContent from '@/components/category/DefaultCategoryContent';
 import MusicHubContent from '@/components/category/musichubContent';
-import Avatar from '../src/components/Avatar';
 import { categories } from '@/config/categoryData';
 import HistoryTrivia from '@/components/HistoryTrivia';
 import { useFocusEffect } from '@react-navigation/native';
 import NewsFeedContent from '@/components/NewsFeedContent';
 import { logEvent } from '@/utils/analytics';
-import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigationTypes'
-import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
 import StudyHubContent from '@/components/category/studyHubContent';
 
-// type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
-const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'CategoryScreen'>> = ({ route, navigation }) => {
+const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'CategoryScreen'>> = ({ route }) => {
     const { posts, setPosts } = usePosts();
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -38,10 +33,11 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
     const [isPeruvian, setIsPeruvian] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [showAdminOverrideMsg, setShowAdminOverrideMsg] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [checkedPermissions, setCheckedPermissions] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
+            setCheckedPermissions(false);
             const checkUserPermissions = async () => {
                 if (user?.uid) {
                     const userRef = doc(db, "users", user.uid);
@@ -70,8 +66,10 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
                         user_id: user.uid,
                       });
                     }
+                    setCheckedPermissions(true); // set to true when done
                   };
-              
+
+                  setCheckedPermissions(false); // <-- Optionally reset on focus
                   checkUserPermissions();
               }, [user?.uid, categoryKey])
     );
@@ -173,12 +171,24 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
         }
     };
 
+    if (!checkedPermissions) {
+        // Only show spinner while checking permissions
+        return (
+          <SafeAreaView style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+              <ActivityIndicator size="large" color="#26c6da" />
+            </View>
+          </SafeAreaView>
+        );
+    }
+    
+
     return (
         <SafeAreaView  style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
         
 
-            {/* STUDY HUB: show Peruvian universities instead of post list */}
-            {categoryKey === 'study hub' && (isPeruvian || isAdmin) && !historyTriviaActive && (
+            {/* universities: show Peruvian universities instead of post list */}
+            {categoryKey === 'universities' && (isPeruvian || isAdmin) && !historyTriviaActive && (
             <ScrollView 
                 contentContainerStyle={{ paddingBottom: 80 }}
                 showsVerticalScrollIndicator={false}
@@ -220,6 +230,7 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
             </Modal>
         </SafeAreaView >
     );
+
 };
 
 const styles = StyleSheet.create({

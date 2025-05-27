@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useUser } from '@/contexts/UserContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import StarRating from 'react-native-star-rating-widget';
 import {
   submitBusinessRating,
@@ -94,41 +95,43 @@ const BusinessRatingModal: React.FC<Props> = ({ visible, onClose, businessId, bu
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.container}>
-            <Text style={styles.title}>
-                {i18n.t('businessRating.rateTitle', { name: businessName })}
-            </Text>
-          {loading && !existingRatingLoaded ? (
-            <ActivityIndicator size="large" />
-          ) : (
-            <>
-                <StarRating
-                    rating={stars}
-                    onChange={setStars}
-                    starSize={32}
-                    animationConfig={{ scale: 1.2 }}
-                />
+        <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+          <View style={styles.container}>
+              <Text style={styles.title}>
+                  {i18n.t('businessRating.rateTitle', { name: businessName })}
+              </Text>
+            {loading && !existingRatingLoaded ? (
+              <ActivityIndicator size="large" />
+            ) : (
+              <>
+                  <StarRating
+                      rating={stars}
+                      onChange={setStars}
+                      starSize={32}
+                      animationConfig={{ scale: 1.2 }}
+                  />
 
-                <TextInput
-                    style={styles.input}
-                    placeholder={i18n.t('businessRating.placeholder')}
-                    value={review}
-                    onChangeText={setReview}
-                    multiline
-                />
+                  <TextInput
+                      style={styles.input}
+                      placeholder={i18n.t('businessRating.placeholder')}
+                      value={review}
+                      onChangeText={setReview}
+                      multiline
+                  />
 
-                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
-                <Text style={styles.submitText}>
-                    {existingRatingLoaded && stars > 0 ? i18n.t('businessRating.update') : i18n.t('businessRating.submit')}
-                </Text>
-                </TouchableOpacity>
+                  <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
+                  <Text style={styles.submitText}>
+                      {existingRatingLoaded && stars > 0 ? i18n.t('businessRating.update') : i18n.t('businessRating.submit')}
+                  </Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity onPress={onClose} style={styles.cancel}>
-                    <Text style={{ color: '#888' }}>Cancel</Text>
-                </TouchableOpacity>
-            </>
-          )}
-        </View>
+                  <TouchableOpacity onPress={onClose} style={styles.cancel}>
+                      <Text style={{ color: '#888' }}>Cancel</Text>
+                  </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
