@@ -13,7 +13,7 @@ import { sendSignInLinkToEmail, signInWithEmailLink, isSignInWithEmailLink } fro
 type Props = {
   visible: boolean;
   onClose: () => void;
-  schoolId: 'upc' | 'villareal' | "sanMarcos" | "catolica";
+  schoolId: 'upc' | 'villareal' | "sanMarcos" | "cesarVallejo" | "catolica" ;
   onSuccess: (email: string) => void;
   user: User | null;
 };
@@ -32,14 +32,16 @@ const SchoolEmailVerificationModal: React.FC<Props> = ({ visible, onClose, schoo
   schoolId === 'upc' ? ['upc.edu.pe'] :
   schoolId === 'villareal' ? ['unfv.edu.pe'] :
   schoolId === 'sanMarcos' ? ['unmsm.edu.pe'] :
+  schoolId === 'cesarVallejo' ? ['ucv.edu.pe'] :
   schoolId === 'catolica' ? ['pucp.edu.pe'] :
   [];
 
   const getUniversityName = (id: string): string => {
     switch (id) {
       case 'upc': return 'UPC';
-      case 'villareal': return 'Universidad Nacional Federico Villarreal';
-      case 'sanMarcos': return 'Universidad Nacional Mayor de San Marcos';
+      case 'villareal': return 'UNFV';
+      case 'sanMarcos': return 'UNMSM';
+      case 'cesarVallejo' : return "UCV";
       case 'catolica': return 'PUCP';
       default: return 'Unknown';
     }

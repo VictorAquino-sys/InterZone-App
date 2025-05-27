@@ -119,7 +119,12 @@ const DiscussionCommentsModal = ({ visible, onClose, universityId, postId }: Pro
                 style={styles.input}
                 value={editingContent}
                 onChangeText={setEditingContent}
+                maxLength={200}
             />
+            <Text style={{ color: '#888', fontSize: 12, alignSelf: 'flex-end', marginTop: 2}}>
+              {editingContent.length}/200
+            </Text>
+
             <TouchableOpacity
             style={styles.button}
             onPress={async () => {
@@ -150,17 +155,25 @@ const DiscussionCommentsModal = ({ visible, onClose, universityId, postId }: Pro
             </TouchableOpacity>
         </>
         )}
+        <View style={styles.footer}>
+          <TextInput
+            placeholder={i18n.t('discussion.placeholder')}
+            value={input}
+            onChangeText={setInput}
+            style={styles.input}
+            maxLength={200}
+          />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: '#888', fontSize: 12, alignSelf: 'flex-end', marginTop: 2 }}>
+              {input.length}/200
+            </Text>
 
-        <TextInput
-          placeholder={i18n.t('discussion.placeholder')}
-          value={input}
-          onChangeText={setInput}
-          style={styles.input}
-        />
+            <TouchableOpacity onPress={submitComment} style={styles.button}>
+                <Text style={styles.buttonText}>{i18n.t('discussion.send')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-        <TouchableOpacity onPress={submitComment} style={styles.button}>
-            <Text style={styles.buttonText}>{i18n.t('discussion.send')}</Text>
-        </TouchableOpacity>
       </View>
     </Modal>
   );
@@ -169,9 +182,17 @@ const DiscussionCommentsModal = ({ visible, onClose, universityId, postId }: Pro
 const styles = StyleSheet.create({
   modalContainer: { flex: 1, padding: 16 },
   close: { fontSize: 16, color: '#007AFF', marginBottom: 10 },
+  footer: {
+    padding: 12,
+    backgroundColor: 'white',
+  },
   input: {
-    borderWidth: 1, borderColor: '#ccc',
-    padding: 10, borderRadius: 6, marginTop: 10
+  borderWidth: 1,
+  borderColor: '#ccc',
+  padding: 10,
+  borderRadius: 6,
+  marginTop: 10,
+  marginBottom: 4, // space for the counter
   },
   button: {
     backgroundColor: '#007AFF', padding: 10,

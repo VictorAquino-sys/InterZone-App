@@ -5,6 +5,7 @@ import { collection, getDocs, deleteDoc, addDoc, doc, serverTimestamp, setDoc } 
 import { useUser } from '@/contexts/UserContext';
 import { useFocusEffect } from '@react-navigation/native';
 import i18n from '@/i18n';
+import normalizeString from '@/utils/normalizeString';
 
 type Suggestion = {
   id: string;
@@ -60,6 +61,7 @@ const ProfessorSuggestionsReviewScreen = () => {
           {
             name: suggestion.name,
             nameLower: suggestion.name.toLowerCase(),
+            nameSearch: normalizeString(suggestion.name),
             department: suggestion.department || '',
             course: suggestion.course || '',
             createdBy: suggestion.createdBy,

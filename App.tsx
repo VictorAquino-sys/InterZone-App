@@ -15,7 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 // import Ionicons from '@expo/vector-icons/Ionicons';
 import { MusicHubProvider } from '@/components/category/musichubContext';
 import LoginScreen from './screens/auth/LoginScreen';
-import HomeScreen from './screens/HomeScreen';
+import HomeScreen, { HomeScreenRef } from './screens/HomeScreen';
+import type { HomeScreenProps } from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PostScreen from './screens/posts/PostScreen';
 import TermsScreen from 'screens/TermsScreen';
@@ -62,6 +63,7 @@ import ProfessorSuggestionsReviewScreen from 'screens/studyub/professorSuggestio
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
 import { createNavigationContainerRef } from '@react-navigation/native';
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+export const homeScreenRef = React.createRef<HomeScreenRef>();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -120,7 +122,15 @@ const Tab = createBottomTabNavigator<TabParamList>();
 function HomeStack(){
   return (
     <Stack.Navigator>
-      <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="HomeScreen" 
+        options={{ headerShown: false }} 
+      >
+        {(props: HomeScreenProps) => (
+          <HomeScreen ref={homeScreenRef} {...props} />
+        )}
+      </Stack.Screen>
+
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
 
       <Stack.Screen
@@ -198,6 +208,17 @@ function BottomTabs() {
                   shadowOpacity: 0.3,
                   shadowRadius: 10,
                   elevation: 10,
+                }}
+                onPress={() => {
+                  // Access your navigation container ref!
+                  const currentRoute = navigationRef.getCurrentRoute?.();
+                  if (currentRoute?.name === 'HomeScreen') {
+                    // If already on Home, scroll to top!
+                    homeScreenRef.current?.scrollToTop?.();
+                  } else {
+                    // Otherwise, navigate to Home
+                    navigationRef.navigate('HomeScreen');
+                  }
                 }}
               >
                 <Image

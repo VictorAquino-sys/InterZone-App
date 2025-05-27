@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useLayoutEffect, useRef, useState, FunctionComponent, useCallback } from 'react';
+import React, { useContext, forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, FunctionComponent, useCallback } from 'react';
 import { useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert, StatusBar, Platform } from 'react-native';
-// import { Image } from 'expo-image';
 import { Image } from 'react-native';
+
+import { FlashList } from '@shopify/flash-list';
+
 import friendsIcon from '../assets/addfriends_icon.png'
-import { Asset } from 'expo-asset';
 import { Ionicons } from '@expo/vector-icons';
 // import defaultProfileImg from '../assets/unknownuser.png';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,14 +15,11 @@ import * as Location from 'expo-location';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import Avatar from '../src/components/Avatar';
-import LikeButton from '../src/components/LikeButton';
 import { deleteDoc, collection, onSnapshot, limit, doc, getDocs, getDoc, updateDoc, query, where, orderBy, arrayUnion } from "firebase/firestore";
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { categories, getCategoryByKey } from '../src/config/categoryData';
-import { checkLocation } from '../src/utils/locationUtils';
 import i18n from '@/i18n'; 
 import { RootStackParamList } from '../src/navigationTypes';
-import { Accuracy } from 'expo-location';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
@@ -29,9 +27,7 @@ import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
 import PostCard from '@/components/PostCard';
-import { Video, ResizeMode } from 'expo-av';
 
-// import { forceCrash } from '@/utils/crashlytics';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -45,16 +41,22 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 
-type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
+export type HomeScreenRef = {
+  scrollToTop: () => void;
+};
 
-const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
+export type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
+
+const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, ref) => {
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const { posts, setPosts } = usePosts();
   const { user, setUser } = useUser();
-  const storage = getStorage();
+  const AnimatedFlatList = Animated.createAnimatedComponent(FlashList<Post>);
+
+  const flatListRef = useRef<any>(null);
 
   // Modal state inside the component
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -62,13 +64,10 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   // const defaultUri = Asset.fromModule(defaultProfileImg).uri;
 
-  const [imageOpacity, setImageOpacity] = useState<number>(1); // State to force refresh
-
   // Search Bar State
   const [searchText, setSearchText] = useState<string>('');
 
   // variables for user's location
-  const [isFetching, setIsFetching] = useState<boolean>(false);
   const [city, setCity] = useState<string | null>(null); // To store the city name
   const [loading, setLoading] = useState<boolean>(true); // Loading state for better UX
   const prevCityRef = useRef<string | null>(null);
@@ -204,6 +203,13 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
       onFocus();
     }, [city, user?.blocked])
   );
+
+  // Expose scrollToTop to parent
+  useImperativeHandle(ref, () => ({
+    scrollToTop: () => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    },
+  }));
 
   const fetchLocation = async () => {
     console.log("🔍 Starting fetchLocation...");
@@ -621,6 +627,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                   placeholderTextColor="#888"
                   value={searchText}
                   onChangeText={setSearchText}
+                  maxLength={20}
                 />
 
                 <TouchableOpacity
@@ -653,14 +660,10 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
               </View>
             ) : (
               /* Scrollable Content (Categories + Funny Message + Posts) */
-              <Animated.FlatList
+              <AnimatedFlatList
+                ref={flatListRef}
                 onScroll={scrollHandler}
                 scrollEventThrottle={16}
-                removeClippedSubviews={true} // Detach offscreen views to save processing
-                maxToRenderPerBatch={6} // Reduce JS execution load per batch
-                updateCellsBatchingPeriod={50} // Delay between batch renders
-                initialNumToRender={5} // Faster initial render
-                windowSize={7} // Limit how many items are mounted around the viewport
                 ListHeaderComponent={
                   <View>
                       {/* Categories (Now Scrollable) */}
@@ -676,10 +679,12 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
                   </View>
                 }
                 data={posts}
-                keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
+                // keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
+                keyExtractor={item => item.id}
                 renderItem={memoizedRenderItem}
                 contentContainerStyle={styles.listContent}
-                style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
+                // style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
+                estimatedItemSize={280}
               />
             )}
 
@@ -742,7 +747,7 @@ const HomeScreen: FunctionComponent<HomeScreenProps> = ({ navigation }) => {
         </SafeAreaView>
     </>
   );
-};
+});
 
 export default HomeScreen;
 
@@ -950,7 +955,10 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   listContent: {
-    width: '100%'
+    // width: '100%'
+    paddingBottom: 20,
+    paddingTop: 10,
+    backgroundColor: '#ECEFF4',
   },
   deleteButton: {
     paddingVertical: 5,  // Small vertical padding for easier tapping

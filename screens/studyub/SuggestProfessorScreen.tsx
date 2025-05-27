@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../src/navigationTypes'; // update path if needed
 import { useNavigation,  RouteProp, useRoute  } from '@react-navigation/native';
 import i18n from '@/i18n';
+import normalizeString from '@/utils/normalizeString';
 
 type SuggestProfessorRouteProp = RouteProp<RootStackParamList, 'SuggestProfessor'>;
 
@@ -31,6 +32,7 @@ const SuggestProfessorScreen = () => {
 
     const suggestion = {
       name: name.trim(),
+      nameSearch: normalizeString(name.trim()),
       department: department.trim(),
       course: course.trim(),
       universityId,

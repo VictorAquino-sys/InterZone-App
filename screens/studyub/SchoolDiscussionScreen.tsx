@@ -156,15 +156,32 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
             <Text style={{ color: '#888', fontStyle: 'italic', marginBottom: 4 }}>
               {i18n.t('discussion.editing')} ({user?.name || i18n.t('discussion.you')})
             </Text>
-            <TextInput
-              editable={!schoolLoading}
-              autoFocus={!!editingPostId}
-              placeholder={i18n.t('discussion.editPlaceholder')}
-              style={styles.input}
-              value={editingText}
-              onChangeText={setEditingText}
-              multiline
-            />
+            
+            <View style={{ position: 'relative', marginBottom: 16 }}>
+              <TextInput
+                editable={!schoolLoading}
+                autoFocus={!!editingPostId}
+                placeholder={i18n.t('discussion.editPlaceholder')}
+                style={styles.input}
+                value={editingText}
+                onChangeText={setEditingText}
+                multiline
+                maxLength={200}
+              />
+              <Text
+                style={{
+                  position: 'absolute',
+                  right: 14, // Adjust for your border/padding
+                  bottom: 10, // Adjust for your font size/input height
+                  color: editingText.length > 190 ? '#d32f2f' : '#888',
+                  fontSize: 12,
+                  backgroundColor: 'white', // Or match your input bg
+                  paddingHorizontal: 2,
+                }}>
+                {editingText.length}/200
+              </Text>
+            </View>
+
             <TouchableOpacity
               style={styles.postButton}
               onPress={async () => {
@@ -193,13 +210,28 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
           </>
         ) : (
           <>
+          <View style={{ position: 'relative', marginBottom: 16 }}>
             <TextInput
-              placeholder={i18n.t('discussion.placeholder')}
-              style={styles.input}
               value={newPost}
               onChangeText={setNewPost}
+              placeholder={i18n.t('discussion.placeholder')}
               multiline
+              maxLength={200}
+              style={[styles.input, { paddingRight: 48 }]} // Add extra right padding for the counter!
             />
+            <Text
+              style={{
+                position: 'absolute',
+                right: 14, // Adjust for your border/padding
+                bottom: 10, // Adjust for your font size/input height
+                color: newPost.length > 190 ? '#d32f2f' : '#888',
+                fontSize: 12,
+                backgroundColor: 'white', // Or match your input bg
+                paddingHorizontal: 2,
+              }}>
+              {newPost.length}/200
+            </Text>
+          </View>
 
             <TouchableOpacity
               style={[styles.postButton, newPost.trim().length < 2 && { backgroundColor: '#ccc' }]}

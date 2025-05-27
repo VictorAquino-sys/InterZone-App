@@ -16,6 +16,7 @@ export interface Post {
         avatar: string;
         description?: string;
         mode?: 'business' | 'individual'; // ✅ Add this to distinguish who posted
+        businessVerified?: boolean;
       };
     likedBy?: string[];
     categoryKey: string;

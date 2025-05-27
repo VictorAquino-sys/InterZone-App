@@ -264,10 +264,6 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         }
     };
 
-    // console.log("👤 user.verifications:", user?.verifications);
-    // console.log("📉 unverifiedTypes:", unverifiedTypes);
-    // console.log("➡️ nextType:", nextType);
-
     return (
         <>
             <StatusBar
@@ -301,6 +297,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                             style={styles.input}
                                             autoFocus={true}
                                             onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
+                                            maxLength={20}
                                         />
                                     ) : (
                                         <View style={{ flexDirection: 'column', alignItems: 'center' }}>

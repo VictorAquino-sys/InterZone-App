@@ -2,12 +2,12 @@ import React from 'react';
 import {
   View,
   Text,
-  FlatList,
   Image,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
 import LikeButton from '@/components/LikeButton';
+import { FlashList } from '@shopify/flash-list';
 import Avatar from '@/components/Avatar';
 import Video from 'react-native-video';
 import i18n from '@/i18n';
@@ -31,6 +31,7 @@ type Props = {
   currentUserId: string;
   onDeletePost: (postId: string, imageUrl: string | null) => void;
   onOpenImageModal: (url: string | null) => void;
+  categoryKey?: string;
 };
 
 const DefaultCategoryContent: React.FC<Props> = ({
@@ -38,6 +39,7 @@ const DefaultCategoryContent: React.FC<Props> = ({
   currentUserId,
   onDeletePost,
   onOpenImageModal,
+  categoryKey,
 }) => {
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'Unknown';
@@ -48,62 +50,66 @@ const DefaultCategoryContent: React.FC<Props> = ({
     })}`;
   };
 
+  if (categoryKey === 'universities') return null;
+
   return (
-    <FlatList
-      data={posts}
-      keyExtractor={(item) => item.id}
-      removeClippedSubviews={true}              // Detach views off-screen
-      initialNumToRender={5}                    // Render only 5 initially
-      maxToRenderPerBatch={6}                   // Render max 8 per batch
-      updateCellsBatchingPeriod={50}            // Wait 50ms between batches
-      windowSize={7}                            // Render a few extra items around the viewport
-      renderItem={({ item }) => (
-        <View style={styles.postItem}>
-          <View style={styles.userContainer}>
-            <TouchableOpacity onPress={() => onOpenImageModal(item.user?.avatar ?? null)}>
-              <Avatar name={item.user?.name} imageUri={item.user?.avatar} />
-            </TouchableOpacity>
-            <View style={styles.postDetails}>
-              <Text style={styles.userName}>{item.user?.name}</Text>
-              <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-              <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+    <View style={{ flex: 1 }}>
+      <FlashList<Post>
+        data={posts}
+        keyExtractor={(item) => item.id}
+        estimatedItemSize={280} // Or another good average for your post height
+        renderItem={({ item }) => (
+          <View style={styles.postItem}>
+            <View style={styles.userContainer}>
+              <TouchableOpacity onPress={() => onOpenImageModal(item.user?.avatar ?? null)}>
+                <Avatar name={item.user?.name} imageUri={item.user?.avatar} />
+              </TouchableOpacity>
+              <View style={styles.postDetails}>
+                <Text style={styles.userName}>{item.user?.name}</Text>
+                <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
+                <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+              </View>
             </View>
+
+            <Text style={styles.postText}>{item.content}</Text>
+
+            {item.imageUrl && (
+              <TouchableOpacity onPress={() => onOpenImageModal(item.imageUrl ?? null)}>
+                <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
+              </TouchableOpacity>
+            )}
+
+            {item.videoUrl && (
+              <View style={styles.videoWrapper}>
+                <Video
+                  source={{ uri: item.videoUrl }}
+                  style={styles.video}
+                  controls
+                  paused
+                  resizeMode="cover"
+                />
+              </View>
+            )}
+
+            <LikeButton postId={item.id} userId={currentUserId} />
+
+            {currentUserId === item.user.uid && (
+              <TouchableOpacity
+                onPress={() => onDeletePost(item.id, item.imageUrl || null)}
+                style={styles.deleteButton}
+              >
+                <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
+              </TouchableOpacity>
+            )}
           </View>
-
-          <Text style={styles.postText}>{item.content}</Text>
-
-          {item.imageUrl && (
-            <TouchableOpacity onPress={() => onOpenImageModal(item.imageUrl ?? null)}>
-              <Image source={{ uri: item.imageUrl }} style={styles.postImage} />
-            </TouchableOpacity>
-          )}
-
-          {item.videoUrl && (
-            <View style={styles.videoWrapper}>
-              <Video
-                source={{ uri: item.videoUrl }}
-                style={styles.video}
-                controls
-                paused
-                resizeMode="cover"
-              />
-            </View>
-          )}
-
-          <LikeButton postId={item.id} userId={currentUserId} />
-
-          {currentUserId === item.user.uid && (
-            <TouchableOpacity
-              onPress={() => onDeletePost(item.id, item.imageUrl || null)}
-              style={styles.deleteButton}
-            >
-              <Text style={styles.deleteText}>{i18n.t('deletePost')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-      ListEmptyComponent={<Text style={styles.emptyCategoryText}>{i18n.t('EmptyCategoryScreen')}</Text>}
-    />
+        )}
+        ListEmptyComponent={
+          categoryKey !== 'universities' ? (
+            <Text style={styles.emptyCategoryText}>{i18n.t('EmptyCategoryScreen')}</Text>
+          ) : null
+        }
+        />
+    </View>
   );
 };
 

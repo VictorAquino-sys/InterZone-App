@@ -49,7 +49,7 @@
 
 * To prebuild folders run:
     for android/ios
-    npx expo rebuild
+    npx expo rebuild?
     Android
     npx expo prebuild --clean
     

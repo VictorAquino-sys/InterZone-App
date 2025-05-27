@@ -11,6 +11,7 @@ import villarealLogo from '@/../assets/federico_logo.png';
 import sanMarcosLogo from '@/../assets/sanmarcos_logo.png';
 import catolicaLogo from '@/../assets/catolica_logo.png';
 import upcLogo from '@/../assets/upc_logo.png';
+import ucvLogo from ' @/../assets/ucv_logo.png';
 import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationModal';
 
   type StudyHubContentProps = {
@@ -22,12 +23,12 @@ import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationMo
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const [showVerificationModal, setShowVerificationModal] = useState(false);
-    const [selectedSchoolId, setSelectedSchoolId] = useState<'villareal' | 'upc' | 'catolica' | 'sanMarcos' | null>(null);
-    const [loadingSchoolId, setLoadingSchoolId] = useState<'villareal' | 'upc' | 'catolica' | 'sanMarcos' | null>(null);
+    const [selectedSchoolId, setSelectedSchoolId] = useState<'villareal' | 'upc' | 'catolica' | 'sanMarcos' | 'cesarVallejo' | null>(null);
+    const [loadingSchoolId, setLoadingSchoolId] = useState<'villareal' | 'upc' | 'catolica' | 'sanMarcos' | 'cesarVallejo' | null>(null);
     const [fadeAnimVilla] = useState(new Animated.Value(1));
     const [fadeAnimUPC] = useState(new Animated.Value(1));
 
-    const handleUniversityTap = async (universityId: 'villareal' | 'upc' | 'catolica' | 'sanMarcos', universityName: string) => {
+    const handleUniversityTap = async (universityId: 'villareal' | 'upc' | 'catolica' | 'sanMarcos' | 'cesarVallejo', universityName: string) => {
         if (!user?.uid) {
             Alert.alert('Error', 'You must be signed in to access this feature.');
             return;
@@ -54,7 +55,7 @@ import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationMo
           if (verifiedSchools.includes(universityId)) {
             navigation.navigate('UniversityScreen', { universityId, universityName });
           } else {
-            if (universityId === 'upc' || universityId === 'villareal' || universityId === 'sanMarcos' || universityId === 'catolica') {
+            if (universityId === 'upc' || universityId === 'villareal' || universityId === 'sanMarcos' || universityId === 'catolica' || universityId === 'cesarVallejo') {
                 setSelectedSchoolId(universityId);
                 setShowVerificationModal(true);
               } else {
@@ -74,7 +75,6 @@ import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationMo
 
             setLoadingSchoolId(null);
         }
-
     };
 
   return (
@@ -156,6 +156,24 @@ import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationMo
         </View>
         </Pressable>
 
+        <Pressable
+            android_ripple={{ color: '#e0e0e0', borderless: false }}
+            style={({ pressed }) => [styles.logoCard, pressed && Platform.OS === 'ios' && { opacity: 0.6 }]}
+            onPress={() => handleUniversityTap('cesarVallejo', 'cesarVallejo')}
+            disabled={loadingSchoolId !== null}
+        >
+        <View style={styles.logoWrapper}>
+            <Animated.View style={[styles.logoImageWrapper, { opacity: fadeAnimUPC }]}>
+            <Image source={ucvLogo} style={styles.logoImageUPC} resizeMode="contain" />
+            </Animated.View>
+
+            {loadingSchoolId === 'cesarVallejo' && (
+            <View style={styles.activityOverlay}>
+                <ActivityIndicator size="large" color="#26c6da" />
+            </View>
+            )}
+        </View>
+        </Pressable>
 
         <View style={styles.testTitleContainer}>
             <Text style={styles.testTitle}>🧠 {i18n.t('testYourKnowledge')}</Text>
@@ -206,7 +224,7 @@ import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationMo
 
 const styles = StyleSheet.create({
   studyHubContent: {
-    flex: 2,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 20,

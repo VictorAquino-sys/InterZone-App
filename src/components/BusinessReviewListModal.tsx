@@ -61,46 +61,46 @@ const BusinessReviewListModal: React.FC<Props> = ({ visible, onClose, businessId
   };
 
   return (
-    <Modal visible={visible} animationType="slide">
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-            <View style={styles.header}>
-                <View style={styles.flexSpacer} />
-                    <Text style={styles.headerText}>{i18n.t('businessReviews.title')}</Text>
-                <TouchableOpacity onPress={onClose}>
-                    <Text style={styles.closeText}>{i18n.t('close')}</Text>
-                </TouchableOpacity>
-            </View>
+      <Modal visible={visible} animationType="slide">
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+              <View style={styles.header}>
+                  <View style={styles.flexSpacer} />
+                      <Text style={styles.headerText}>{i18n.t('businessReviews.title')}</Text>
+                  <TouchableOpacity onPress={onClose}>
+                      <Text style={styles.closeText}>{i18n.t('close')}</Text>
+                  </TouchableOpacity>
+              </View>
 
-            {loading ? (
-                <ActivityIndicator style={{ marginTop: 40 }} size="large" />
-            ) : (
-                <FlatList
-                data={reviews}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ padding: 16 }}
-                renderItem={({ item }) => (
-                    <View style={styles.reviewCard}>
-                    <View style={styles.userRow}>
-                        <Avatar name={item.userName ?? 'Anonymous'} imageUri={item.userAvatar} size={40} />
-                        <View style={{ marginLeft: 10 }}>
-                        <Text style={styles.userName}>{item.userName}</Text>
-                        <Text style={styles.timestamp}>
-                            {formatDistanceToNow(item.timestamp?.toDate?.() || new Date(), { addSuffix: true })}
-                        </Text>
-                        </View>
-                    </View>
+              {loading ? (
+                  <ActivityIndicator style={{ marginTop: 40 }} size="large" />
+              ) : (
+                  <FlatList
+                  data={reviews}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={{ padding: 16 }}
+                  renderItem={({ item }) => (
+                      <View style={styles.reviewCard}>
+                      <View style={styles.userRow}>
+                          <Avatar name={item.userName ?? 'Anonymous'} imageUri={item.userAvatar} size={40} />
+                          <View style={{ marginLeft: 10 }}>
+                          <Text style={styles.userName}>{item.userName}</Text>
+                          <Text style={styles.timestamp}>
+                              {formatDistanceToNow(item.timestamp?.toDate?.() || new Date(), { addSuffix: true })}
+                          </Text>
+                          </View>
+                      </View>
 
-                    <Text style={styles.stars}>{"★".repeat(item.stars)}{"☆".repeat(5 - item.stars)}</Text>
+                      <Text style={styles.stars}>{"★".repeat(item.stars)}{"☆".repeat(5 - item.stars)}</Text>
 
-                    {item.review ? (
-                        <Text style={styles.comment}>{item.review}</Text>
-                    ) : null}
-                    </View>
-                )}
-                />
-            )}
-        </SafeAreaView>        
-    </Modal>
+                      {item.review ? (
+                          <Text style={styles.comment}>{item.review}</Text>
+                      ) : null}
+                      </View>
+                  )}
+                  />
+              )}
+          </SafeAreaView>        
+      </Modal>
   );
 };
 

@@ -8,25 +8,20 @@ import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
 import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { deleteDoc, doc, getDoc} from "firebase/firestore";
-import LikeButton from '../src/components/LikeButton';
 import DefaultCategoryContent from '@/components/category/DefaultCategoryContent';
 import MusicHubContent from '@/components/category/musichubContent';
-import Avatar from '../src/components/Avatar';
 import { categories } from '@/config/categoryData';
 import HistoryTrivia from '@/components/HistoryTrivia';
 import { useFocusEffect } from '@react-navigation/native';
 import NewsFeedContent from '@/components/NewsFeedContent';
 import { logEvent } from '@/utils/analytics';
-import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigationTypes'
-import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
 import StudyHubContent from '@/components/category/studyHubContent';
 
-// type CategoryScreenRouteProp = RouteProp<{ params: { categoryKey: string; title: string; } }, 'params'>;
 
-const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'CategoryScreen'>> = ({ route, navigation }) => {
+const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'CategoryScreen'>> = ({ route }) => {
     const { posts, setPosts } = usePosts();
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -36,31 +31,47 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
 
     const [historyTriviaActive, setHistoryTriviaActive] = useState(false);
     const [isPeruvian, setIsPeruvian] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [showAdminOverrideMsg, setShowAdminOverrideMsg] = useState(false);
+    const [checkedPermissions, setCheckedPermissions] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
-          const checkUserCountry = async () => {
-            if (user?.uid) {
-              const userRef = doc(db, "users", user.uid);
-              const userSnap = await getDoc(userRef);
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    // console.log("Fetched user data on focus:", userData);
-                    setIsPeruvian(userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru');
-                }
-            }
+            setCheckedPermissions(false);
+            const checkUserPermissions = async () => {
+                if (user?.uid) {
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
+            
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
 
-            if (user?.uid && categoryKey) {
-                 await logEvent('category_viewed', {
-                  category: categoryKey,
-                  user_id: user.uid,
-                });
-            }
-          };
-      
-          checkUserCountry();
-        }, [user?.uid, categoryKey])
+                        const isFromPeru = userData.country?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === 'peru';
+                        const isAdminUser = user?.claims?.admin === true;
+              
+                        setIsPeruvian(isFromPeru);
+                        setIsAdmin(isAdminUser);
+              
+                        if (!isFromPeru && isAdminUser) {
+                          setShowAdminOverrideMsg(true);
+                        } else {
+                          setShowAdminOverrideMsg(false);
+                        }
+                      }
+                    }
+              
+                    if (user?.uid && categoryKey) {
+                      await logEvent('category_viewed', {
+                        category: categoryKey,
+                        user_id: user.uid,
+                      });
+                    }
+                    setCheckedPermissions(true); // set to true when done
+                  };
+
+                  setCheckedPermissions(false); // <-- Optionally reset on focus
+                  checkUserPermissions();
+              }, [user?.uid, categoryKey])
     );
 
     // Assuming each post has a 'timestamp' field that's a Date or a number
@@ -85,8 +96,10 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
     };
 
     const toggleHistoryTrivia = () => {
+        const isAdmin = user?.claims?.admin === true;
+
         console.log("History Trivia button pressed. Current isPeruvian:", isPeruvian);
-        if (!isPeruvian) {
+        if (!isPeruvian && !isAdmin) {
             alert("History Trivia is not available in your location");
         } else {
             setHistoryTriviaActive(!historyTriviaActive);
@@ -158,21 +171,37 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
         }
     };
 
+    if (!checkedPermissions) {
+        // Only show spinner while checking permissions
+        return (
+          <SafeAreaView style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+              <ActivityIndicator size="large" color="#26c6da" />
+            </View>
+          </SafeAreaView>
+        );
+    }
+    
+
     return (
         <SafeAreaView  style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
         
 
-            {/* STUDY HUB: show Peruvian universities instead of post list */}
-            {categoryKey === 'study hub' && isPeruvian && !historyTriviaActive && (
-                <ScrollView 
-                    contentContainerStyle={{ paddingBottom: 80 }}
-                    showsVerticalScrollIndicator={false}
-                >
-                    <StudyHubContent toggleHistoryTrivia={toggleHistoryTrivia} />
-                </ScrollView>
+            {/* universities: show Peruvian universities instead of post list */}
+            {categoryKey === 'universities' && (isPeruvian || isAdmin) && !historyTriviaActive && (
+            <ScrollView 
+                contentContainerStyle={{ paddingBottom: 80 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {showAdminOverrideMsg && (
+                <Text style={{ textAlign: 'center', color: 'orange', marginBottom: 10 }}>
+                    You are seeing this as Admin. This screen is only available for Peruvian users.
+                </Text>
+                )}
+                <StudyHubContent toggleHistoryTrivia={toggleHistoryTrivia} />
+            </ScrollView>
             )}
 
-        
             {categoryKey === 'music' ? (
             <MusicHubContent />
             ) : historyTriviaActive ? (
@@ -185,6 +214,7 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
                     currentUserId={user?.uid || ''}
                     onDeletePost={handleDeletePost}
                     onOpenImageModal={openImageModal}
+                    categoryKey={categoryKey}
                 />
             )}
 
@@ -200,6 +230,7 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
             </Modal>
         </SafeAreaView >
     );
+
 };
 
 const styles = StyleSheet.create({

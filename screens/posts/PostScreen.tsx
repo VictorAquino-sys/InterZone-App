@@ -9,6 +9,7 @@ import { db } from '../../src/config/firebase';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc, query, getDocs, where } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
+import { Tooltip } from '@rneui/themed';
 import * as ImagePicker from 'expo-image-picker';
 import { useIsFocused } from '@react-navigation/native';
 import i18n from '@/i18n';
@@ -33,6 +34,16 @@ import { getProfaneWords } from '@/utils/profanityFilter';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
+function isUserPeruvian(user?: { country?: string } | null): boolean {
+  if (!user?.country) return false;
+  // Remove accents, lowercase, and trim
+  const normalized = user.country.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  return (
+    normalized === "pe" ||
+    normalized === "peru"
+  );
+}
+
 const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const auth = getAuth();
   const { user } = useUser();
@@ -40,16 +51,15 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [postText, setPostText] = useState<string>('');
   const [charCount, setCharCount] = useState<number>(0); 
-  const [city, setCity] = useState<string | null>(null); // To store the city name
   const [location, setLocation] = useState<string | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [videoPath, setVideoPath] = useState<string | null>(null); // Video path state
   const [videoUri, setVideoUri] = useState<string | null>(null); // Store video URI
   const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
-  const [isTrimming, setIsTrimming] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null); // New state to track media type
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
   const [isShowcase, setIsShowcase] = useState(false); // 🔹 Showcase toggle state
+  const isPeruvian = isUserPeruvian(user);
 
   const [postingAsBusiness, setPostingAsBusiness] = useState<boolean>(
     user?.accountType === 'business' && user?.businessVerified === true
@@ -58,7 +68,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [locationIconVisible, setLocationIconVisible] = useState(true);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>('');
-  const [trimmedAssetId, setTrimmedAssetId] = useState<string | null>(null);
 
   const [commentsEnabled, setcommentsEnabled] = useState<boolean>(true);
 
@@ -599,7 +608,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
           description: postingAsBusiness
             ? user.businessProfile?.description
             : user.description || '',
-            mode: postingAsBusiness ? 'business' : 'individual' as 'business' | 'individual', // ✅ Fix here
+          mode: postingAsBusiness ? 'business' : 'individual' as 'business' | 'individual',
+          businessVerified: postingAsBusiness ? user.businessVerified : false,  
         },
         categoryKey: selectedCategory,
         commentCount: 0,
@@ -676,18 +686,98 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                 <Text style={styles.screenTitle}>{i18n.t('createPost')}</Text>
 
                 {user?.accountType === 'business' && user.businessVerified && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+
+                  <View style={styles.postAsRow}>
                     <Text style={{ marginRight: 10 }}>{i18n.t('postAs')}</Text>
-                    <TouchableOpacity onPress={() => setPostingAsBusiness(false)}>
-                      <Text style={{ fontWeight: !postingAsBusiness ? 'bold' : 'normal' }}>
-                        {user.name}
-                      </Text>
+
+                    {/* User Option */}
+                    <TouchableOpacity
+                      onPress={() => setPostingAsBusiness(false)}
+                      style={[
+                        styles.identityOption,
+                        !postingAsBusiness && styles.identityOptionSelected
+                      ]}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', maxWidth: 110 }}>
+                        <Text
+                          numberOfLines={1}
+                          ellipsizeMode='tail'
+                          style={[
+                            styles.identityText,
+                            !postingAsBusiness && styles.identityTextSelected
+                          ]}
+                        >
+                          {user.name}
+                        </Text>
+                        {user.name.length > 14 && (
+                          <Tooltip
+                            popover={<Text style={{ fontSize: 15 }}>{user.name}</Text>}
+                            backgroundColor="#fff"
+                          >
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={16}
+                              color="#888"
+                              style={{ marginLeft: 3 }}
+                            />
+                          </Tooltip>
+                        )}
+                        {/* Show checkmark if selected */}
+                        {!postingAsBusiness && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color="#1976D2"
+                            style={{ marginLeft: 4 }}
+                          />
+                        )}
+                      </View>
                     </TouchableOpacity>
-                    <Text style={{ marginHorizontal: 6 }}>/</Text>
-                    <TouchableOpacity onPress={() => setPostingAsBusiness(true)}>
-                      <Text style={{ fontWeight: postingAsBusiness ? 'bold' : 'normal' }}>
-                      {user.businessProfile?.name || user.name}
-                      </Text>
+
+                    <Text style={styles.dividerText}>/</Text>
+
+                    {/* Business Option */}
+                    <TouchableOpacity
+                      onPress={() => setPostingAsBusiness(true)}
+                      style={[
+                        styles.identityOption,
+                        postingAsBusiness && styles.identityOptionSelected
+                      ]}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', maxWidth: 110 }}>
+                        <Text
+                          numberOfLines={1}
+                          ellipsizeMode='tail'
+                          style={[
+                            styles.identityText,
+                            postingAsBusiness && styles.identityTextSelected
+                          ]}
+                        >
+                          {user.businessProfile?.name || user.name}
+                        </Text>
+                        {(user.businessProfile?.name || '').length > 14 && (
+                          <Tooltip
+                            popover={<Text style={{ fontSize: 15 }}>{user.businessProfile?.name}</Text>}
+                            backgroundColor="#fff"
+                          >
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={16}
+                              color="#888"
+                              style={{ marginLeft: 3 }}
+                            />
+                          </Tooltip>
+                        )}
+                        {/* Show checkmark if selected */}
+                        {postingAsBusiness && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={16}
+                            color="#1976D2"
+                            style={{ marginLeft: 4 }}
+                          />
+                        )}
+                      </View>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -781,10 +871,14 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   >
                     <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
                     <Picker.Item label={i18n.t('categories.restaurants')} value="restaurants" color="cornflowerblue"/>
+                    {!isPeruvian && (
+                      <Picker.Item label={i18n.t('categories.universities')} value="universities" color="cornflowerblue"/>
+                    )}
                     <Picker.Item label={i18n.t('categories.events')} value="events" color="cornflowerblue"/>
                     <Picker.Item label={i18n.t('categories.music')} value="music" color="cornflowerblue"/>
                     <Picker.Item label={i18n.t('categories.news')} value="news" color="cornflowerblue"/>
                     <Picker.Item label={i18n.t('categories.studyhub')} value="study hub" color="cornflowerblue"/>
+                    <Picker.Item label={i18n.t('categories.sports')} value="sports" color='cornflowerblue'/>
                     <Picker.Item label={i18n.t('categories.petpals')} value="petpals" color="cornflowerblue"/>
                     <Picker.Item label={i18n.t('categories.deals')} value="deals" color="cornflowerblue"/>
                     <Picker.Item label={i18n.t('categories.random')} value="random" color="cornflowerblue"/>  
@@ -887,6 +981,48 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 10,
     backgroundColor: 'white', // Ensure background matches
+  },
+  postAsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    marginHorizontal: 2,
+  },
+  postAsLabel: {
+    marginRight: 8,
+    color: '#666',
+    fontSize: 14,
+  },
+  dividerText: {
+    marginHorizontal: 6,
+    color: '#666',
+    fontSize: 18,
+    fontWeight: '300',
+  },
+  identityOption: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f4fa', // unselected bg
+    minWidth: 60,
+    maxWidth: 110,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  identityOptionSelected: {
+    backgroundColor: '#E3F2FD',
+    borderColor: '#1976D2',
+  },
+  identityText: {
+    fontWeight: 'normal',
+    color: '#555',
+    fontSize: 15,
+  },
+  identityTextSelected: {
+    fontWeight: 'bold',
+    color: '#1976D2',
   },
   textInput: {
     flex: 1,

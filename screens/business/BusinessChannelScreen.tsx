@@ -69,6 +69,7 @@ const BusinessChannelScreen = () => {
     };
 
     fetchBusinessData();
+    fetchBusinessRating();
   }, [businessUid]);
 
   useLayoutEffect(() => {

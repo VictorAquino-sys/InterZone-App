@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, Alert, Acti
 import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '@/contexts/UserContext';
 import { db, storage } from '@/config/firebase';
+import { useNavigation } from '@react-navigation/native';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import i18n from '@/i18n'; 
@@ -14,6 +15,7 @@ const EditBusinessProfileScreen = () => {
   const [description, setDescription] = useState(user?.businessProfile?.description || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(user?.businessProfile?.avatar || null);
   const [uploading, setUploading] = useState(false);
+  const navigation = useNavigation();
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -63,6 +65,7 @@ const EditBusinessProfileScreen = () => {
 
       await refreshUser();
       Alert.alert(i18n.t('successTitle'), i18n.t('businessProfileUpdated'))
+      navigation.goBack();
     } catch (error) {
       console.error('Update failed:', error);
       Alert.alert(i18n.t('errorTitle'), i18n.t('updateBusinessProfileError'))
@@ -90,6 +93,7 @@ const EditBusinessProfileScreen = () => {
         value={name}
         placeholder={i18n.t('businessName')}
         onChangeText={setName}
+        maxLength={30}
       />
       <TextInput
         style={[styles.input, { height: 100 }]}
@@ -97,6 +101,7 @@ const EditBusinessProfileScreen = () => {
         placeholder={i18n.t('businessDescription')}
         onChangeText={setDescription}
         multiline
+        maxLength={300}
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSave} disabled={uploading}>

@@ -1,5 +1,14 @@
 (Daily logs of what have been worked on)
 
+### 05-26
+    Install FlashList over FlatList
+    npm install @shopify/flash-list
+    Install Tooltip
+    npm install @rneui/themed
+
+### 05-25
+    Hide StudyHub category under PostScreen.tsx for Peruvian users. School channels has replaced this.
+
 ### 05-18
     Install SendGrid Package locally
     Go to your functions directory:
