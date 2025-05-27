@@ -869,7 +869,9 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                     enabled={!locationLoading}                  
                     style={styles.pickerStyle}
                   >
-                    <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
+                    {Platform.OS !== 'ios' && (
+                      <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
+                    )}
                     <Picker.Item label={i18n.t('categories.restaurants')} value="restaurants" color="cornflowerblue"/>
                     {!isPeruvian && (
                       <Picker.Item label={i18n.t('categories.universities')} value="universities" color="cornflowerblue"/>
