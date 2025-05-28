@@ -7,18 +7,22 @@ import i18n from '@/i18n';
 import { Post } from '../contexts/PostsContext';
 import * as Clipboard from 'expo-clipboard';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, deleteDoc, addDoc, serverTimestamp, collection, getDoc, updateDoc, doc, increment } from 'firebase/firestore';
+import { Timestamp, getCountFromServer, getDocs, query, orderBy, limit, deleteDoc, addDoc, serverTimestamp, collection, getDoc, updateDoc, doc, increment, where } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { getCategoryByKey } from '@/config/categoryData';
 import CommentsModal from './commentsModal';
+import ClaimQrModal from './ClaimQrModal';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import Toast from 'react-native-toast-message';
-// import { Video, ResizeMode } from 'expo-av';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/config/firebase';
 import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
 import { User } from '@/contexts/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigationTypes';
+
+const createPromoClaim = httpsCallable(functions, "createPromoClaim");
 
 interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
@@ -70,9 +74,15 @@ const PostCard: React.FC<PostCardProps> = ({
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [hasUserClaimed, setHasUserClaimed] = useState(false); // Track if already claimed
 
   const [zoomModalVisible, setZoomModalVisible] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
+  const [showQrModal, setShowQrModal] = useState(false);
+
+  const [shortCode, setShortCode] = useState<string | null>(null);
+  const [qrCodeValue, setQrCodeValue] = useState('');
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const [isPlaying, setIsPlaying] = useState(false); // State to track play/pause
 
@@ -123,7 +133,20 @@ const PostCard: React.FC<PostCardProps> = ({
     fetchBusinessRating();
   }, [item.user?.uid]);
 
-
+  useEffect(() => {
+    const checkClaim = async () => {
+      if (!user.uid) return;
+      const claimsQuery = query(
+        collection(db, "claims"),
+        where("userId", "==", user.uid),
+        where("postId", "==", item.id)
+      );
+      const snapshot = await getDocs(claimsQuery);
+      setHasUserClaimed(!snapshot.empty);
+    };
+    if (item.promo?.enabled && item.id && user.uid) checkClaim();
+  }, [item.id, item.promo, user.uid]);
+  
   // Fetch recent comments only when toggling open
   const handleToggleComments = async () => {
     setShowComments(prev => !prev);
@@ -131,6 +154,30 @@ const PostCard: React.FC<PostCardProps> = ({
     if (!showComments) {
       const recent = await fetchRecentComments();
       setComments(recent.reverse()); //oldest to newest
+    }
+  };
+
+  const handleClaimPromo = async () => {
+    try {
+      setIsClaiming(true);
+      type ClaimResponse = { qrCodeData: string; shortCode: string; claimId: string; };
+      const res = await createPromoClaim({ postId: item.id }) as { data: ClaimResponse };
+      setQrCodeValue(res.data.qrCodeData);
+      setShortCode(res.data.shortCode);
+      setShowQrModal(true); // Only open modal
+      // DO NOT setHasUserClaimed(true) yet!
+      // DO NOT show Toast here
+    } catch (err: any) {
+      if (err.code === "already-exists") {
+        setHasUserClaimed(true);
+        Alert.alert("Código ya reclamado", "Ya reclamaste este descuento.");
+      } else if (err.code === "failed-precondition") {
+        Alert.alert("Descuento agotado", "Ya no hay códigos disponibles.");
+      } else {
+        Alert.alert("Error", "No se pudo reclamar el código.");
+      }
+    } finally {
+      setIsClaiming(false);
     }
   };
 
@@ -388,6 +435,7 @@ const PostCard: React.FC<PostCardProps> = ({
     handleUserProfileNavigation(userId);
   }, [handleUserProfileNavigation]);
 
+
   return (
     <View style={[styles.postItem, isShowcase && styles.showcaseBorder]}>
       <View style={styles.postHeader}>
@@ -524,6 +572,77 @@ const PostCard: React.FC<PostCardProps> = ({
         </Modal>
       )}
 
+      {item.promo?.enabled && item.promo?.codeLabel && (
+        <View style={styles.promoBox}>
+          <Text style={styles.promoLabel}>
+            <Ionicons name="pricetag" size={16} color="#E65100" />{' '}
+            {i18n.t('promoLabel', { defaultValue: 'Promoción' })}: 
+            <Text style={styles.promoLabelValue}> {item.promo.codeLabel}</Text>
+          </Text>
+
+          {/* 💡 New: Standard price and price after discount */}
+          {(typeof item.promo.originalPrice === 'number' && typeof item.promo.discountPercent === 'number') && (
+            <Text style={{ fontSize: 14, color: "#2e7d32", fontWeight: "bold", marginBottom: 2 }}>
+              {i18n.t('priceBeforeDiscount', { defaultValue: 'Precio regular:' })} <Text style={{ textDecorationLine: 'line-through', color: '#e53935' }}>
+                {item.promo.originalPrice.toFixed(2)}
+              </Text>
+              {"  "}
+              {i18n.t('afterDiscount', { defaultValue: 'Ahora:' })}{" "}
+              <Text style={{ color: '#00897b' }}>
+                {(
+                  item.promo.originalPrice * (1 - item.promo.discountPercent / 100)
+                ).toFixed(2)}
+              </Text>
+            </Text>
+          )}
+
+          {item.promo.description !== '' && (
+            <Text style={styles.promoDescription}>{item.promo.description}</Text>
+          )}
+          <Text style={styles.promoClaims}>
+            {i18n.t('promoClaimsLeft', {
+              count: item.promo.total - (item.promo.claimed || 0),
+              defaultValue: `Solo ${item.promo.total} primeros usuarios`
+            })}
+          </Text>
+          
+          {!hasUserClaimed && (item.promo.total - (item.promo.claimed || 0)) > 0 && (
+            <TouchableOpacity
+              style={{ marginTop: 12, alignSelf: 'flex-start', backgroundColor: '#E65100', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8 }}
+              onPress={handleClaimPromo}
+              disabled={isClaiming}
+            >
+              {isClaiming ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 15 }}>
+                  {i18n.t('claimDiscount', { defaultValue: '¡Reclamar descuento!' })}
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {hasUserClaimed && (
+            <Text style={{ color: 'green', marginTop: 8, fontWeight: 'bold' }}>
+              {i18n.t("promoAlreadyClaimed", { defaultValue: "¡Código reclamado! Puedes volver a mostrar tu código QR." })}
+            </Text>
+          )}
+
+        </View>
+      )}
+      <ClaimQrModal
+        visible={showQrModal}
+        qrCodeValue={qrCodeValue}
+        shortCode={shortCode ?? undefined}
+        onClose={() => {
+          setShowQrModal(false);
+          setHasUserClaimed(true);
+          setQrCodeValue('');
+          setShortCode(null);
+          Toast.show({ type: "success", text1: i18n.t("promoClaimed") });
+        }}
+      />
+
       <View style={styles.actionRow}>
         {/* Left Side: Like + Comment */}
         <View style={styles.leftActions}>
@@ -535,6 +654,9 @@ const PostCard: React.FC<PostCardProps> = ({
             </TouchableOpacity>
           )}
         </View>
+
+
+
 
         {/* Right Side: Delete + Ellipsis */}
         <View style={styles.rightActions}>
@@ -876,6 +998,45 @@ const styles = StyleSheet.create({
   },
   commentItem: {
     marginBottom: 6,
+  },
+  promoBox: {
+    backgroundColor: '#FFF8E1',
+    borderRadius: 10,
+    marginTop: 16,
+    marginBottom: 12,
+    borderLeftWidth: 5,
+    borderLeftColor: '#FF9800',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 1, height: 2 },
+    shadowOpacity: 0.09,
+    shadowRadius: 5,
+    minHeight: 60,
+  },
+  
+  promoLabel: {
+    fontWeight: 'bold',
+    color: '#E65100',
+    fontSize: 15,
+    marginBottom: 4,
+  },
+  
+  promoLabelValue: {
+    color: '#D84315',
+  },
+  
+  promoDescription: {
+    color: '#5D4037',
+    fontSize: 14,
+    marginBottom: 5,
+    fontStyle: 'italic',
+  },
+  
+  promoClaims: {
+    color: '#757575',
+    fontSize: 13,
+    marginTop: 2,
   },
   commentAuthor: {
     fontWeight: 'bold',

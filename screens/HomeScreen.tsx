@@ -26,6 +26,7 @@ import UpdateChecker from '../src/components/UpdateChecker';
 import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
+import { useQrVisibility } from '@/contexts/QrVisibilityContext';
 import PostCard from '@/components/PostCard';
 
 import Animated, {
@@ -78,6 +79,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const prevHasUnread = useRef(false);
 
   const [fallbackUpdate, setFallbackUpdate] = useState(false);
+  const { setQrVisible } = useQrVisibility();
 
   const [isFullScreen, setIsFullScreen] = useState(false); // State to control full-screen mode
 
@@ -202,6 +204,13 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   
       onFocus();
     }, [city, user?.blocked])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      setQrVisible(true); // Set this in a shared context
+      return () => setQrVisible(false); // Hide when screen loses focus
+    }, [])
   );
 
   // Expose scrollToTop to parent
@@ -387,7 +396,9 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
           categoryKey: data.categoryKey,
           commentCount: data.commentCount ?? 0,
           commentsEnabled: data.commentsEnabled,
-          verifications: data.verifications || {}
+          verifications: data.verifications || {},
+          showcase: data.showcase || false,
+          promo: data.promo || null,
         };
       }));
 
@@ -679,11 +690,9 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                   </View>
                 }
                 data={posts}
-                // keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
                 keyExtractor={item => item.id}
                 renderItem={memoizedRenderItem}
                 contentContainerStyle={styles.listContent}
-                // style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
                 estimatedItemSize={280}
               />
             )}

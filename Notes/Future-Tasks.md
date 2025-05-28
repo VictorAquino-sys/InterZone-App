@@ -2,6 +2,9 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
+# 5 = 28
+    Implement Scheduled Cleanup of Expired Promo Claims
+
 # 5 - 15
 Implement the rating prompt after liking a post (if the user hasn't rated that business yet).
 

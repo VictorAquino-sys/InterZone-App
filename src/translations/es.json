@@ -542,5 +542,24 @@
     "university": {
         "rateTab": "Calificar Profesores",
         "discussionTab": "Chat"
-      }
+    },
+
+    "promoSettingsTitle": "Configuración de Promoción",
+    "enablePromo": "Activar Promoción",
+    "promoAvailableVerifiedOnly": "Solo las cuentas de negocio verificadas pueden activar promociones.",
+    "promoLabel": "Etiqueta de Promoción",
+    "promoDescription": "Opcional: Descripción de la Promoción",
+    "promoQuantity": "Cantidad Máxima de Canjes (ej. 10)",
+    "promoToastTitle": "Solo negocios verificados",
+    "promoToastMessage": "Verifica tu cuenta de negocio para activar promociones.",
+    "promoQuantityNote": "Máximo de 50 canjes por promoción",
+    "originalPrice": "Precio original (ej. 25.00)",
+    "discountedPriceLabel": "Precio con descuento: ${original} - {discount}% = ${final}",
+    "enterStandardPrice": "Ingrese Precio Estándar",
+    "applyDiscount": "Aplicar Descuento",
+    "afterDiscount": "Precio con descuento",
+    "promoClaimsLeft": "Solo {{count}} primeros usuarios",
+    "priceBeforeDiscount": "Precio regular:",
+    "promoExpiresIn24h": "Nota: cada código de promoción será válido sólo durante 24 horas después de ser reclamado."
+
 } 

@@ -1,5 +1,6 @@
-import React, { createContext, useEffect, useState } from 'react';
-import { StyleSheet, ActivityIndicator, Text, TouchableOpacity, Image, Dimensions, Platform, ImageBackground, StatusBar, Alert, Pressable } from 'react-native';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
+import { StyleSheet, ActivityIndicator, Text, View, TouchableOpacity, Image, Dimensions, Platform, ImageBackground, StatusBar, Alert, Pressable } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { getLocales } from 'expo-localization';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import i18n from '@/i18n';
@@ -12,7 +13,7 @@ import homeIcon from './assets/home_icon_transparent.png';
 import limasunset from './assets/lima_sunset_image.png';
 import magicIcon from './assets/magic_icon_transparent.png';
 import { Ionicons } from '@expo/vector-icons';
-// import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRoute, getFocusedRouteNameFromRoute, useNavigationState } from '@react-navigation/native';
 import { MusicHubProvider } from '@/components/category/musichubContext';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen, { HomeScreenRef } from './screens/HomeScreen';
@@ -36,6 +37,7 @@ import UserProfileScreen from './screens/UserProfileScreen';
 import FriendsScreen from 'screens/FriendsScreen';
 import { VerifiedSchoolProvider } from '@/contexts/verifiedSchoolContext';
 import ChatScreen from 'screens/ChatScreen';
+import RedeemPromoScreen from 'screens/business/RedeemPromoScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 import DeleteAccountScreen from 'screens/DeleteAccountScreen';
@@ -47,19 +49,21 @@ import { ChatProvider, useChatContext } from '@/contexts/chatContext';
 import PostDetailScreen from 'screens/posts/PostDetailScreen';
 import Toast from 'react-native-toast-message';
 import { logScreen } from '@/utils/analytics';
-import { isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import DistributeQrScreen from 'screens/admin/DistributeQrScreen';
 import VerifyBusinessScreen from 'screens/business/VerifyBusinessScreen';
 import Animated, { BounceIn} from 'react-native-reanimated';
 import AdminApprovalScreen from 'screens/admin/AdminApprovalScreen';
 import BusinessChannelScreen from 'screens/business/BusinessChannelScreen';
-import ProfessorDetailScreen from 'screens/studyub/ProfessorDetailScreen';
-import UniversityScreen from 'screens/studyub/UniversityScreen';
-import RateProfessorScreen from 'screens/studyub/RateProfessorScreen';
+import ProfessorDetailScreen from 'screens/studyhub/ProfessorDetailScreen';
+import UniversityScreen from 'screens/studyhub/UniversityScreen';
+import RateProfessorScreen from 'screens/studyhub/RateProfessorScreen';
+import ClaimPromoScreen from 'screens/promos/ClaimPromoScreen';
 import ApplyBusinessScreen from 'screens/business/ApplyBusinessScreen';
 import EditBusinessProfileScreen from './screens/business/EditBusinessProfileScreen';
-import SuggestProfessorScreen from 'screens/studyub/SuggestProfessorScreen';
-import ProfessorSuggestionsReviewScreen from 'screens/studyub/professorSuggestionsReviewScreen';
+import SuggestProfessorScreen from 'screens/studyhub/SuggestProfessorScreen';
+import EmptyScreen from '@/utils/EmptyScreen';
+import { QrVisibilityProvider, useQrVisibility } from '@/contexts/QrVisibilityContext';
+import ProfessorSuggestionsReviewScreen from 'screens/studyhub/professorSuggestionsReviewScreen';
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
 import { createNavigationContainerRef } from '@react-navigation/native';
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
@@ -175,7 +179,12 @@ function BottomTabs() {
   const windowWidth = Dimensions.get('window').width;
   const postIconLeft = windowWidth - 120; // tune this value
   const iconSpacing = windowWidth * 0.15;
+  const iconQrCode = windowWidth * 0.43;
   const insets = useSafeAreaInsets(); // grabs bottom padding (e.g., iPhone notch)
+  const { user } = useUser();
+
+  const route = useRoute();
+  const { qrVisible } = useQrVisibility();
 
   return (
     <Tab.Navigator 
@@ -232,6 +241,60 @@ function BottomTabs() {
           ),
         }} 
       />
+
+    {user?.businessVerified && qrVisible && (
+      <Tab.Screen
+        name="ScanPromoTab"
+        component={EmptyScreen} // placeholder or noop
+        options={{
+          tabBarLabel: '',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="qr-code" size={size} color={color} />
+          ),
+          tabBarButton: (props) => {
+
+              return (
+                <TouchableOpacity
+                  {...props}
+                  onPress={() => navigationRef.navigate('RedeemPromoScreen')}
+                  style={{
+                    position: 'absolute',
+                    bottom: Platform.OS === 'ios' ? insets.bottom - 40 : insets.bottom + 12,
+                    left: iconQrCode,
+                    backgroundColor: 'white',
+                    borderRadius: 20,
+                    padding: 6,
+                    shadowColor: '#4F46E5',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 10,
+                    elevation: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    transform: [{ rotate: '22.5deg' }], // rotate outer octagon
+                    borderWidth: 2,
+                    borderColor: 'white',
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 45,
+                      height: 45,
+                      backgroundColor: '#00acc1',
+                      transform: [{ rotate: '-22.5deg' }], // rotate inner back to normal
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: 8,
+                    }}
+                  >
+                <Ionicons name="qr-code" size={32} color="white" />
+                  </View>
+                </TouchableOpacity>
+              );
+          },
+        }}
+      />
+      )}
 
       <Tab.Screen 
         name="PostScreen" 
@@ -426,6 +489,14 @@ function AuthenticatedApp() {
               />
           )}
 
+          <Stack.Screen name="ClaimPromoScreen" component={ClaimPromoScreen} options={{ title: 'Your Promo Code' }} />
+
+          <Stack.Screen
+            name="RedeemPromoScreen"
+            component={RedeemPromoScreen}
+            options={{ title: 'Redeem Promo' }}
+          />
+
         </>
       )}
     </Stack.Navigator>
@@ -440,23 +511,25 @@ export default function App() {
         <PostsProvider>
           <TriviaProvider>
             <HistoryTriviaProvider>
-              <ChatProvider>
-                <NavigationContainer 
-                  ref={navigationRef}
-                  linking={linking}
-                  onReady={() => {
-                    const route = navigationRef.getCurrentRoute();
-                    if (route) logScreen(route.name);
-                  }}
-                  onStateChange={() => {
-                    const route = navigationRef.getCurrentRoute();
-                    if (route) logScreen(route.name);
-                  }}
-                >
-                  <AuthenticatedApp />
-                </NavigationContainer>
-                <Toast />
-              </ChatProvider>
+              <QrVisibilityProvider>
+                <ChatProvider>
+                  <NavigationContainer 
+                    ref={navigationRef}
+                    linking={linking}
+                    onReady={() => {
+                      const route = navigationRef.getCurrentRoute();
+                      if (route) logScreen(route.name);
+                    }}
+                    onStateChange={() => {
+                      const route = navigationRef.getCurrentRoute();
+                      if (route) logScreen(route.name);
+                    }}
+                  >
+                    <AuthenticatedApp />
+                  </NavigationContainer>
+                  <Toast />
+                </ChatProvider>
+              </QrVisibilityProvider>
             </HistoryTriviaProvider>
           </TriviaProvider>
         </PostsProvider>

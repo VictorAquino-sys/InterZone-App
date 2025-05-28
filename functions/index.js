@@ -10,6 +10,7 @@ const { defineSecret } = require('firebase-functions/params');
 const { getStorage } = require('firebase-admin/storage'); // Add this line to import Firebase Storage
 
 const SENDGRID_API_KEY = defineSecret('SENDGRID_API_KEY');
+const PROMO_HMAC_SECRET = defineSecret("PROMO_HMAC_SECRET");
 const sgMail = require('@sendgrid/mail');
 
 initializeApp();
@@ -395,3 +396,148 @@ exports.notifyPostLike = onDocumentUpdated("posts/{postId}", async (event) => {
     }
   }
 });
+
+exports.createPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (request) => {
+  const { postId } = request.data;
+  const userId = request.auth?.uid;
+
+  if (!userId || !postId) {
+    throw new HttpsError("invalid-argument", "Missing user or post ID.");
+  }
+
+  const postRef = db.collection("posts").doc(postId);
+  const claimsRef = db.collection("claims");
+
+  const generateShortCode = (length = 6) => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const createSignedPayload = (claimId, shortCode) => {
+    const data = `${claimId}|${shortCode}`;
+    const hmac = crypto.createHmac("sha256", PROMO_HMAC_SECRET.value());
+    const signature = hmac.update(data).digest("hex");
+    return `${data}|${signature}`;
+  };
+
+  return await db.runTransaction(async (tx) => {
+    const postDoc = await tx.get(postRef);
+    if (!postDoc.exists) {
+      throw new HttpsError("not-found", "Post not found.");
+    }
+
+    const postData = postDoc.data();
+    const promo = postData.promo;
+
+    if (!promo?.enabled || promo.claimed >= promo.total) {
+      throw new HttpsError("failed-precondition", "Promo no longer available.");
+    }
+
+    // Check for existing claim
+    const existingClaim = await claimsRef
+      .where("userId", "==", userId)
+      .where("postId", "==", postId)
+      .limit(1)
+      .get();
+
+    if (!existingClaim.empty) {
+      throw new HttpsError("already-exists", "User already claimed this promo.");
+    }
+
+    // Generate claim
+    const claimId = crypto.randomUUID();
+    const shortCode = generateShortCode();
+    const qrCodeData = createSignedPayload(claimId, shortCode);
+    const expiresAt = Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
+
+    const claimData = {
+      userId,
+      postId,
+      createdAt: Timestamp.now(),
+      expiresAt: expiresAt,
+      redeemedAt: null,
+      status: "active",
+      shortCode,
+      qrCodeData,
+    };
+
+    tx.set(claimsRef.doc(claimId), claimData);
+    tx.update(postRef, {
+      "promo.claimed": FieldValue.increment(1),
+    });
+
+    return {
+      success: true,
+      shortCode,
+      qrCodeData,
+      claimId,
+    };
+  });
+});
+
+exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (request) => {
+  const businessId = request.auth?.uid;
+  const { qrCodeData, shortCode } = request.data;
+
+  if (!businessId || (!qrCodeData && !shortCode)) {
+    throw new HttpsError("invalid-argument", "Missing QR or code data.");
+  }
+
+  const validateSignature = (qrData) => {
+    const [claimId, code, signature] = qrData.split("|");
+    const expected = crypto.createHmac("sha256", PROMO_HMAC_SECRET.value())
+      .update(`${claimId}|${code}`)
+      .digest("hex");
+    if (signature !== expected) throw new HttpsError("permission-denied", "Invalid QR code signature.");
+    return { claimId, code };
+  };
+
+  let claimDoc;
+
+  if (qrCodeData) {
+    const { claimId, code } = validateSignature(qrCodeData);
+    claimDoc = await db.collection("claims").doc(claimId).get();
+  } else if (shortCode) {
+    const query = await db.collection("claims")
+      .where("shortCode", "==", shortCode.toUpperCase())
+      .limit(1)
+      .get();
+    if (query.empty) throw new HttpsError("not-found", "Claim not found.");
+    claimDoc = query.docs[0];
+  }
+
+  const claim = claimDoc.data();
+  if (!claim || claim.status !== "active") {
+    throw new HttpsError("failed-precondition", "Claim is not active.");
+  }
+
+  if (claim.expiresAt && claim.expiresAt.toDate() < new Date()) {
+    // Expired
+    throw new HttpsError("failed-precondition", "Este código ha expirado. Reclama uno nuevo.");
+  }
+
+  const postSnap = await db.collection("posts").doc(claim.postId).get();
+  const post = postSnap.data();
+  if (!post || post.user?.uid !== businessId) {
+    throw new HttpsError("permission-denied", "You don't own this promo.");
+  }
+
+  await claimDoc.ref.update({
+    redeemedAt: Timestamp.now(),
+    status: "redeemed",
+    redeemedBy: businessId
+  });
+
+  return {
+    success: true,
+    userId: claim.userId,
+    postId: claim.postId,
+    redeemedAt: new Date().toISOString()
+  };
+});
+
+

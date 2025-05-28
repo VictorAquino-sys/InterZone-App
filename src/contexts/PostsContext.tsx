@@ -22,7 +22,17 @@ export interface Post {
     categoryKey: string;
     commentCount?: number;
     commentsEnabled: boolean;
-    verifications?: User['verifications']
+    verifications?: User['verifications'];
+    promo?: {
+        enabled: boolean;
+        codeLabel: string;
+        description: string;
+        total: number;
+        claimed: number;
+        originalPrice?: number;
+        discountPercent?: number;
+        expirationDate?: Timestamp; // optional if not implemented yet
+    } | null;
 }
 
 // Define the type for the posts and the context structure

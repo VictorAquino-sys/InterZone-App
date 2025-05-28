@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { usePosts } from '../../src/contexts/PostsContext';
+import Toast from 'react-native-toast-message';
 import { useUser } from '../../src/contexts/UserContext'; // Import useUser hook
 import { db } from '../../src/config/firebase';
 import { getAuth, User as FirebaseUser } from "firebase/auth";
@@ -24,12 +25,9 @@ import { TabParamList } from '../../src/navigationTypes';
 // import { ContentType } from 'expo-clipboard';
 import { Video } from 'expo-av';
 import { app } from '../../src/config/firebase';
-import * as FileSystem from 'expo-file-system';  // Import FileSystem from expo-file-system
-// import * as ScreenOrientation from 'expo-screen-orientation';
-// import { Video as VideoCompressor } from 'react-native-compressor';
+import * as FileSystem from 'expo-file-system';
 import { getReadableVideoPath, saveVideoToAppStorage, validateVideoFile, uploadVideoWithCompression } from '@/utils/videoUtils';
 import { isValidFile, showEditor } from 'react-native-video-trim';
-// import * as MediaLibrary from 'expo-media-library';
 import { getProfaneWords } from '@/utils/profanityFilter';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
@@ -61,6 +59,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [isShowcase, setIsShowcase] = useState(false); // 🔹 Showcase toggle state
   const isPeruvian = isUserPeruvian(user);
 
+  const [isPromoEnabled, setIsPromoEnabled] = useState(false);
+  const [promoLabel, setPromoLabel] = useState('');
+  const [promoDescription, setPromoDescription] = useState('');
+  const [promoTotal, setPromoTotal] = useState<number | null>(null);
+
   const [postingAsBusiness, setPostingAsBusiness] = useState<boolean>(
     user?.accountType === 'business' && user?.businessVerified === true
   );
@@ -70,8 +73,18 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>('');
 
   const [commentsEnabled, setcommentsEnabled] = useState<boolean>(true);
+  const normalizedCountry = user?.country?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const currencyPrefix = (normalizedCountry === 'peru' || normalizedCountry === 'pe') ? 'S/ ' : '$ ';
 
   const profaneWords = getProfaneWords(postText);
+  const [promoExpirationDate, setPromoExpirationDate] = useState<Date | null>(null);
+
+  const [originalPrice, setOriginalPrice] = useState<number | null>(null);
+  const [selectedDiscount, setSelectedDiscount] = useState<number | null>(null);
+
+  const discountedPrice = originalPrice && selectedDiscount
+  ? (originalPrice * (1 - selectedDiscount / 100)).toFixed(2)
+  : null;
 
   // Check if the category supports video posts
   const isVideoCategory = selectedCategory === 'business' || selectedCategory === 'music' || selectedCategory === "tutors";
@@ -615,7 +628,19 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         commentCount: 0,
         commentsEnabled: commentsEnabled,
         verifications: user?.verifications || {},
-        showcase: isShowcase // 🔹 Save showcase field
+        showcase: isShowcase, // 🔹 Save showcase field
+        promo: isPromoEnabled && promoLabel && promoTotal && promoTotal > 0
+        ? {
+            enabled: true,
+            codeLabel: promoLabel,
+            description: promoDescription || '',
+            total: promoTotal,
+            claimed: 0,
+            ...(promoExpirationDate ? { expirationDate: Timestamp.fromDate(promoExpirationDate) } : {}),
+            originalPrice: originalPrice != null ? originalPrice : undefined,
+            discountPercent: selectedDiscount != null ? selectedDiscount : undefined,
+          }
+        : null    
       };
 
       // Add post to Firestore
@@ -903,6 +928,177 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
                     <Text>{i18n.t('featureOnChannel')}</Text>
                     <Switch value={isShowcase} onValueChange={setIsShowcase} />
+                  </View>
+                )}
+
+                {user?.accountType === 'business' && (
+                  <View style={{ padding: 10, backgroundColor: '#e3f2fd', borderRadius: 10, marginBottom: 15 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 6 }}>
+                      🎁 {i18n.t('promoSettingsTitle') || 'Promo Settings'}
+                    </Text>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                      <Text style={{ flex: 1 }}>{i18n.t('enablePromo') || 'Enable Promo:'}</Text>
+
+                      <Switch
+                        value={isPromoEnabled}
+                        onValueChange={() => {
+                          if (!user.businessVerified || !postingAsBusiness) {
+                            Toast.show({
+                              type: 'error',
+                              text1: i18n.t('promoToastTitle'),
+                              text2: i18n.t('promoToastMessage'),
+                              position: 'bottom',
+                              visibilityTime: 3000,
+                            });
+                            return;
+                          }
+                          setIsPromoEnabled(prev => !prev);
+                        }}
+                      />
+
+                    </View>
+
+                    {!user.businessVerified && (
+                      <Text style={{ fontSize: 13, color: '#d32f2f', marginBottom: 10 }}>
+                        {i18n.t('promoAvailableVerifiedOnly') || 'Only verified business accounts can enable promotions.'}
+                      </Text>
+                    )}
+
+                    {(isPromoEnabled && user.businessVerified && postingAsBusiness) && (
+                      <>
+                        <Text style={{
+                            fontSize: 12,
+                            color: '#FFA000',
+                            marginBottom: 8,
+                            textAlign: 'center',
+                            fontWeight: 'bold',
+                          }}>
+                          {i18n.t('promoExpiresIn24h', {
+                            defaultValue: 'Nota: Cada código o QR de promoción será válido sólo durante 24 horas después de ser reclamado.'
+                          })}
+                        </Text>
+                        <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 6 }}>{i18n.t('enterStandardPrice')}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                          <Text style={{ fontSize: 18, marginRight: 6 }}>{currencyPrefix}</Text>
+                          
+                          <TouchableOpacity
+                            onPress={() => setOriginalPrice(prev => Math.max(0, (prev || 0) - 1))}
+                            style={{ padding: 8, backgroundColor: '#e0e0e0', borderRadius: 6 }}
+                          >
+                            <Ionicons name="remove" size={20} color="#333" />
+                          </TouchableOpacity>
+
+                          <TextInput
+                            keyboardType="numeric"
+                            value={originalPrice?.toString() || ''}
+                            onChangeText={(text) => {
+                              // Remove anything that's not a digit
+                              const sanitized = text.replace(/[^0-9]/g, '');
+                              setOriginalPrice(sanitized === '' ? null : Math.max(1, Number(sanitized)));
+                            }}
+                            style={{
+                              width: 80,
+                              padding: 6,
+                              marginHorizontal: 10,
+                              textAlign: 'center',
+                              fontSize: 16,
+                              backgroundColor: 'white',
+                              borderRadius: 6,
+                              borderWidth: 1,
+                              borderColor: '#ccc',
+                            }}
+                          />
+
+                          <TouchableOpacity
+                            onPress={() => setOriginalPrice(prev => Math.min(9999, (prev || 0) + 1))}
+                            style={{ padding: 8, backgroundColor: '#e0e0e0', borderRadius: 6 }}
+                          >
+                            <Ionicons name="add" size={20} color="#333" />
+                          </TouchableOpacity>
+                        </View>
+
+                        <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 6 }}>{i18n.t('applyDiscount')}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginBottom: 10 }}>
+                          {[5, 10, 15, 20].map((percentage) => (
+                            <TouchableOpacity
+                              key={percentage}
+                              style={{
+                                paddingVertical: 6,
+                                paddingHorizontal: 14,
+                                borderRadius: 10,
+                                backgroundColor: selectedDiscount === percentage ? '#4A90E2' : '#e0e0e0',
+                                minWidth: 55,
+                                alignItems: 'center',
+                              }}
+                              onPress={() => {
+                                setPromoLabel(`${percentage}%`);
+                                setSelectedDiscount(percentage);
+                              }}
+                            >
+                              <Text style={{ color: selectedDiscount === percentage ? 'white' : '#333', fontWeight: 'bold' }}>
+                                {percentage}%
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+
+                        {discountedPrice && originalPrice && selectedDiscount && (
+                          <Text style={{ fontSize: 13, color: '#2e7d32', textAlign: 'center', marginBottom: 8, fontWeight: '600' }}>
+                            {i18n.t('afterDiscount')}: {currencyPrefix}{discountedPrice}
+                          </Text>
+                        )}
+
+                        <TextInput
+                          placeholder={i18n.t('promoDescription')}
+                          value={promoDescription}
+                          onChangeText={setPromoDescription}
+                          style={{ backgroundColor: 'white', marginBottom: 8, padding: 8, borderRadius: 8 }}
+                          maxLength={40}
+                        />
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                          <TouchableOpacity
+                            onPress={() => setPromoTotal(prev => Math.max(1, (prev || 1) - 1))}
+                            style={{ padding: 8, backgroundColor: '#e0e0e0', borderRadius: 6, marginRight: 10 }}
+                          >
+                            <Ionicons name="remove" size={20} color="#333" />
+                          </TouchableOpacity>
+
+                          <TextInput
+                            keyboardType="numeric"
+                            value={promoTotal?.toString() || ''}
+                            onChangeText={(text) => {
+                              // Remove non-digits
+                              const sanitized = text.replace(/[^0-9]/g, '');
+                              setPromoTotal(sanitized === '' ? null : Math.max(1, Number(sanitized)));
+                            }}
+                            style={{
+                              width: 60,
+                              padding: 6,
+                              textAlign: 'center',
+                              fontSize: 16,
+                              backgroundColor: 'white',
+                              borderRadius: 6,
+                              borderWidth: 1,
+                              borderColor: '#ccc',
+                            }}
+                          />
+
+                          <TouchableOpacity
+                            onPress={() => setPromoTotal(prev => Math.min(50, (prev || 1) + 1))}
+                            style={{ padding: 8, backgroundColor: '#e0e0e0', borderRadius: 6, marginLeft: 10 }}
+                          >
+                            <Ionicons name="add" size={20} color="#333" />
+                          </TouchableOpacity>
+                        </View>
+
+                        <Text style={{ fontSize: 12, marginTop: 6, color: '#555', textAlign: 'center' }}>
+                          {i18n.t('promoQuantityNote')}
+                        </Text>
+
+                      </>
+                    )}
                   </View>
                 )}
 
