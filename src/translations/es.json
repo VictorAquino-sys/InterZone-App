@@ -495,7 +495,7 @@
     },
     "rateOne": {
         "header": "Califica al Profesor {{name}}",
-        "placeholder": "Escribe tu reseña...",
+        "placeholder": "Escribe tu reseña...(ej. 60% presentaciones, 20% examenes, 10% trabajo grupal. El profe te mandara a leer bastante.)",
         "submit": "Enviar Reseña",
         "incompleteTitle": "Incompleto",
         "incompleteMsg": "Por favor, proporciona una calificación con estrellas y un comentario.",
@@ -560,6 +560,10 @@
     "afterDiscount": "Precio con descuento",
     "promoClaimsLeft": "Solo {{count}} primeros usuarios",
     "priceBeforeDiscount": "Precio regular:",
-    "promoExpiresIn24h": "Nota: cada código de promoción será válido sólo durante 24 horas después de ser reclamado."
+    "promoExpiresIn24h": "Nota: cada código de promoción será válido sólo durante 24 horas después de ser reclamado.",
+    "onlineBanner": {
+        "one": "🟢 Hay {{count}} persona conectada",
+        "other": "🟢 Hay {{count}} personas conectadas"
+    }
 
 } 

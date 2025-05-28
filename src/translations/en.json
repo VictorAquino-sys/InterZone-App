@@ -552,6 +552,10 @@
   "afterDiscount": "Price after discount",
   "promoClaimsLeft": "First {{count}} users only",
   "priceBeforeDiscount": "Standard price:",
-  "promoExpiresIn24h": "Note: Each promo code will only be valid for 24 hours after it is claimed."
+  "promoExpiresIn24h": "Note: Each promo code will only be valid for 24 hours after it is claimed.",
+  "onlineBanner": {
+    "one": "🟢 There is {{count}} person online",
+    "other": "🟢 There are {{count}} people online"
+  }
 
 }  

@@ -23,6 +23,8 @@ import { RootStackParamList } from '../src/navigationTypes';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
+import { useOnlineUserCount } from '@/hooks/useOnlineUserCount';
+import OnlineBanner from '@/components/OnlineBanner';
 import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
@@ -603,6 +605,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   );
   
   const isFocused = useIsFocused();
+  const onlineCount = useOnlineUserCount();
 
   return (
     <>
@@ -697,6 +700,8 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
               />
             )}
 
+            <OnlineBanner count={onlineCount} />
+
             <Modal
               animationType="slide"
               transparent={true}
@@ -741,6 +746,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                   <TouchableOpacity onPress={() => setReportModalVisible(false)}>
                     <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
                   </TouchableOpacity>
+
                 </View>
               </TouchableOpacity>
             </Modal>
@@ -751,6 +757,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 {hasUnreadMessages && <View style={styles.unreadDot} />}
               </TouchableOpacity>
             </Animated.View>
+
 
           </View>
         </SafeAreaView>

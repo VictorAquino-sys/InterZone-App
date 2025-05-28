@@ -117,6 +117,7 @@ const BusinessRatingModal: React.FC<Props> = ({ visible, onClose, businessId, bu
                       value={review}
                       onChangeText={setReview}
                       multiline
+                      maxLength={70}
                   />
 
                   <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>

@@ -7,8 +7,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Alert } from 'react-native';
 // import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
-import { auth, db } from '../../src/config/firebase';
+import { auth, db, rtdb } from '../../src/config/firebase';
+import { setUserOnlineStatus } from '@/utils/presence';
 import * as RNLocalize from 'react-native-localize';
+import { ref, remove } from "firebase/database";
 import { setUserProps } from '@/utils/analytics';
 import { recordHandledError } from '@/utils/crashlytics';
 import { deepMerge } from '@/utils/merge';
@@ -127,6 +129,9 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
           setLoading(false);
           return;
         }
+        if (firebaseUser.emailVerified) {
+          setUserOnlineStatus({ uid: firebaseUser.uid });
+        }
 
         try {
 
@@ -193,6 +198,9 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         }
       } else {
         console.log("User logged out");
+        if (user && user.uid) {
+          remove(ref(rtdb, `presence/${user.uid}`));
+        }
         setUser(null);
       }
       setLoading(false); // Set loading false once user data is fetched
@@ -201,6 +209,8 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
     // Cleanup function to unsubscribe from the auth listener on component unmount.
     return () => unsubscribe();
   }, []);
+
+
 
   // Function to update user profile details, accepting partial user info.
   const updateUserProfile = (updates: Partial<User>) => {
