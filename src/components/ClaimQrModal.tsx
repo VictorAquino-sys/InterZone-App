@@ -21,15 +21,12 @@ const ClaimQrModal: React.FC<ClaimQrModalProps> = ({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.qrModalContent}>
         <Text style={styles.title}>
-          {i18n.t('promoShowQr', { defaultValue: 'Muestra este QR en el local' })}
+          {i18n.t('promo.showQr')}
         </Text>
 
         <View style={styles.screenshotTipBox}>
         <Text style={styles.screenshotTipText}>
-            {i18n.t(
-            'promoScreenshotTip',
-            { defaultValue: '¡Toma una captura de pantalla para guardar este código si no vas a canjearlo ahora. De otro modo, lo perderas al cerrar esta ventana!' }
-            )}
+          {i18n.t('promo.screenshotTip')}
         </Text>
         </View>
 
@@ -37,23 +34,22 @@ const ClaimQrModal: React.FC<ClaimQrModalProps> = ({
         {qrCodeValue ? (
           <QRCode value={qrCodeValue} size={200} />
         ) : (
-          <Text style={{ color: '#fff', marginBottom: 20 }}>Cargando código...</Text>
+          <Text style={{ color: '#fff', marginBottom: 20 }}>
+            {i18n.t('promo.loadingCode')}
+          </Text>
         )}
         {shortCode && (
           <View style={styles.codeBox}>
             <Text style={styles.codeLabel}>
-              {i18n.t('promoShortCode', { defaultValue: 'Código corto:' })}
+              {i18n.t('promo.shortCodeLabel')}
             </Text>
             <Text selectable style={styles.shortCode}>{shortCode}</Text>
             <Text style={styles.tip}>
-              {i18n.t(
-                'promoManualEntryHint',
-                { defaultValue: 'O comparte este código si no puedes escanear el QR.' }
-              )}
+              {i18n.t('promo.manualEntryHint')}
             </Text>
           </View>
         )}
-        <Button title={i18n.t('close', { defaultValue: 'Cerrar' })} onPress={onClose} />
+        <Button title={i18n.t('common.close')} onPress={onClose} />
       </View>
     </Modal>
   );

@@ -564,6 +564,39 @@
     "onlineBanner": {
         "one": "🟢 Hay {{count}} persona conectada",
         "other": "🟢 Hay {{count}} personas conectadas"
+    },
+    "getPremium": "Obtener Premium",
+    "premiumMember": "Miembro Premium",
+    "membershipTitle": "Membresía Premium",
+    "premiumBenefits": "Desbloquea estos beneficios Premium:",
+    "allCitiesAccess": "Ver y publicar en cualquier ciudad, en cualquier momento",
+    "premiumBadge": "Destaca con una insignia Premium",
+    "exclusiveEvents": "Únete a eventos y grupos exclusivos",
+    "prioritySupport": "Disfruta de soporte prioritario",
+    "businessPremiumBenefit": "Muestra tus publicaciones en hasta 5 ciudades a la vez",
+    "monthlyPlan": "Mensual",
+    "yearlyPlan": "Anual",
+    "saveTwoMonths": "¡Ahorra 2 meses!",
+    "promo": {
+        "requestingCameraPermission": "Solicitando permiso para la cámara...",
+        "noCamera": "No hay cámara disponible",
+        "scanQr": "Escanea un código QR de promoción",
+        "redeemedSuccess": "✅ ¡Promoción canjeada!\nUsuario: {{user}}\nPublicación: {{post}}",
+        "redemptionFailedTitle": "❌ Canje fallido",
+        "redemptionFailed": "Promoción inválida o caducada.",
+        "enterCodeLabel": "Ingresa el código promocional de 6 dígitos",
+        "enterCodePlaceholder": "ej. B8L2QF",
+        "redeem": "Canjear",
+        "enterCodeManually": "Ingresar código manualmente",
+        "useQrScanner": "Usar lector QR",
+        "showQr": "Muestra este QR en el local",
+        "screenshotTip": "¡Toma una captura de pantalla para guardar este código si no vas a canjearlo ahora! De otro modo, lo perderás al cerrar esta ventana.",
+        "loadingCode": "Cargando código...",
+        "shortCodeLabel": "Código corto:",
+        "manualEntryHint": "O comparte este código si no puedes escanear el QR."
+    },
+    "common": {
+        "close": "Cerrar"
     }
 
 } 

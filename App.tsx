@@ -39,6 +39,7 @@ import { VerifiedSchoolProvider } from '@/contexts/verifiedSchoolContext';
 import ChatScreen from 'screens/ChatScreen';
 import RedeemPromoScreen from 'screens/business/RedeemPromoScreen';
 import MessagesScreen from 'screens/MessagesScreen';
+import Purchases from 'react-native-purchases';
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 import DeleteAccountScreen from 'screens/DeleteAccountScreen';
 import { registerForPushNotificationsAsync, setupNotificationChannelAsync } from './services/notifications';
@@ -504,6 +505,16 @@ function AuthenticatedApp() {
 }
 
 export default function App() {
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      Purchases.configure({ apiKey: 'appl_CnENaGIzITLUYcepXRXhxAKgDOI' });
+    } else if (Platform.OS === 'android') {
+      Purchases.configure({ apiKey: 'goog_fpugvqiXxEUYnyYbbmTDiJaKJcG' });
+    } else {
+      throw new Error('Unsupported platform for RevenueCat Purchases!');
+    }
+  }, []);
 
   return (
     <UserProvider> 

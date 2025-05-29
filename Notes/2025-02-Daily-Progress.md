@@ -1,5 +1,8 @@
 (Daily logs of what have been worked on)
 
+### 05-28
+    npm install moti
+
 ### 05-26
     Install FlashList over FlatList
     npm install @shopify/flash-list

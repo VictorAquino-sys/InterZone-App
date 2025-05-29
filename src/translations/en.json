@@ -556,6 +556,39 @@
   "onlineBanner": {
     "one": "🟢 There is {{count}} person online",
     "other": "🟢 There are {{count}} people online"
+  },
+  "getPremium": "Get Premium",
+  "premiumMember": "Premium Member",
+  "membershipTitle": "Premium Membership",
+  "premiumBenefits": "Unlock these Premium benefits:",
+  "allCitiesAccess": "View and post in any city, anytime",
+  "premiumBadge": "Stand out with a Premium badge",
+  "exclusiveEvents": "Join exclusive events and groups",
+  "prioritySupport": "Enjoy priority support",
+  "businessPremiumBenefit": "Show your posts in up to 5 cities at once",
+  "monthlyPlan": "Monthly",
+  "yearlyPlan": "Yearly",
+  "saveTwoMonths": "Save 2 months!",
+  "promo": {
+    "requestingCameraPermission": "Requesting camera permission...",
+    "noCamera": "No camera available",
+    "scanQr": "Scan a promo QR code",
+    "redeemedSuccess": "✅ Promo redeemed!\nUser: {{user}}\nPost: {{post}}",
+    "redemptionFailedTitle": "❌ Redemption Failed",
+    "redemptionFailed": "Invalid or expired promo.",
+    "enterCodeLabel": "Enter 6-digit promo code",
+    "enterCodePlaceholder": "e.g. B8L2QF",
+    "redeem": "Redeem",
+    "enterCodeManually": "Enter code manually",
+    "useQrScanner": "Use QR scanner",
+    "showQr": "Show this QR code at the business",
+    "screenshotTip": "Take a screenshot to save this code if you're not redeeming now. Otherwise, you’ll lose it when closing this window!",
+    "loadingCode": "Loading code...",
+    "shortCodeLabel": "Short code:",
+    "manualEntryHint": "Or share this code if you can't scan the QR."
+  },
+  "common": {
+    "close": "Close"
   }
-
+  
 }  

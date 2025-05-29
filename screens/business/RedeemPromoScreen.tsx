@@ -41,10 +41,18 @@ export default function RedeemPromoScreen() {
       const res: any = await redeemFn({ qrCodeData, shortCode });
 
       const { userId, postId } = res.data;
-      setSuccessInfo(`✅ Promo redeemed!\nUser: ${userId.slice(0, 6)}…\nPost: ${postId.slice(0, 6)}…`);
+      setSuccessInfo(
+        i18n.t('promo.redeemedSuccess', {
+          user: userId.slice(0, 6) + '…',
+          post: postId.slice(0, 6) + '…',
+        })
+      );
     } catch (err: any) {
       console.error("🔥 Redeem failed:", err);
-      Alert.alert("❌ Redemption Failed", err.message || "Invalid or expired promo.");
+      Alert.alert(
+        i18n.t('promo.redemptionFailedTitle'),
+        err.message || i18n.t('promo.redemptionFailed')
+      );
     } finally {
       setScanned(false);
     }
@@ -62,8 +70,10 @@ export default function RedeemPromoScreen() {
     },
   });
 
-  if (!hasPermission) return <Text style={styles.centered}>Requesting camera permission...</Text>;
-  if (!device && mode === 'scan') return <Text style={styles.centered}>No camera available</Text>;
+  if (!hasPermission)
+    return <Text style={styles.centered}>{i18n.t('promo.requestingCameraPermission')}</Text>;
+  if (!device && mode === 'scan')
+    return <Text style={styles.centered}>{i18n.t('promo.noCamera')}</Text>;
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
@@ -76,12 +86,12 @@ export default function RedeemPromoScreen() {
             codeScanner={codeScanner}
           />
           <Text style={styles.instructions}>
-            {successInfo ? successInfo : 'Scan a promo QR code'}
+            {successInfo ? successInfo : i18n.t('promo.scanQr')}
           </Text>
         </>
       ) : (
         <View style={styles.manualContainer}>
-          <Text style={styles.manualLabel}>Enter 6-digit promo code</Text>
+          <Text style={styles.manualLabel}>{i18n.t('promo.enterCodeLabel')}</Text>
           <TextInput
             placeholder="e.g. B8L2QF"
             value={manualCode}
@@ -95,7 +105,7 @@ export default function RedeemPromoScreen() {
             style={styles.verifyButton}
             onPress={() => handleRedeem({ shortCode: manualCode.trim().toUpperCase() })}
           >
-            <Text style={styles.verifyText}>Redeem</Text>
+            <Text style={styles.verifyText}>{i18n.t('promo.redeem')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -105,7 +115,9 @@ export default function RedeemPromoScreen() {
         onPress={() => setMode((prev) => (prev === 'scan' ? 'manual' : 'scan'))}
       >
         <Text style={styles.toggleText}>
-          {mode === 'scan' ? 'Enter code manually' : 'Use QR scanner'}
+          {mode === 'scan'
+            ? i18n.t('promo.enterCodeManually')
+            : i18n.t('promo.useQrScanner')}
         </Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>

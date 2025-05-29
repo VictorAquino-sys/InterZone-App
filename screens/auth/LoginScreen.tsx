@@ -157,11 +157,6 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         [{ text: i18n.t('ok'), onPress: () => navigation.replace("LoginScreen") }]
       );
 
-      // Save user data in AsyncStorage
-      // await AsyncStorage.setItem('user', JSON.stringify(authUser));
-      // await AsyncStorage.setItem('userId', authUser.uid);
-      // await AsyncStorage.setItem('termsAccepted', 'false'); // let App.tsx handle navigation
-
       console.log("User signed up:", authUser.email, "| Country:", country);
 
     } catch (error :any) {
@@ -298,11 +293,6 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
       await refreshUser(); // 👈 This triggers UserProvider to re-fetch Firestore + update `user`
 
-      // Only navigate to NameInputScreen if the name is missing
-      // if (!userData?.name) {
-      //   await AsyncStorage.setItem('userId', authUser.uid); // save for TermsScreen
-      //   await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
-      // }
     } catch (error: any) {
       await recordHandledError(error);
 

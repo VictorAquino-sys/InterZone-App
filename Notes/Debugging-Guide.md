@@ -10,7 +10,6 @@
     cd ..
 
 
-
 3-31
     For github, when divergent branches occurs, do the following:
     1.
@@ -34,7 +33,11 @@
 
 * to test the app in dev, run:
     android
-    npx eas build --platform android --profile development
+    - for local:
+        expo run:android
+        
+    - cloud builds:
+        npx eas build --platform android --profile development
     
     to test on IOS
     First update pods by:

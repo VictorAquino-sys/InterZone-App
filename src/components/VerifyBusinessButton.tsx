@@ -56,6 +56,7 @@ export default function VerifyBusinessButton({
 const styles = StyleSheet.create({
   container: {
     marginTop: 12,
+    marginBottom:4,
     borderRadius: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -65,9 +66,10 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 28,
     borderRadius: 14,
+    // marginBottom:4,
     alignItems: 'center',
   },
   text: {

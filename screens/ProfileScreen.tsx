@@ -4,6 +4,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MotiView, AnimatePresence } from 'moti';
 import { getAuth, signOut, updateProfile } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../src/contexts/UserContext';
@@ -12,12 +13,14 @@ import { db } from '../src/config/firebase';
 import { Alert } from 'react-native';
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import Ionicons from '@expo/vector-icons/Ionicons';
+import Purchases from 'react-native-purchases';
 import i18n from '@/i18n'; 
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import mime from "mime";
 import { ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../src/navigationTypes';
+import MembershipInfoModal from '@/components/MembershipInfoModal';
 import VerifyBusinessButton from '@/components/VerifyBusinessButton';
 
 type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'ProfileScreen'>;
@@ -38,6 +41,8 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [savingNote, setSavingNote] = useState(false);
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showMembershipModal, setShowMembershipModal] = useState(false);
+    const [isPulsing, setIsPulsing] = useState(false);
 
     const verificationTypes: Array<'business' | 'musician' | 'tutor'> = ['business', 'musician', 'tutor'];
     const [unverifiedTypes, setUnverifiedTypes] = useState<Array<'business' | 'musician' | 'tutor'>>([]);
@@ -131,6 +136,45 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         }
     };
 
+    const handleSubscribe = async (plan: 'monthly' | 'yearly') => {
+        try {
+          // Fetch current offerings from RevenueCat
+          const offerings = await Purchases.getOfferings();
+      
+          // Pick the right package based on your plan string and RevenueCat config
+          let selectedPackage = null;
+          if (plan === 'monthly') {
+            selectedPackage = offerings.current?.monthly; // This is the default key in RevenueCat
+            // Or: selectedPackage = offerings.current.availablePackages.find(pkg => pkg.identifier === 'your_monthly_id');
+          } else if (plan === 'yearly') {
+            selectedPackage = offerings.current?.annual; // This is the default key in RevenueCat
+            // Or: selectedPackage = offerings.current.availablePackages.find(pkg => pkg.identifier === 'your_annual_id');
+          }
+      
+          if (!selectedPackage) {
+            alert('No plan found for selection.');
+            return;
+          }
+      
+          // Start the purchase
+          const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
+      
+          // Check if the entitlement is active
+          if (customerInfo.entitlements.active["premium"]) {
+            // Update your context/UI (this example sets premium on your user object)
+            setUser(prev => prev ? { ...prev, premium: true } : prev);
+            alert('Thank you for subscribing! 🎉');
+          } else {
+            alert('Subscription was not activated.');
+          }
+          setShowMembershipModal(false); // Optionally close modal
+        } catch (e: any) {
+          if (!e.userCancelled) {
+            alert('There was a problem processing your payment.');
+          }
+        }
+      };
+
     const handleLogout = async () => {
         try {
             await signOut(auth); // Sign out the user
@@ -180,6 +224,11 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
 
     const toggleEdit = () => {
         setIsEditing(!isEditing);
+    };
+
+    const handlePremiumPress = () => {
+        setIsPulsing(true);
+        setShowMembershipModal(true);
     };
 
     const uploadImageAsync = async (uri: string): Promise<string | null> => {
@@ -269,8 +318,9 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
             <StatusBar
                 backgroundColor={Platform.OS === 'android' ? 'aliceblue' : 'transparent'}
                 barStyle="dark-content"
-                />
-            <SafeAreaView style={{ flex: 1, backgroundColor: 'aliceblue'}}>
+            />
+                <SafeAreaView style={{ flex: 1, backgroundColor: 'aliceblue'}}>
+
                     <KeyboardAvoidingView
                         style={{ flex: 1 }}
                         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -280,6 +330,51 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                             keyboardShouldPersistTaps="handled"
                         >
                             <View style={styles.topSection}>
+
+                                <View style={styles.headerRow}>
+                                    <View style={{ flex: 1 }} />
+                                    <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.settingsIconContainer}>
+                                    <Ionicons name="settings-outline" size={26} color="#555" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                <MotiView
+                                    from={{ scale: 0.7, opacity: 0 }}
+                                    animate={{
+                                        scale: isPulsing ? 1.15 : 1,
+                                        opacity: 1,
+                                      }}
+                                      transition={{
+                                        type: 'spring',
+                                        damping: 8,
+                                        mass: 1.2,
+                                        stiffness: 170,
+                                      }}
+                                    style={styles.premiumButtonWrapper}
+                                    onDidAnimate={(key, finished) => {
+                                        if (key === 'scale' && isPulsing && finished) {
+                                          setIsPulsing(false); // Reset after pulse
+                                        }
+                                    }}
+                                >
+
+                                <TouchableOpacity
+                                    style={styles.premiumButton}
+                                    activeOpacity={0.93}
+                                    onPress={handlePremiumPress}
+                                >
+                                    <Ionicons name="trophy" size={24} color="#FFD700" style={styles.premiumIcon} />
+                                    <Text style={styles.premiumText}>
+                                        {user?.premium ? i18n.t('premiumMember') : i18n.t('getPremium')}
+                                    </Text>
+                                </TouchableOpacity>
+                                </MotiView>
+
+                            <MembershipInfoModal
+                            visible={showMembershipModal}
+                            onClose={() => setShowMembershipModal(false)}
+                            onSubscribe={handleSubscribe}
+                            />
 
                                 <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
                             
@@ -348,13 +443,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                     <TextInput
                                         style={styles.descriptionInput}
                                         multiline
-                                        maxLength={150}
+                                        maxLength={80}
                                         placeholder={i18n.t('descriptionPlaceholder')}
                                         value={description}
                                         onChangeText={setDescription}
                                     />
                                     <View style={styles.characterCountWrapper}>
-                                        <Text style={styles.characterCount}>{description.length}/150</Text>
+                                        <Text style={styles.characterCount}>{description.length}/80</Text>
                                     </View>
                                     <TouchableOpacity
                                         onPress={handleSaveDescription}
@@ -376,94 +471,90 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                         </TouchableOpacity>
                                     </View>
                                 )}
-                                </View>
+                            </View>
 
-                                <View style={styles.bottomSection}>
+                            <Modal transparent visible={showSettings} animationType="slide">
+                                <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
+                                    <View style={styles.modalBox}>
+                                        <Text style={styles.modalTitle}>{i18n.t('settings.title')}</Text>
+                                        <TouchableOpacity style={styles.modalOption} onPress={() => {
+                                            setShowSettings(false);
+                                            navigation.navigate('DeleteAccount');
+                                        }}>
+                                            <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>{i18n.t('deleteAccount.button')}</Text>
+                                        </TouchableOpacity>
 
-                                    <TouchableOpacity
-                                        style={styles.buttonContainer} // Additional top margin for separation
-                                        onPress={handleLogout}
-                                    >
-                                        <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity onPress={() => setShowSettings(true)} style={{ marginTop: 30, alignItems: 'center' }}>
-                                        <Ionicons name="settings-outline" size={26} color="#555" />
-                                    </TouchableOpacity>
-
-                                    {user?.accountType === 'individual' && !user.businessVerified && (
-                                    <TouchableOpacity
-                                        style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
-                                        onPress={() => navigation.navigate('ApplyBusiness')}
-                                    >
-                                        <Text style={styles.buttonText}>{i18n.t('applyForBusiness')}</Text>
-                                        
-                                    </TouchableOpacity>
-                                    )}
-
-                                    {user?.businessVerified && (
-                                    <TouchableOpacity
-                                        style={[styles.buttonContainer, { backgroundColor: '#6A1B9A' }]}
-                                        onPress={() => navigation.navigate('EditBusinessProfile')}
-                                    >
-                                        <Text style={styles.buttonText}>{i18n.t('editBusinessProfile')}</Text>
-                                    </TouchableOpacity>
-                                    )}
-
-                                    <View style={styles.verificationButtonWrapper}>
-                                        { unverifiedTypes.length > 0 && nextType && (
-                                        <VerifyBusinessButton
-                                            type={nextType}
-                                            onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
-                                        />
-                                        )}
-                                    </View>
-
-                                    {user?.claims?.admin && (
-                                    <>
-                                        <View style={{ marginVertical: 20 }}>
-                                        <Text style={{ fontWeight: '600', fontSize: 16, marginBottom: 10 }}>
-                                            Admin Controls
-                                        </Text>
                                         <TouchableOpacity
-                                            style={[styles.buttonContainer, { backgroundColor: '#222' }]}
-                                            onPress={() => navigation.navigate('AdminDashboard')}
+                                            onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}
+                                            style={[styles.modalOption, { marginTop: 20 }]}
                                         >
-                                            <Text style={styles.buttonText}>🛠 Admin Dashboard</Text>
+                                        <Text style={{ color: '#007aff', textAlign: 'center' }}>
+                                            {i18n.t('privacyPolicy')}
+                                        </Text>
                                         </TouchableOpacity>
-                                        </View>
-                                    </>
-                                    )}
 
-                                    <Modal transparent visible={showSettings} animationType="slide">
-                                        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => setShowSettings(false)}>
-                                            <View style={styles.modalBox}>
-                                                <Text style={styles.modalTitle}>{i18n.t('settings.title')}</Text>
-                                                <TouchableOpacity style={styles.modalOption} onPress={() => {
-                                                    setShowSettings(false);
-                                                    navigation.navigate('DeleteAccount');
-                                                }}>
-                                                    <Text style={{ color: 'red', fontWeight: 'bold', textAlign: 'center' }}>{i18n.t('deleteAccount.button')}</Text>
-                                                </TouchableOpacity>
-
-                                                <TouchableOpacity
-                                                    onPress={() => Linking.openURL('https://doc-hosting.flycricket.io/interzone-privacy-policy/27db818a-98c7-40d9-8363-26e92866ed5b/privacy')}
-                                                    style={[styles.modalOption, { marginTop: 20 }]}
-                                                >
-                                                <Text style={{ color: '#007aff', textAlign: 'center' }}>
-                                                    {i18n.t('privacyPolicy')}
-                                                </Text>
-                                                </TouchableOpacity>
-
-                                                <TouchableOpacity onPress={() => setShowSettings(false)}>
-                                                    <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
-                                                </TouchableOpacity>
-
-                                            </View>
+                                        <TouchableOpacity onPress={() => setShowSettings(false)}>
+                                            <Text style={{ marginTop: 12, textAlign: 'center', color: '#555' }}>{i18n.t('cancel')}</Text>
                                         </TouchableOpacity>
-                                    </Modal>
+
+                                    </View>
+                                </TouchableOpacity>
+                            </Modal>
+
+                            <View style={styles.bottomSection}>
+
+                                {user?.accountType === 'individual' && !user.businessVerified && (
+                                <TouchableOpacity
+                                    style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
+                                    onPress={() => navigation.navigate('ApplyBusiness')}
+                                >
+                                    <Text style={styles.buttonText}>{i18n.t('applyForBusiness')}</Text>
                                     
+                                </TouchableOpacity>
+                                )}
+
+                                {user?.businessVerified && (
+                                <TouchableOpacity
+                                    style={[styles.buttonContainer, { backgroundColor: '#009688' }]}
+                                    onPress={() => navigation.navigate('EditBusinessProfile')}
+                                >
+                                    <Text style={styles.buttonText}>{i18n.t('editBusinessProfile')}</Text>
+                                </TouchableOpacity>
+                                )}
+
+                                <View style={styles.verificationButtonWrapper}>
+                                    { unverifiedTypes.length > 0 && nextType && (
+                                    <VerifyBusinessButton
+                                        type={nextType}
+                                        onPress={() => navigation.navigate('VerifyBusiness', { type: nextType })}
+                                    />
+                                    )}
                                 </View>
+
+                                <TouchableOpacity
+                                    style={styles.buttonContainer} // Additional top margin for separation
+                                    onPress={handleLogout}
+                                >
+                                    <Text style={styles.buttonText}>{i18n.t('logoutButton')}</Text>
+                                </TouchableOpacity>
+
+                                {user?.claims?.admin && (
+                                <>
+                                    <View style={{ marginVertical: 20 }}>
+                                    <Text style={{ fontWeight: '600', fontSize: 16, marginBottom: 10 }}>
+                                        Admin Controls
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={[styles.buttonContainer, { backgroundColor: '#222' }]}
+                                        onPress={() => navigation.navigate('AdminDashboard')}
+                                    >
+                                        <Text style={styles.buttonText}>🛠 Admin Dashboard</Text>
+                                    </TouchableOpacity>
+                                    </View>
+                                </>
+                                )}
+
+                            </View>
                         </ScrollView>
                     </KeyboardAvoidingView>
             </SafeAreaView>
@@ -476,16 +567,33 @@ export default ProfileScreen;
 const styles = StyleSheet.create({
     container:{
         alignItems: 'center',
-        padding: 10,
+        // padding: 10,
+        paddingLeft: 10,
+        paddingRight: 10,
+        paddingTop: 1,
         backgroundColor: 'aliceblue',
     },
     topSection: {
         alignItems: 'center',
-        marginTop: 20  // Push top section slightly down
+        marginTop: 2,  // Push top section slightly down
+        position: 'relative',
+    },
+    headerRow: {
+        flexDirection: 'row',
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        marginBottom: 4,
+    },
+    settingsIconContainer: {
+        position: 'absolute',
+        top: 6,
+        right: 4,
+        zIndex: 2,
     },
     bottomSection: {
         alignItems: 'center',
-        marginTop: 40,  // Add spacing between sections
+        marginTop: 14,  // Add spacing between sections
         marginBottom: 40, // Push the bottom stuff down
     },
     profilePic: {
@@ -511,7 +619,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginLeft: 25,
-        marginTop: 10,
+        // marginTop: 10,
     },
     input: {
         fontSize: 18,
@@ -537,7 +645,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 12,
+        marginTop: 8,
         width: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -552,8 +660,8 @@ const styles = StyleSheet.create({
     },
     descriptionWrapper: {
         width: '100%',
-        marginTop: 25,
-        marginBottom: 20,
+        marginTop: 3,
+        marginBottom: 12,
         paddingLeft: 20,
         paddingRight: 20,
     },
@@ -568,12 +676,11 @@ const styles = StyleSheet.create({
         color: '#333',
         fontStyle: 'italic',
         paddingVertical: 4,
-        // paddingRight: 8,
     },
     label: {
         fontSize: 16,
         fontWeight: '600',
-        marginTop: 20,
+        marginTop: 10,
         marginBottom: 8,
     },
     descriptionInput: {
@@ -611,24 +718,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.3)',
         padding: 30,
       },
-      modalBox: {
+    modalBox: {
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 24,
         elevation: 5,
-      },
-      modalTitle: {
+    },
+    modalTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 16,
         textAlign: 'center',
-      },
-      modalOption: {
+    },
+    modalOption: {
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-      },
-
+    },
     verifiedBadge: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -644,8 +750,42 @@ const styles = StyleSheet.create({
         fontSize: 15,
     },
     verificationButtonWrapper: {
-        marginTop: 18,
+        marginTop: 10,
+        marginBottom: 10,
         alignItems: 'center',
         width: '100%',
     },
+    premiumButtonWrapper: {
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 1,
+        marginBottom: 5,
+      },
+      premiumButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fffbe6',
+        borderRadius: 30,
+        paddingVertical: 10,
+        paddingHorizontal: 22,
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.14,
+        shadowRadius: 10,
+        elevation: 6,
+        borderWidth: 1.5,
+        borderColor: '#FFE066',
+        minHeight: 44,
+      },
+      premiumIcon: {
+        marginRight: 12,
+        marginLeft: 2,
+      },
+      premiumText: {
+        fontWeight: '700',
+        color: '#b8860b',
+        fontSize: 17,
+        letterSpacing: 0.2,
+      },
+
 });
