@@ -58,7 +58,8 @@ export default {
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.CAMERA",
         "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.SCHEDULE_EXACT_ALARM"
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.BILLING"
       ],
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       runtimeVersion: {
@@ -88,6 +89,7 @@ export default {
           },
           android: {
             enableProguardInReleaseBuilds: false,
+            minSdkVersion: 24,
             extraProguardRules: "./proguard-rules.pro"
           }
         }

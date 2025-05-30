@@ -170,6 +170,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
           setShowMembershipModal(false); // Optionally close modal
         } catch (e: any) {
           if (!e.userCancelled) {
+            console.log('RevenueCat purchase error:', JSON.stringify(e, null, 2));
             alert('There was a problem processing your payment.');
           }
         }

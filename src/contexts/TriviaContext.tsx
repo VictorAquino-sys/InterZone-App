@@ -44,9 +44,12 @@ export const TriviaProvider = ({ children }: TriviaProviderProps) => {
 
     
     const fetchTrivia = async () => {
+
         if (!user) {
             setError('User is not authenticated.');
-            setLoading(false);
+            setTrivia([]);
+            setError(null);
+            setLoading(false);            
             return; // Exit if no user is authenticated
         }
         
