@@ -38,7 +38,7 @@ interface PostCardProps {
     isFullScreen: boolean;
     toggleFullScreen: () => void;
     isShowcase?: boolean;
-    // style?: ViewStyle;
+    onEdit: (postId: string, newContent: string) => void;
 
 }
 
@@ -56,7 +56,7 @@ const PostCard: React.FC<PostCardProps> = ({
   isFullScreen,  // Full-screen state passed from HomeScreen
   toggleFullScreen,  // Full-screen toggle passed from HomeScreen
   isShowcase,
-  // style
+  onEdit,
 
 }) => {
   const category = getCategoryByKey(item.categoryKey);
@@ -96,6 +96,9 @@ const PostCard: React.FC<PostCardProps> = ({
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null); // State for selected video URL
   const ref = useRef(null);
 
+  const [editingPost, setEditingPost] = useState(false);
+  const [editedPostText, setEditedPostText] = useState(item.content || '');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const fetchRecentComments = async () => {
     const q = query(
@@ -500,15 +503,65 @@ const PostCard: React.FC<PostCardProps> = ({
         </View>
       </View>
 
-      <TouchableOpacity onPress={handleCopyText}>
-        <Text style={styles.postText}>{item.content}</Text>
-      </TouchableOpacity>
-
       {/* Stylish Toast for Copy Feedback */}
       {copyMessage && (
         <View style={styles.toastContainer}>
           <Text style={styles.toastText}>{copyMessage}</Text>
         </View>
+      )}
+
+      {editingPost ? (
+        <>
+          <TextInput
+            value={editedPostText}
+            onChangeText={setEditedPostText}
+            maxLength={500}
+            multiline
+            style={{
+              borderWidth: 1,
+              borderColor: "#aaa",
+              borderRadius: 10,
+              padding: 8,
+              marginVertical: 6,
+              minHeight: 60
+            }}
+            autoFocus
+            placeholder={i18n.t('postCard.editPlaceholder')}
+          />
+          <Text style={{ textAlign: 'right', color: '#888', fontSize: 12 }}>  
+            {i18n.t('postCard.charCount', { count: editedPostText.length })}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+            <Button
+              title={isSavingEdit ? i18n.t('postCard.updating') : i18n.t('postCard.update')}
+              onPress={async () => {
+                if (!editedPostText.trim()) return;
+                setIsSavingEdit(true);
+                try {
+                  await updateDoc(doc(db, "posts", item.id), {
+                    content: editedPostText.trim(),
+                    updatedAt: serverTimestamp(),
+                  });
+                  onEdit(item.id, editedPostText.trim());
+                  setEditingPost(false);
+                } finally {
+                  setIsSavingEdit(false);
+                }
+              }}
+              disabled={isSavingEdit}
+            />
+            <Button
+              title={i18n.t("postCard.cancel")}
+              color="gray"
+              onPress={() => setEditingPost(false)}
+              disabled={isSavingEdit}
+            />
+          </View>
+        </>
+      ) : (
+        <TouchableOpacity onPress={handleCopyText}>
+          <Text style={styles.postText}>{item.content}</Text>
+        </TouchableOpacity>
       )}
 
       {isShowcase && (
@@ -646,17 +699,30 @@ const PostCard: React.FC<PostCardProps> = ({
       <View style={styles.actionRow}>
         {/* Left Side: Like + Comment */}
         <View style={styles.leftActions}>
+
           <LikeButton postId={item.id} userId={userId} />
+
           {item.commentsEnabled !== false && (
             <TouchableOpacity onPress={handleToggleComments} style={styles.commentButton}>
               <Ionicons name="chatbubble-outline" size={20} color="#888" />
               <Text style={styles.commentCount}>{commentCount}</Text>
             </TouchableOpacity>
           )}
+
+          {userId === item.user?.uid && !editingPost && (
+            <TouchableOpacity
+              onPress={() => {
+                setEditedPostText(item.content);
+                setEditingPost(true);
+              }}
+              style={{ marginLeft: 20, marginRight: 4, padding: 2 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="pencil" size={18} color="#1976D2"/>
+            </TouchableOpacity>
+          )}
+
         </View>
-
-
-
 
         {/* Right Side: Delete + Ellipsis */}
         <View style={styles.rightActions}>

@@ -184,18 +184,76 @@ export const locationMapping = [
       latitude: { min: -12.034669604486496, max: -11.91712201307889 },
       longitude: { min: -77.02839829487948, max: -76.95518471696566 }
     }
-  }
+  },
+  {
+    city: "Villa el Salvador",
+    region: "Lima",
+    bounds: {
+      latitude: { min: -12.25184429176479, max: -12.183183007391172 },
+      longitude: { min: -76.9766471074446, max: -76.91120120703484 }
+    }
+  },
+  {
+    city: "Carabayllo",
+    region: "Lima",
+    polygon: [
+      { latitude: -11.903529353801476, longitude: -77.03521171259737 },
+      { latitude: -11.907476620505726, longitude: -77.02946105640375 },
+      { latitude: -11.904453187317939, longitude: -77.0223371091788 },
+      { latitude: -11.897902300037318, longitude: -77.01718726781138 },
+      { latitude: -11.890091420494329, longitude: -76.99590125682603 },
+      { latitude: -11.876148863274851, longitude: -76.9867173730541 },
+      { latitude: -11.845237517916788, longitude: -76.9847432672976 },
+      { latitude: -11.817364705470832, longitude: -76.99712141839329 },
+      { latitude: -11.80677904728966, longitude: -77.01609000076333 },
+      { latitude: -11.80929947919012, longitude: -77.03789099588542 },
+      { latitude: -11.81005560416657, longitude: -77.0555721173929 },
+      { latitude: -11.81526440892112, longitude: -77.08183630836677 },
+      { latitude: -11.83030217675172, longitude: -77.0836387527385 },
+      { latitude: -11.84332303940875, longitude: -77.07617148275573 },
+      { latitude: -11.848531210770302, longitude: -77.06973418104644 },
+      { latitude: -11.857828388851678, longitude: -77.05900847696539 },
+      { latitude: -11.866900141180414, longitude: -77.05583274143292 },
+      { latitude: -11.884958749615326, longitude: -77.05265700589358 },
+      { latitude: -11.893105729810305, longitude: -77.0458763815902 },
+      { latitude: -11.894118512209602, longitude: -77.03979474084755 },
+      { latitude: -11.904280859994254, longitude: -77.03344326982773 }
+    ]
+  },
 ];
   
-  export function checkLocation(coords) {
-    const { latitude, longitude } = coords;
-    const matchedLocation = locationMapping.find(location => 
-      latitude >= location.bounds.latitude.min &&
-      latitude <= location.bounds.latitude.max &&
-      longitude >= location.bounds.longitude.min &&
-      longitude <= location.bounds.longitude.max
-    );
-  
-    return matchedLocation ? `${matchedLocation.city}, ${matchedLocation.region}` : null;
+function isPointInPolygon(point, polygon) {
+  let inside = false;
+  const x = point.latitude, y = point.longitude;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].latitude, yi = polygon[i].longitude;
+    const xj = polygon[j].latitude, yj = polygon[j].longitude;
+    const intersect =
+      ((yi > y) !== (yj > y)) &&
+      (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
   }
+  return inside;
+}
+
+export function checkLocation(coords) {
+  const { latitude, longitude } = coords;
+  const matchedLocation = locationMapping.find(location => {
+    if (location.polygon) {
+      // Use polygon check if polygon exists
+      return isPointInPolygon({ latitude, longitude }, location.polygon);
+    } else if (location.bounds) {
+      // Otherwise, use bounding box
+      return (
+        latitude >= location.bounds.latitude.min &&
+        latitude <= location.bounds.latitude.max &&
+        longitude >= location.bounds.longitude.min &&
+        longitude <= location.bounds.longitude.max
+      );
+    }
+    return false;
+  });
+
+  return matchedLocation ? `${matchedLocation.city}, ${matchedLocation.region}` : null;
+}
   

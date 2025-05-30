@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import i18n from '@/i18n';
 import { useUser } from '@/contexts/UserContext';
@@ -8,9 +8,15 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   onSubscribe: (plan: 'monthly' | 'yearly') => void;
+  monthlyPrice?: string; // e.g. "$4.99"
+  yearlyPrice?: string;  // e.g. "$29.99"
+  loading?: boolean;
 };
 
-const MembershipInfoModal: React.FC<Props> = ({ visible, onClose, onSubscribe }) => {
+const MembershipInfoModal: React.FC<Props> = ({
+  visible, onClose, onSubscribe, monthlyPrice, yearlyPrice, loading
+}) => {
+  
   const { user } = useUser();
   const isBusiness = user?.businessVerified;
 
@@ -58,20 +64,27 @@ const MembershipInfoModal: React.FC<Props> = ({ visible, onClose, onSubscribe })
           </ScrollView>
 
           {/* Plans */}
+          {loading && (
+            <ActivityIndicator size="small" color="#26c6da" style={{ marginBottom: 12 }} />
+          )}
           <View style={styles.plansRow}>
             <TouchableOpacity
               style={styles.planButton}
               onPress={() => onSubscribe('monthly')}
+              disabled={loading} // Optional: disables button while loading
+
             >
               <Text style={styles.planLabel}>{i18n.t('monthlyPlan')}</Text>
-              <Text style={styles.planPrice}>$5.99</Text>
+              <Text style={styles.planPrice}>{monthlyPrice ?? '$4.99'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.planButton, { backgroundColor: '#ffd70022', borderWidth: 2, borderColor: '#ffd700' }]}
               onPress={() => onSubscribe('yearly')}
+              disabled={loading}
+
             >
               <Text style={[styles.planLabel, { color: '#c09c00' }]}>{i18n.t('yearlyPlan')}</Text>
-              <Text style={[styles.planPrice, { color: '#c09c00' }]}>$59.99</Text>
+              <Text style={[styles.planPrice, { color: '#c09c00' }]}>{yearlyPrice ?? '$29.99'}</Text>
               <Text style={styles.savings}>{i18n.t('saveTwoMonths')}</Text>
             </TouchableOpacity>
           </View>

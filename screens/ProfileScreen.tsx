@@ -44,6 +44,10 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const [showMembershipModal, setShowMembershipModal] = useState(false);
     const [isPulsing, setIsPulsing] = useState(false);
 
+    const [monthlyPrice, setMonthlyPrice] = useState<string | undefined>(undefined);
+    const [yearlyPrice, setYearlyPrice] = useState<string | undefined>(undefined);
+    const [offeringsLoading, setOfferingsLoading] = useState(false);
+
     const verificationTypes: Array<'business' | 'musician' | 'tutor'> = ['business', 'musician', 'tutor'];
     const [unverifiedTypes, setUnverifiedTypes] = useState<Array<'business' | 'musician' | 'tutor'>>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -160,8 +164,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
           const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
       
           // Check if the entitlement is active
-          if (customerInfo.entitlements.active["premium"]) {
-            // Update your context/UI (this example sets premium on your user object)
+          if (customerInfo.entitlements.active["premium_access"]) {
             setUser(prev => prev ? { ...prev, premium: true } : prev);
             alert('Thank you for subscribing! 🎉');
           } else {
@@ -227,10 +230,29 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
         setIsEditing(!isEditing);
     };
 
-    const handlePremiumPress = () => {
+    const handlePremiumPress = async () => {
         setIsPulsing(true);
-        setShowMembershipModal(true);
-    };
+        setOfferingsLoading(true);
+        try {
+          const offerings = await Purchases.getOfferings();
+          if (offerings.current?.monthly?.product?.priceString) {
+            setMonthlyPrice(offerings.current.monthly.product.priceString);
+          } else {
+            setMonthlyPrice('$4.99'); // fallback
+          }
+          if (offerings.current?.annual?.product?.priceString) {
+            setYearlyPrice(offerings.current.annual.product.priceString);
+          } else {
+            setYearlyPrice('$29.99');
+          }
+        } catch (e) {
+          setMonthlyPrice('$4.99');
+          setYearlyPrice('$29.99');
+        } finally {
+          setOfferingsLoading(false);
+          setShowMembershipModal(true);
+        }
+      };
 
     const uploadImageAsync = async (uri: string): Promise<string | null> => {
         if (!uri) return null;
@@ -371,11 +393,14 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                 </TouchableOpacity>
                                 </MotiView>
 
-                            <MembershipInfoModal
-                            visible={showMembershipModal}
-                            onClose={() => setShowMembershipModal(false)}
-                            onSubscribe={handleSubscribe}
-                            />
+                                <MembershipInfoModal
+                                    visible={showMembershipModal}
+                                    onClose={() => setShowMembershipModal(false)}
+                                    onSubscribe={handleSubscribe}
+                                    monthlyPrice={monthlyPrice}
+                                    yearlyPrice={yearlyPrice}
+                                    loading={offeringsLoading}
+                                />
 
                                 <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
                             
@@ -504,7 +529,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
 
                             <View style={styles.bottomSection}>
 
-                                {user?.accountType === 'individual' && !user.businessVerified && (
+                            {/* {user?.accountType === 'individual' && !user?.verifications?.business && (
                                 <TouchableOpacity
                                     style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
                                     onPress={() => navigation.navigate('ApplyBusiness')}
@@ -512,7 +537,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                     <Text style={styles.buttonText}>{i18n.t('applyForBusiness')}</Text>
                                     
                                 </TouchableOpacity>
-                                )}
+                                )} */}
 
                                 {user?.businessVerified && (
                                 <TouchableOpacity

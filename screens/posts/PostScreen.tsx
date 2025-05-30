@@ -11,6 +11,7 @@ import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { Timestamp, collection, addDoc, doc, getDoc, query, getDocs, where } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, UploadTaskSnapshot } from 'firebase/storage';
 import { Tooltip } from '@rneui/themed';
+import { navigationRef } from '../../src/navigation/navigationRef'; // Adjust path as needed
 import * as ImagePicker from 'expo-image-picker';
 import { useIsFocused } from '@react-navigation/native';
 import i18n from '@/i18n';
@@ -927,7 +928,26 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                 {user?.accountType === 'business' && (
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
                     <Text>{i18n.t('featureOnChannel')}</Text>
-                    <Switch value={isShowcase} onValueChange={setIsShowcase} />
+
+
+                    <Switch 
+                      value={isShowcase} 
+                      onValueChange={() => {
+                        if (!user.businessVerified || !postingAsBusiness) {
+                          Toast.show({
+                            type: 'error',
+                            text1: i18n.t('promoToastTitle'),
+                            text2: i18n.t('promoToastMessage'),
+                            position: 'bottom',
+                            visibilityTime: 3000,
+                          });
+                          return;
+                        }
+                        setIsShowcase(prev => !prev);
+                      }} 
+                    />
+
+
                   </View>
                 )}
 
@@ -1086,7 +1106,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                           />
 
                           <TouchableOpacity
-                            onPress={() => setPromoTotal(prev => Math.min(50, (prev || 1) + 1))}
+                            onPress={() => setPromoTotal(prev => Math.min(20, (prev || 1) + 1))}
                             style={{ padding: 8, backgroundColor: '#e0e0e0', borderRadius: 6, marginLeft: 10 }}
                           >
                             <Ionicons name="add" size={20} color="#333" />
@@ -1128,10 +1148,27 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                       color="#4A90E2"
                     />
                   </TouchableOpacity>
+
                   <Text style={{ fontSize: 16, color: '#333' }}>
                     {commentsEnabled ? i18n.t('allowComments') : i18n.t('noComments')}
                   </Text>
+
                 </View>
+
+                {user?.accountType === 'individual' && !user?.verifications?.business && (
+                    <TouchableOpacity
+                      onPress={() => navigationRef.navigate('ApplyBusiness')}
+                      style={styles.applyBusinessCard}
+                      activeOpacity={0.6}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="briefcase" size={18} color="#1976D2" style={{ marginRight: 6 }} />
+                        <Text style={styles.applyBusinessText}>
+                          {i18n.t('gotBusinessGetVerified')}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
       
               </View>
           </ScrollView>
@@ -1157,14 +1194,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    paddingTop: '2%',
+    paddingTop: 1,
     backgroundColor: '#b2dfdb',
   },
   screenTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginVertical: 20,
+    marginBottom: 10,
   },
   charCount: {
     textAlign: 'right',
@@ -1184,6 +1221,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    marginTop: 4,
     marginHorizontal: 2,
   },
   postAsLabel: {
@@ -1196,6 +1234,32 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 18,
     fontWeight: '300',
+  },
+  applyBusinessCard: {
+    marginTop: 18,
+    marginBottom: 8,
+    paddingVertical: 13,
+    paddingHorizontal: 15,
+    backgroundColor: '#e3f2fd',
+    borderRadius: 10,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 370,
+    borderColor: '#BBDEFB',
+    borderWidth: 1,
+    shadowColor: '#1976D2',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  applyBusinessText: {
+    color: '#1976D2',
+    fontSize: 15.5,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    textAlign: 'center',
+    lineHeight: 22,
   },
   identityOption: {
     paddingVertical: 4,

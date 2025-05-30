@@ -30,6 +30,17 @@ const i18n = {
       likeBody: "liked your post.",
       someone: "Someone",
     },
+    promo: {
+      promoRedeemedTitle: "Discount Redeemed!",
+      promoRedeemedBody: "Your code was validated at the business.",
+      redemptionFailedTitle: "Redemption Failed",
+      redemptionFailed: "This claim is not active.",
+      codeExpired: "This code has expired. Please claim a new one.",
+      notYourPromo: "You don't own this promo.",
+      invalidArgument: "Missing QR code or code data.",
+      notFound: "Claim not found.",
+      invalidSignature: "Invalid QR code signature.",
+    }
   },
 
   es: {
@@ -42,6 +53,17 @@ const i18n = {
       likeBody: "le dio me gusta a tu publicación.",
       someone: "Alguien",
     },
+    promo: {
+      promoRedeemedTitle: "¡Descuento canjeado!",
+      promoRedeemedBody: "Tu código fue validado en el negocio.",
+      redemptionFailedTitle: "Canje fallido",
+      redemptionFailed: "Esta reclamación no está activa.",
+      codeExpired: "Este código ha expirado. Reclama uno nuevo.",
+      notYourPromo: "No eres dueño de esta promoción.",
+      invalidArgument: "Faltan datos del código QR o del código.",
+      notFound: "Reclamación no encontrada.",
+      invalidSignature: "Firma del código QR no válida.",
+    }
   }
 };
 
@@ -483,8 +505,14 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
   const businessId = request.auth?.uid;
   const { qrCodeData, shortCode } = request.data;
 
+  let lang = "en";
+  if (businessId) {
+    const businessDoc = await db.collection("users").doc(businessId).get();
+    lang = (businessDoc.data()?.language && i18n[businessDoc.data().language]) ? businessDoc.data().language : "en";
+  }
+
   if (!businessId || (!qrCodeData && !shortCode)) {
-    throw new HttpsError("invalid-argument", "Missing QR or code data.");
+    throw new HttpsError("invalid-argument", i18n[lang]?.promo?.invalidArgument || "Missing QR or code data.");
   }
 
   const validateSignature = (qrData) => {
@@ -492,7 +520,8 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     const expected = crypto.createHmac("sha256", PROMO_HMAC_SECRET.value())
       .update(`${claimId}|${code}`)
       .digest("hex");
-    if (signature !== expected) throw new HttpsError("permission-denied", "Invalid QR code signature.");
+    if (signature !== expected) 
+      throw new HttpsError("permission-denied", i18n[lang]?.promo?.invalidSignature || "Invalid QR code signature.");
     return { claimId, code };
   };
 
@@ -506,24 +535,31 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
       .where("shortCode", "==", shortCode.toUpperCase())
       .limit(1)
       .get();
-    if (query.empty) throw new HttpsError("not-found", "Claim not found.");
+    if (query.empty) 
+      throw new HttpsError("not-found", i18n[lang]?.promo?.notFound || "Claim not found.");
     claimDoc = query.docs[0];
   }
 
   const claim = claimDoc.data();
+
+  if (claim?.userId) {
+    const customerDoc = await db.collection("users").doc(claim.userId).get();
+    lang = (customerDoc.data()?.language && i18n[customerDoc.data().language]) ? customerDoc.data().language : "en";
+  }
+
   if (!claim || claim.status !== "active") {
-    throw new HttpsError("failed-precondition", "Claim is not active.");
+    throw new HttpsError("failed-precondition", i18n[lang]?.promo?.redemptionFailed || "Claim is not active.");
   }
 
   if (claim.expiresAt && claim.expiresAt.toDate() < new Date()) {
     // Expired
-    throw new HttpsError("failed-precondition", "Este código ha expirado. Reclama uno nuevo.");
+    throw new HttpsError("failed-precondition", i18n[lang]?.promo?.codeExpired || "This code has expired. Please claim a new one.");
   }
 
   const postSnap = await db.collection("posts").doc(claim.postId).get();
   const post = postSnap.data();
   if (!post || post.user?.uid !== businessId) {
-    throw new HttpsError("permission-denied", "You don't own this promo.");
+    throw new HttpsError("permission-denied", i18n[lang]?.promo?.notYourPromo || "You don't own this promo.");
   }
 
   await claimDoc.ref.update({
@@ -532,11 +568,31 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     redeemedBy: businessId
   });
 
+  const customerDoc = await db.collection("users").doc(claim.userId).get();
+  const customer = customerDoc.data();
+  if (customer?.expoPushToken && Expo.isExpoPushToken(customer.expoPushToken)) {
+    const lang = i18n[customer.language] ? customer.language : "en";
+    const message = {
+      to: customer.expoPushToken,
+      sound: "default",
+      title: i18n[lang]?.promo?.promoRedeemedTitle || "¡Descuento canjeado!",
+      body: i18n[lang]?.promo?.promoRedeemedBody || "Tu código fue validado en el negocio.",
+      data: {
+        type: "promo_redeemed",
+        postId: claim.postId,
+        claimId: claimDoc.id,
+        status: "redeemed"
+      }
+    };
+    await expo.sendPushNotificationsAsync([message]);
+  }
+
   return {
     success: true,
     userId: claim.userId,
     postId: claim.postId,
-    redeemedAt: new Date().toISOString()
+    redeemedAt: new Date().toISOString(),
+    message: i18n[lang]?.promo?.promoRedeemedTitle
   };
 });
 

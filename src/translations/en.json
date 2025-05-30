@@ -284,7 +284,10 @@
       "copySuccess": "Post text copied to clipboard!",
       "copiedToClipboard": "Copied to Clipboard",
       "copyMessage": "Post text has been copied!",
-      "copyError": "Failed to copy the text"
+      "copyError": "Failed to copy the text",
+      "updating": "Updating...",
+      "editPlaceholder": "Edit your post...",
+      "charCount": "{{count}} / 500"
     },
 
     "editBusinessProfile": "Edit Business Profile",
@@ -543,8 +546,8 @@
   "promoDescription": "Optional: Promo Description",
   "promoQuantity": "Max Claims (e.g. 10)",
   "promoToastTitle": "Verified Business Only",
-  "promoToastMessage": "Please verify your business account to activate promotions.",
-  "promoQuantityNote": "Maximum 50 redemptions per promotion",
+  "promoToastMessage": "Your business account needs to be approved to use promos.",
+  "promoQuantityNote": "Maximum 20 redemptions per promotion",
   "originalPrice": "Original Price (e.g. 25.00)",
   "discountedPriceLabel": "Discounted Price: ${original} - {discount}% = ${final}",
   "enterStandardPrice": "Enter Standard Price",
@@ -585,10 +588,14 @@
     "screenshotTip": "Take a screenshot to save this code if you're not redeeming now. Otherwise, you’ll lose it when closing this window!",
     "loadingCode": "Loading code...",
     "shortCodeLabel": "Short code:",
-    "manualEntryHint": "Or share this code if you can't scan the QR."
+    "manualEntryHint": "Or share this code if you can't scan the QR.",
+    "redemptionSuccessTitle": "Promo Successfully Redeemed!",
+    "copied": "Copied!"
   },
   "common": {
     "close": "Close"
-  }
-  
+  },
+  "promoClaimed": "Promo Successfully Redeemed!",
+  "gotBusinessGetVerified": "Got a business? Get verified and unlock features for your posts."
+
 }  

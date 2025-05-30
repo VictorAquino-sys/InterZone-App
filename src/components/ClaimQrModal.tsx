@@ -1,7 +1,9 @@
 // components/ClaimQrModal.tsx
 import React from 'react';
-import { View, Text, Button, Modal, StyleSheet } from 'react-native';
+import { View, Text, Button, Modal, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Clipboard from 'expo-clipboard';
 import i18n from '@/i18n'; // If you use i18n
 
 interface ClaimQrModalProps {
@@ -38,18 +40,43 @@ const ClaimQrModal: React.FC<ClaimQrModalProps> = ({
             {i18n.t('promo.loadingCode')}
           </Text>
         )}
+
         {shortCode && (
           <View style={styles.codeBox}>
-            <Text style={styles.codeLabel}>
-              {i18n.t('promo.shortCodeLabel')}
-            </Text>
-            <Text selectable style={styles.shortCode}>{shortCode}</Text>
-            <Text style={styles.tip}>
-              {i18n.t('promo.manualEntryHint')}
-            </Text>
+            <Text style={styles.codeLabel}>{i18n.t('promo.shortCodeLabel')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text selectable style={styles.shortCode}>{shortCode}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  Clipboard.setString(shortCode);
+                  Alert.alert(i18n.t('promo.copied'));
+                }}
+                style={{ marginLeft: 8 }}
+                accessibilityLabel={i18n.t('promo.copyCode')}
+              >
+                <Ionicons name="copy-outline" size={24} color="#FFD600" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.tip}>{i18n.t('promo.manualEntryHint')}</Text>
           </View>
         )}
-        <Button title={i18n.t('common.close')} onPress={onClose} />
+
+        <TouchableOpacity
+          style={{
+            marginTop: 30,
+            backgroundColor: '#FFD600',
+            paddingVertical: 12,
+            paddingHorizontal: 32,
+            borderRadius: 8,
+          }}
+          onPress={onClose}
+          accessibilityLabel={i18n.t('common.close')}
+        >
+          <Text style={{ color: '#333', fontWeight: 'bold', fontSize: 16 }}>
+            {i18n.t('common.close')}
+          </Text>
+        </TouchableOpacity>
+
       </View>
     </Modal>
   );

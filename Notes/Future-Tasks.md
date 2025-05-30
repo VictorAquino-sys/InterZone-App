@@ -2,10 +2,14 @@
 Convert all API calls to Firestore
 Implement a dashboard for tracking user activity
 
-# 5 = 28
+
+### 5-30
+    If you ever switch to more precise polygonal checks (for more accurate geofencing), let me know—polygon support is possible, but this bounding box will work for your current approach.
+
+### 5 = 28
     Implement Scheduled Cleanup of Expired Promo Claims
 
-# 5 - 15
+### 5 - 15
 Implement the rating prompt after liking a post (if the user hasn't rated that business yet).
 
 ### 4-24

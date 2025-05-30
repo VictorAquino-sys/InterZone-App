@@ -461,6 +461,14 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   };
 
+  const handleEditPost = (postId: string, newContent: string) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p.id === postId ? { ...p, content: newContent } : p
+      )
+    );
+  };
+
   const handleDeletePost = (postId: string, imageUrl: string | null) => {
     Alert.alert(
       i18n.t('confirmDeleteTitle'), // "Confirm Delete"
@@ -588,6 +596,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
         formatDate={formatDate}
         isFullScreen={isFullScreen}
         toggleFullScreen={toggleFullScreen}
+        onEdit={handleEditPost}
       />
     ),
     [
@@ -1057,44 +1066,44 @@ const styles = StyleSheet.create({
   
 });
 
-const renderPostItem = (
-  user: any,
-  onDelete: any,
-  onReport: any,
-  onOpenImage: any,
-  onUserProfile: any,
-  formatDate: any,
-  isFullScreen: boolean,
-  toggleFullScreen: () => void
-) => useCallback(
-  ({ item }: { item: Post }) => (
-    <PostCard
-      item={item}
-      userId={user?.uid ?? ''}
-      user={{
-        uid: user?.uid ?? '',
-        name: user?.name ?? '',
-        avatar: user?.avatar ?? '',
-      }}
-      onDelete={onDelete}
-      onReport={onReport}
-      onOpenImage={onOpenImage}
-      onUserProfile={onUserProfile}
-      formatDate={formatDate}
-      isFullScreen={isFullScreen}
-      toggleFullScreen={toggleFullScreen}
-    />
-  ),
-  [
-    user?.uid,
-    user?.name,
-    user?.avatar,
-    onDelete,
-    onReport,
-    onOpenImage,
-    onUserProfile,
-    formatDate,
-    isFullScreen,
-    toggleFullScreen,
-  ]
-);
+// const renderPostItem = (
+//   user: any,
+//   onDelete: any,
+//   onReport: any,
+//   onOpenImage: any,
+//   onUserProfile: any,
+//   formatDate: any,
+//   isFullScreen: boolean,
+//   toggleFullScreen: () => void
+// ) => useCallback(
+//   ({ item }: { item: Post }) => (
+//     <PostCard
+//       item={item}
+//       userId={user?.uid ?? ''}
+//       user={{
+//         uid: user?.uid ?? '',
+//         name: user?.name ?? '',
+//         avatar: user?.avatar ?? '',
+//       }}
+//       onDelete={onDelete}
+//       onReport={onReport}
+//       onOpenImage={onOpenImage}
+//       onUserProfile={onUserProfile}
+//       formatDate={formatDate}
+//       isFullScreen={isFullScreen}
+//       toggleFullScreen={toggleFullScreen}
+//     />
+//   ),
+//   [
+//     user?.uid,
+//     user?.name,
+//     user?.avatar,
+//     onDelete,
+//     onReport,
+//     onOpenImage,
+//     onUserProfile,
+//     formatDate,
+//     isFullScreen,
+//     toggleFullScreen,
+//   ]
+// );
