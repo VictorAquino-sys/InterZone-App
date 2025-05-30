@@ -1089,9 +1089,14 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                             keyboardType="numeric"
                             value={promoTotal?.toString() || ''}
                             onChangeText={(text) => {
-                              // Remove non-digits
+                              // Remove non-digits and parse
                               const sanitized = text.replace(/[^0-9]/g, '');
-                              setPromoTotal(sanitized === '' ? null : Math.max(1, Number(sanitized)));
+                              let val = sanitized === '' ? null : Number(sanitized);
+                              if (val !== null) {
+                                if (val < 1) val = 1;
+                                if (val > 20) val = 20; 
+                              }                              
+                              setPromoTotal(val);
                             }}
                             style={{
                               width: 60,
