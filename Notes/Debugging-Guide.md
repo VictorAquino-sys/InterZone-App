@@ -77,7 +77,7 @@ Open the simulator first through Xcode, this mounts the new simulator bundle, th
     npx eas build --platform android --profile production
     
     IOS/Submit
-    npx eas build --platform ios 
+    npx eas build --platform ios (Avoid this)
     (OR)
     eas build -p ios --profile production
     Then:

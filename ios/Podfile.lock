@@ -1864,6 +1864,8 @@ PODS:
   - PromisesObjC (2.4.0)
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
+  - PurchasesHybridCommon (13.32.0):
+    - RevenueCat (= 5.24.0)
   - RCT-Folly (2024.01.01.00):
     - boost
     - DoubleConversion
@@ -3137,6 +3139,7 @@ PODS:
     - React-perflogger (= 0.74.5)
     - React-utils (= 0.74.5)
   - RecaptchaInterop (101.0.0)
+  - RevenueCat (5.24.0)
   - RNCAsyncStorage (1.23.1):
     - React-Core
   - RNCCheckbox (0.5.17):
@@ -3210,6 +3213,9 @@ PODS:
     - GoogleSignIn (~> 7.1)
     - React-Core
   - RNLocalize (3.4.1):
+    - React-Core
+  - RNPurchases (8.11.0):
+    - PurchasesHybridCommon (= 13.32.0)
     - React-Core
   - RNReanimated (3.10.1):
     - DoubleConversion
@@ -3417,6 +3423,7 @@ DEPENDENCIES:
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
   - RNLocalize (from `../node_modules/react-native-localize`)
+  - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -3461,8 +3468,10 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - PromisesSwift
+    - PurchasesHybridCommon
     - ReachabilitySwift
     - RecaptchaInterop
+    - RevenueCat
     - SDWebImage
     - SDWebImageAVIFCoder
     - SDWebImageSVGCoder
@@ -3687,6 +3696,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-google-signin/google-signin"
   RNLocalize:
     :path: "../node_modules/react-native-localize"
+  RNPurchases:
+    :path: "../node_modules/react-native-purchases"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -3778,6 +3789,7 @@ SPEC CHECKSUMS:
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
+  PurchasesHybridCommon: 662aa1f4769ff4ef594e35adf1a5d0ad7b3d08b7
   RCT-Folly: 5dc73daec3476616d19e8a53f0156176f7b55461
   RCTDeprecation: 3afceddffa65aee666dafd6f0116f1d975db1584
   RCTRequired: ec1239bc9d8bf63e10fb92bd8b26171a9258e0c1
@@ -3833,6 +3845,7 @@ SPEC CHECKSUMS:
   React-utils: 3c4b8677afc614f15357ad66fcc3e61bc21a42db
   ReactCommon: cfb89afbdafafbf049c719db9cb61ac4d38af434
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
+  RevenueCat: 2d3639d30b8a71cbfe3d99cef8243c602793e0ec
   RNCAsyncStorage: aa75595c1aefa18f868452091fa0c411a516ce11
   RNCCheckbox: 450ce156f3e29e25efa0315c96cfbabe5a39ded1
   RNCPicker: 15ad063c72ecba748be9edea62a5bdce53090aa6
@@ -3845,6 +3858,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: 5d95b0a3cffed8325ed0c181f4f411c1dcd49317
   RNGoogleSignin: 576a84dd0407b912e7a0adf07492de9feb79e5d9
   RNLocalize: 15463c4d79c7da45230064b4adcf5e9bb984667e
+  RNPurchases: 4ddfd516e40b558dcb168625bddbea690ed8a81a
   RNReanimated: f6c3a3aa35de5a312c01b9256a61f23eed660b34
   RNScreens: 5b35d863db10f9be81da4e8f4e08096ee7644f8c
   RNSVG: 0e7deccab0678200815104223aadd5ca734dd41d

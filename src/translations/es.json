@@ -495,7 +495,7 @@
     },
     "rateOne": {
         "header": "Califica al Profesor {{name}}",
-        "placeholder": "Escribe tu reseña...",
+        "placeholder": "Escribe tu reseña...(ej. 60% presentaciones, 20% examenes, 10% trabajo grupal. El profe te mandara a leer bastante.)",
         "submit": "Enviar Reseña",
         "incompleteTitle": "Incompleto",
         "incompleteMsg": "Por favor, proporciona una calificación con estrellas y un comentario.",
@@ -542,5 +542,61 @@
     "university": {
         "rateTab": "Calificar Profesores",
         "discussionTab": "Chat"
-      }
+    },
+
+    "promoSettingsTitle": "Configuración de Promoción",
+    "enablePromo": "Activar Promoción",
+    "promoAvailableVerifiedOnly": "Solo las cuentas de negocio verificadas pueden activar promociones.",
+    "promoLabel": "Etiqueta de Promoción",
+    "promoDescription": "Opcional: Descripción de la Promoción",
+    "promoQuantity": "Cantidad Máxima de Canjes (ej. 10)",
+    "promoToastTitle": "Solo negocios verificados",
+    "promoToastMessage": "Verifica tu cuenta de negocio para activar promociones.",
+    "promoQuantityNote": "Máximo de 50 canjes por promoción",
+    "originalPrice": "Precio original (ej. 25.00)",
+    "discountedPriceLabel": "Precio con descuento: ${original} - {discount}% = ${final}",
+    "enterStandardPrice": "Ingrese Precio Estándar",
+    "applyDiscount": "Aplicar Descuento",
+    "afterDiscount": "Precio con descuento",
+    "promoClaimsLeft": "Solo {{count}} primeros usuarios",
+    "priceBeforeDiscount": "Precio regular:",
+    "promoExpiresIn24h": "Nota: cada código de promoción será válido sólo durante 24 horas después de ser reclamado.",
+    "onlineBanner": {
+        "one": "🟢 Hay {{count}} persona conectada",
+        "other": "🟢 Hay {{count}} personas conectadas"
+    },
+    "getPremium": "Obtener Premium",
+    "premiumMember": "Miembro Premium",
+    "membershipTitle": "Membresía Premium",
+    "premiumBenefits": "Desbloquea estos beneficios Premium:",
+    "allCitiesAccess": "Ver y publicar en cualquier ciudad, en cualquier momento",
+    "premiumBadge": "Destaca con una insignia Premium",
+    "exclusiveEvents": "Únete a eventos y grupos exclusivos",
+    "prioritySupport": "Disfruta de soporte prioritario",
+    "businessPremiumBenefit": "Muestra tus publicaciones en hasta 5 ciudades a la vez",
+    "monthlyPlan": "Mensual",
+    "yearlyPlan": "Anual",
+    "saveTwoMonths": "¡Ahorra 2 meses!",
+    "promo": {
+        "requestingCameraPermission": "Solicitando permiso para la cámara...",
+        "noCamera": "No hay cámara disponible",
+        "scanQr": "Escanea un código QR de promoción",
+        "redeemedSuccess": "✅ ¡Promoción canjeada!\nUsuario: {{user}}\nPublicación: {{post}}",
+        "redemptionFailedTitle": "❌ Canje fallido",
+        "redemptionFailed": "Promoción inválida o caducada.",
+        "enterCodeLabel": "Ingresa el código promocional de 6 dígitos",
+        "enterCodePlaceholder": "ej. B8L2QF",
+        "redeem": "Canjear",
+        "enterCodeManually": "Ingresar código manualmente",
+        "useQrScanner": "Usar lector QR",
+        "showQr": "Muestra este QR en el local",
+        "screenshotTip": "¡Toma una captura de pantalla para guardar este código si no vas a canjearlo ahora! De otro modo, lo perderás al cerrar esta ventana.",
+        "loadingCode": "Cargando código...",
+        "shortCodeLabel": "Código corto:",
+        "manualEntryHint": "O comparte este código si no puedes escanear el QR."
+    },
+    "common": {
+        "close": "Cerrar"
+    }
+
 } 

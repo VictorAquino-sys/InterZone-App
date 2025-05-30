@@ -1,10 +1,9 @@
 import React, { useState, useEffect, FunctionComponent } from 'react'
 import { GoogleAuthProvider, signInWithCredential, createUserWithEmailAndPassword,signInWithEmailAndPassword, sendPasswordResetEmail, OAuthProvider, sendEmailVerification } from "firebase/auth";
-import { Image, Dimensions, ScrollView, useWindowDimensions, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
+import { Image, ScrollView, ImageBackground, StyleSheet, View, Text, KeyboardAvoidingView, SafeAreaView, Platform, StatusBar, TextInput, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import image from '../../assets/localbrands_1.png';
 import BG_PE from '../../assets/peru_background_login.png';
-import BG_U from '../../assets/image_for_ipads.png';
-import BG_US from '../../assets/usa_background_login.png';
 import GoogleIcon from '../../assets/google_icon.png'; // TypeScript-compatible
 import { auth, db } from '../../src/config/firebase'; // Import Firestore
 import { Alert } from 'react-native';
@@ -18,21 +17,8 @@ import * as RNLocalize from 'react-native-localize';
 import { useUser } from '../../src/contexts/UserContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { generateNonce, sha256 } from '@/utils/cryptoUtils';
-import { logScreen } from '@/utils/analytics';
-import * as Localization from 'expo-localization';
 import { recordHandledError } from '@/utils/crashlytics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ResponsiveContainer from '@/components/ResponsiveContainer';
-
-const locales = Localization.getLocales() as Array<{ region?: string }>;
-const countryCode = locales[0]?.region || 'US';
-
-const backgroundMap: Record<string, any> = {
-  US: BG_US,
-  PE: BG_PE,
-};
-
-// const image = backgroundMap[countryCode] || BG_US; // fallback to US
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'LoginScreen'>;
 
@@ -43,19 +29,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
   const { refreshUser } = useUser(); // ⬅️ grab from context
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
   const [googleLoading, setGoogleLoading] = useState(false);
-  const isTablet = width >= 768;
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-
-  const image2 = isTablet ? BG_U : backgroundMap[countryCode] || BG_US;
-
-  useEffect(() => {
-    const logLoginScreen = async () => {
-      await logScreen('LoginScreen'); // 🔥 This tracks it
-    };
-    logLoginScreen();
-  }, []);
 
   useEffect(() => {
     // let alreadyNavigated = false;
@@ -170,31 +144,23 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         termsAccepted: false,
       });
 
+      // ✅ Send email verification
+      await sendEmailVerification(authUser);
 
-       // ✅ Send email verification
-       await sendEmailVerification(authUser);
- 
-       // ✅ Sign the user out to wait for email verification
-       await auth.signOut();
- 
-       // ✅ Now show only 1 clean alert
-       Alert.alert(
-         i18n.t('verificationSentTitle'),
-         i18n.t('verificationSentMessage'),
-         [{ text: i18n.t('ok'), onPress: () => navigation.replace("LoginScreen") }]
-       );
- 
-      // Save user data in AsyncStorage
-      // await AsyncStorage.setItem('user', JSON.stringify(authUser));
-      // await AsyncStorage.setItem('userId', authUser.uid);
-      // await AsyncStorage.setItem('termsAccepted', 'false'); // let App.tsx handle navigation
+      // ✅ Sign the user out to wait for email verification
+      await auth.signOut();
+
+      // ✅ Now show only 1 clean alert
+      Alert.alert(
+        i18n.t('verificationSentTitle'),
+        i18n.t('verificationSentMessage'),
+        [{ text: i18n.t('ok'), onPress: () => navigation.replace("LoginScreen") }]
+      );
 
       console.log("User signed up:", authUser.email, "| Country:", country);
 
     } catch (error :any) {
-
       await recordHandledError(error);
-
       let errorMessage = i18n.t('genericError'); // Default error message
 
       switch (error.code) {
@@ -205,7 +171,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
           errorMessage = i18n.t('emailAlreadyInUse');
           break;
         case 'auth/weak-password':
-          errorMessage = i18n.t('weakPassword');  
+          errorMessage = i18n.t('weakPassword');
           break;
         case 'auth/operation-not-allowed':
           errorMessage = i18n.t('signUpDisabled');
@@ -266,8 +232,6 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
     }
   };
   
-
-
   const handlePasswordReset = async () => {
     if (email.trim() === '') {
       Alert.alert(
@@ -276,7 +240,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       );
       return;
     }
-
+  
     try {
       await sendPasswordResetEmail(auth, email);
       Alert.alert(
@@ -298,8 +262,8 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const authUser = userCredential.user;
 
-       // ❌ Block login if email not verified
-       if (!authUser.emailVerified) {
+      // ❌ Block login if email not verified
+      if (!authUser.emailVerified) {
         Alert.alert(
           i18n.t('emailNotVerifiedTitle'),
           i18n.t('emailNotVerifiedMessage')
@@ -318,7 +282,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         userData = userSnap.data() as UserData;
       }
 
-      // Store user data locally
+      // Optional local cache (safe to keep)
       // await AsyncStorage.setItem('user', JSON.stringify(authUser));
       await AsyncStorage.setItem('userName' + authUser.uid, userData?.name || ""); // Save name
       await AsyncStorage.setItem('userCountry' + authUser.uid, userData?.country || "Unknown"); // Save country
@@ -326,13 +290,9 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
       console.log("User logged in:", authUser.email);
       console.log("Fetched name:", userData?.name); 
 
+
       await refreshUser(); // 👈 This triggers UserProvider to re-fetch Firestore + update `user`
 
-      // Only navigate to NameInputScreen if the name is missing
-      // if (!userData?.name) {
-      //   await AsyncStorage.setItem('userId', authUser.uid); // save for TermsScreen
-      //   await AsyncStorage.setItem('termsAccepted', 'false'); // force user to re-accept
-      // }
     } catch (error: any) {
       await recordHandledError(error);
 
@@ -383,6 +343,7 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
       console.log('User signed in with Google:', authUser.email);
     
+      // await checkAndCreateFirestoreDocument(userCredential.user); 
       const userRef = doc(db, "users", authUser.uid);
       const docSnap = await getDoc(userRef);
     
@@ -453,14 +414,11 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
         backgroundColor="transparent" 
         barStyle="light-content" // ⬅️ or "dark-content" depending on image brightness
       />
-        <ImageBackground 
-          source={image2} 
-          resizeMode="cover" 
-          style={styles.rootContainer}
+        <ImageBackground source={BG_PE} resizeMode="cover" style={[styles.rootContainer, { paddingBottom: insets.bottom }]}
         >
           <SafeAreaView style={styles.safeArea}>
             <ScrollView
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[ styles.scrollContent, { paddingBottom: insets.bottom }]}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator= {false}
             >
@@ -473,81 +431,75 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
                 )}
               </View>
 
-              <ResponsiveContainer>
+              <KeyboardAvoidingView behavior= "padding"  style= {styles.container}>
+                <View style={styles.authButtonsContainer}>
 
-                <KeyboardAvoidingView 
-                  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                  style= {styles.container}>
-                  <View style={styles.authButtonsContainer}>
-
-                    <TouchableOpacity
-                      onPress={signIn}
-                      disabled={googleLoading}
-                      style={[styles.customGoogleButton, googleLoading && { opacity: 0.6 }]}
-                    >
-
-                      <View style={styles.googleContent}>
-                        <Image source={GoogleIcon} style={styles.googleIcon} />
-                        <Text style={styles.googleText}>
-                          {googleLoading ? i18n.t('loading') : i18n.t('auth.signInWithGoogle')}
-                        </Text> 
-                      </View>
-                    </TouchableOpacity>
-
-
-                    {Platform.OS === 'ios' && isAppleAvailable && (
-                      <AppleAuthentication.AppleAuthenticationButton
-                        buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                        cornerRadius={5}
-                        style={styles.appleButton}
-                        onPress={handleAppleSignIn}
-                      />
-                    )}
-                  </View>
-
-                  <View style={[styles.inputContainer, { width: isTablet ? 400 : '60%' }]}>
-                  <TextInput
-                      style={styles.input}
-                      placeholder={i18n.t('Email')}
-                      value={email}
-                      onChangeText={text => setEmail(text)}
-                    />
-                    <TextInput
-                      style={styles.input}
-                      placeholder={i18n.t('Password')}
-                      value={password}
-                      onChangeText={text => setPassword(text)}
-                      secureTextEntry
-                    />
-                  </View>
-                  
-                  <View style={[styles.buttonContainer, { width: isTablet ? 400 : '60%' }]}>
-                    <TouchableOpacity onPress={handleLogin} style={styles.button}>
-                      <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
-                      <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.troubleAccessContainer}>
-                    <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
-                    <View style={styles.troubleLinks}>
-                      <TouchableOpacity onPress={handlePasswordReset}>
-                        <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
-                      </TouchableOpacity>
-                      <Text style={styles.separator}> | </Text>
-                      <TouchableOpacity onPress={handleResendVerificationEmail}>
-                        <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
-                      </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={signIn}
+                    disabled={googleLoading}
+                    style={[styles.customGoogleButton, googleLoading && { opacity: 0.6 }]}
+                  >
+                    <View style={styles.googleContent}>
+                      <Image source={GoogleIcon} style={styles.googleIcon} />
+                      <Text style={styles.googleText}>
+                        {googleLoading ? i18n.t('loading') : i18n.t('auth.signInWithGoogle')}
+                      </Text>
                     </View>
+                  </TouchableOpacity>
+
+
+                  {Platform.OS === 'ios' && isAppleAvailable && (
+                    <AppleAuthentication.AppleAuthenticationButton
+                      buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                      buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                      cornerRadius={5}
+                      style={styles.appleButton}
+                      onPress={handleAppleSignIn}
+                    />
+                  )}
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={i18n.t('Email')}
+                    value={email}
+                    onChangeText={text => setEmail(text)}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder={i18n.t('Password')}
+                    value={password}
+                    onChangeText={text => setPassword(text)}
+                    secureTextEntry
+                  />
+                </View>
+                
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity onPress={handleLogin} style={styles.button}>
+                    <Text style={styles.buttonText}>{i18n.t('loginButton')}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={handleSignUp} style={[styles.button, styles.buttonOutline]}>
+                    <Text style={styles.buttonOutlineText}>{i18n.t('registerButton')}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.troubleAccessContainer}>
+                  <Text style={styles.troubleText}>{i18n.t('troubleAccess')}</Text>
+                  <View style={styles.troubleLinks}>
+                    <TouchableOpacity onPress={handlePasswordReset}>
+                      <Text style={styles.troubleLink}>{i18n.t('forgotPasswordLink')}</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.separator}> | </Text>
+                    <TouchableOpacity onPress={handleResendVerificationEmail}>
+                      <Text style={styles.troubleLink}>{i18n.t('resendVerificationLink')}</Text>
+                    </TouchableOpacity>
                   </View>
+                </View>
 
-                </KeyboardAvoidingView>
 
-              </ResponsiveContainer>
+              </KeyboardAvoidingView>
             </ScrollView>
           </SafeAreaView>
         </ImageBackground>
@@ -563,13 +515,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 0 : 40,
     marginBottom: 20,
     width: "100%",
   },
   scrollContent: {
     flexGrow: 1,
-    minHeight: '100%',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -592,24 +542,27 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
+    // paddingHorizontal: 2, // added padding
   },
   googleContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  
   googleIcon: {
     width: 24,
     height: 24,
     marginRight: 2,
   },
+  
   googleText: {
     fontSize: 14,
     fontWeight: '500',
     color: '#000',
   },
   appleButton: {
-    width: 200,
+    width: 170,
     height: 44,
     borderRadius: 18,
   },
@@ -642,7 +595,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inputContainer: {
-    // width: isTablet ? 400 : '60%',
+    width:'60%',
     justifyContent: 'center',
   },
   input: {
@@ -687,6 +640,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
   },
+  rootContainer: {
+    flex: 1,
+  },
   troubleAccessContainer: {
     marginTop: 10,
     alignItems: 'center',
@@ -711,10 +667,5 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     color: '#999',
     fontSize: 13,
-  },
-  rootContainer: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
   },
 })

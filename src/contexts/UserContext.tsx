@@ -7,8 +7,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Alert } from 'react-native';
 // import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
-import { auth, db } from '../../src/config/firebase';
+import { auth, db, rtdb } from '../../src/config/firebase';
+import { setUserOnlineStatus } from '@/utils/presence';
 import * as RNLocalize from 'react-native-localize';
+import { ref, remove } from "firebase/database";
 import { setUserProps } from '@/utils/analytics';
 import { recordHandledError } from '@/utils/crashlytics';
 import { deepMerge } from '@/utils/merge';
@@ -27,9 +29,11 @@ export interface User {
   emailVerified?: boolean;
   accountType?: "individual" | "business";
   businessVerified?: boolean;
+  premium?: boolean;
   isQrDistributor?: boolean; // ✅ this line
   claims?: {
     admin?: boolean;
+    premium?: boolean;
     isQrDistributor?: boolean;
     [key: string]: any;
   };
@@ -135,7 +139,9 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
           const idTokenResult = await firebaseUser.getIdTokenResult();
           const claims = idTokenResult.claims;
           console.log("🔥 Current Claims:", claims); // ✅ Add this line
+
           const isQrDistributorClaim = Boolean(claims.isQrDistributor); // ✅ Type-safe boolean
+          const premiumClaim = Boolean(claims.premium);
 
           const userRef = doc(db, "users", firebaseUser.uid);
           const userSnap = await getDoc(userRef);
@@ -168,6 +174,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               termsAccepted: userData.termsAccepted || false, // 👈 Include termsAccepted
               emailVerified: firebaseUser.emailVerified, // ✅ ADD THIS LINE
               isQrDistributor: isQrDistributorClaim,
+              premium: premiumClaim,
               verifications: userData.verifications || {},
               lastKnownLocation: userData.lastKnownLocation || undefined,
               accountType: userData.accountType || "individual",
@@ -183,6 +190,9 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               language: updatedUser.language || 'en',
               country: updatedUser.country || 'unknown',
             });
+
+            setUserOnlineStatus({ uid: updatedUser.uid });
+        
           } else {
             console.log("No user data available");
             setUser(null);
@@ -193,6 +203,9 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         }
       } else {
         console.log("User logged out");
+        if (user && user.uid) {
+          remove(ref(rtdb, `presence/${user.uid}`));
+        }
         setUser(null);
       }
       setLoading(false); // Set loading false once user data is fetched
@@ -201,6 +214,8 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
     // Cleanup function to unsubscribe from the auth listener on component unmount.
     return () => unsubscribe();
   }, []);
+
+
 
   // Function to update user profile details, accepting partial user info.
   const updateUserProfile = (updates: Partial<User>) => {
@@ -223,6 +238,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         const idTokenResult = await firebaseUser.getIdTokenResult(true);
         const claims = idTokenResult.claims;
         const isQrDistributorClaim = Boolean(claims.isQrDistributor);
+        const premiumClaim = Boolean(claims.premium);
 
         const userRef = doc(db, "users", firebaseUser.uid);
         const userSnap = await getDoc(userRef);
@@ -240,6 +256,7 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
             termsAccepted: userData.termsAccepted ?? false,
             emailVerified: firebaseUser.emailVerified, // ✅ ADD HERE TOO
             isQrDistributor: isQrDistributorClaim,
+            premium: premiumClaim,
             verifications: userData.verifications || {},
             lastKnownLocation: userData.lastKnownLocation || undefined,
             accountType: userData.accountType || "individual",
