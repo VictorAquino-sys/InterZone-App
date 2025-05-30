@@ -7,7 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
+  Platform, Modal
 } from 'react-native';
 import {
   useCameraPermission,
@@ -30,10 +30,22 @@ export default function RedeemPromoScreen() {
   const [manualCode, setManualCode] = useState('');
   const [mode, setMode] = useState<'scan' | 'manual'>('scan');
   const [successInfo, setSuccessInfo] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     if (!hasPermission) requestPermission();
   }, []);
+
+  useEffect(() => {
+    if (showSuccessModal) {
+      const timer = setTimeout(() => {
+        setShowSuccessModal(false);
+        setSuccessInfo(null);
+        setManualCode('');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessModal]);
 
   const handleRedeem = async ({ qrCodeData, shortCode }: { qrCodeData?: string, shortCode?: string }) => {
     try {
@@ -47,6 +59,7 @@ export default function RedeemPromoScreen() {
           post: postId.slice(0, 6) + '…',
         })
       );
+      setShowSuccessModal(true); // show modal
     } catch (err: any) {
       console.error("🔥 Redeem failed:", err);
       Alert.alert(
@@ -75,8 +88,37 @@ export default function RedeemPromoScreen() {
   if (!device && mode === 'scan')
     return <Text style={styles.centered}>{i18n.t('promo.noCamera')}</Text>;
 
+
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+      style={styles.container}
+    >
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={{
+          flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)'
+        }}>
+          <View style={{
+            backgroundColor: '#fff', padding: 28, borderRadius: 16, alignItems: 'center', minWidth: 260
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>{i18n.t('promo.redemptionSuccessTitle')}</Text>
+            <Text style={{ fontSize: 16, marginBottom: 18 }}>{successInfo}</Text>
+            <TouchableOpacity onPress={() => {
+              setShowSuccessModal(false);
+              setSuccessInfo(null);
+              setManualCode('');
+            }}>
+              <Text style={{ color: '#2e7d32', fontWeight: 'bold', fontSize: 16 }}>{i18n.t('common.close')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {mode === 'scan' ? (
         <>
           <Camera
@@ -100,9 +142,13 @@ export default function RedeemPromoScreen() {
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={6}
+            onSubmitEditing={() => {
+              if (manualCode) handleRedeem({ shortCode: manualCode.trim().toUpperCase() });
+            }}
           />
           <TouchableOpacity
-            style={styles.verifyButton}
+            style={[styles.verifyButton, !manualCode && { opacity: 0.5 }]}
+            disabled={!manualCode}
             onPress={() => handleRedeem({ shortCode: manualCode.trim().toUpperCase() })}
           >
             <Text style={styles.verifyText}>{i18n.t('promo.redeem')}</Text>

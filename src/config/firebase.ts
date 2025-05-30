@@ -39,11 +39,11 @@ const storage = getStorage(app);
 // Initialize Firebase Functions
 const functions = getFunctions(app, 'us-central1');
 
-const rtdb = getDatabase(app);
-
 // Initialize authentication with default persistence (auto-configured for React Native)
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
+
+const rtdb = getDatabase(app);
 
 export { app, auth, db, storage, functions, rtdb };

@@ -285,7 +285,10 @@
         "copySuccess": "¡Texto de la publicación copiado al portapapeles!",
         "copiedToClipboard": "Copiado al portapapeles",
         "copyMessage": "¡El texto de la publicación ha sido copiado!",
-        "copyError": "Error al copiar el texto"
+        "copyError": "Error al copiar el texto",
+        "updating": "Actualizando...",
+        "editPlaceholder": "Edita tu publicación...",
+        "charCount": "{{count}} / 500"
     },
 
     "businessVerified": "Empresario",
@@ -551,8 +554,8 @@
     "promoDescription": "Opcional: Descripción de la Promoción",
     "promoQuantity": "Cantidad Máxima de Canjes (ej. 10)",
     "promoToastTitle": "Solo negocios verificados",
-    "promoToastMessage": "Verifica tu cuenta de negocio para activar promociones.",
-    "promoQuantityNote": "Máximo de 50 canjes por promoción",
+    "promoToastMessage": "Tu negocio tiene que ser aprobado para usar promociones.",
+    "promoQuantityNote": "Máximo de 20 canjes por promoción",
     "originalPrice": "Precio original (ej. 25.00)",
     "discountedPriceLabel": "Precio con descuento: ${original} - {discount}% = ${final}",
     "enterStandardPrice": "Ingrese Precio Estándar",
@@ -593,10 +596,14 @@
         "screenshotTip": "¡Toma una captura de pantalla para guardar este código si no vas a canjearlo ahora! De otro modo, lo perderás al cerrar esta ventana.",
         "loadingCode": "Cargando código...",
         "shortCodeLabel": "Código corto:",
-        "manualEntryHint": "O comparte este código si no puedes escanear el QR."
+        "manualEntryHint": "O comparte este código si no puedes escanear el QR.",
+        "redemptionSuccessTitle": "Codigo exitosamente canjeado!",
+        "copied": "Copiado!"
     },
     "common": {
         "close": "Cerrar"
-    }
+    },
+    "promoClaimed": "Codigo exitosamente canjeado!",
+    "gotBusinessGetVerified": "¿Tienes un negocio? Verifícalo y desbloquea funciones para tus publicaciones."
 
 } 

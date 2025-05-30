@@ -39,10 +39,13 @@ export type RootStackParamList = {
   SuggestProfessor: { universityId: string };
   ProfessorSuggestionsReview: undefined; // ✅ Add this
   AdminDashboard: undefined;
+  ClaimPromoScreen: { postId: string };
+  RedeemPromoScreen: undefined;
 
 };
 
 export type TabParamList = {
   Home: undefined;
   PostScreen: undefined;
+  ScanPromoTab: undefined;
 };

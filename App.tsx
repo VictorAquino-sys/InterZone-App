@@ -40,6 +40,8 @@ import ChatScreen from 'screens/ChatScreen';
 import RedeemPromoScreen from 'screens/business/RedeemPromoScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import Purchases from 'react-native-purchases';
+import { navigationRef } from './src/navigation/navigationRef';
+
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 import DeleteAccountScreen from 'screens/DeleteAccountScreen';
 import { registerForPushNotificationsAsync, setupNotificationChannelAsync } from './services/notifications';
@@ -67,7 +69,7 @@ import { QrVisibilityProvider, useQrVisibility } from '@/contexts/QrVisibilityCo
 import ProfessorSuggestionsReviewScreen from 'screens/studyhub/professorSuggestionsReviewScreen';
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
 import { createNavigationContainerRef } from '@react-navigation/native';
-export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+// export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 export const homeScreenRef = React.createRef<HomeScreenRef>();
 
 Notifications.setNotificationHandler({

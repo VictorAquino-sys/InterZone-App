@@ -8,9 +8,9 @@ import { Alert } from 'react-native';
 // import { getAuth, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore"; // Import getDoc and doc
 import { auth, db, rtdb } from '../../src/config/firebase';
-import { setUserOnlineStatus } from '@/utils/presence';
+// import { setUserOnlineStatus } from '@/utils/presence';
 import * as RNLocalize from 'react-native-localize';
-import { ref, remove } from "firebase/database";
+// import { ref, remove } from "firebase/database";
 import { setUserProps } from '@/utils/analytics';
 import { recordHandledError } from '@/utils/crashlytics';
 import { deepMerge } from '@/utils/merge';
@@ -191,8 +191,13 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               country: updatedUser.country || 'unknown',
             });
 
-            setUserOnlineStatus({ uid: updatedUser.uid });
-        
+            // console.log("Setting presence for:", firebaseUser?.uid, "currentUser in auth:", auth.currentUser?.uid);
+
+            // setTimeout(() => {
+            //   setUserOnlineStatus({ uid: firebaseUser.uid });
+            // }, 1000);         
+
+
           } else {
             console.log("No user data available");
             setUser(null);
@@ -203,10 +208,11 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         }
       } else {
         console.log("User logged out");
-        if (user && user.uid) {
-          remove(ref(rtdb, `presence/${user.uid}`));
-        }
+        // if (user && user.uid) {
+        //   remove(ref(rtdb, `presence/${user.uid}`));
+        // }
         setUser(null);
+        setLoading(false);
       }
       setLoading(false); // Set loading false once user data is fetched
     });

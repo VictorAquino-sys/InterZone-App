@@ -23,9 +23,12 @@ import { RootStackParamList } from '../src/navigationTypes';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import UpdateChecker from '../src/components/UpdateChecker';
+import { useOnlineUserCount } from '@/hooks/useOnlineUserCount';
+import OnlineBanner from '@/components/OnlineBanner';
 import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
+import { useQrVisibility } from '@/contexts/QrVisibilityContext';
 import PostCard from '@/components/PostCard';
 
 import Animated, {
@@ -78,6 +81,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const prevHasUnread = useRef(false);
 
   const [fallbackUpdate, setFallbackUpdate] = useState(false);
+  const { setQrVisible } = useQrVisibility();
 
   const [isFullScreen, setIsFullScreen] = useState(false); // State to control full-screen mode
 
@@ -202,6 +206,13 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   
       onFocus();
     }, [city, user?.blocked])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      setQrVisible(true); // Set this in a shared context
+      return () => setQrVisible(false); // Hide when screen loses focus
+    }, [])
   );
 
   // Expose scrollToTop to parent
@@ -387,7 +398,9 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
           categoryKey: data.categoryKey,
           commentCount: data.commentCount ?? 0,
           commentsEnabled: data.commentsEnabled,
-          verifications: data.verifications || {}
+          verifications: data.verifications || {},
+          showcase: data.showcase || false,
+          promo: data.promo || null,
         };
       }));
 
@@ -446,6 +459,14 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     if (!timestamp) return 'Unknown date';
     const date = new Date(timestamp.seconds * 1000);
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  };
+
+  const handleEditPost = (postId: string, newContent: string) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p.id === postId ? { ...p, content: newContent } : p
+      )
+    );
   };
 
   const handleDeletePost = (postId: string, imageUrl: string | null) => {
@@ -575,6 +596,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
         formatDate={formatDate}
         isFullScreen={isFullScreen}
         toggleFullScreen={toggleFullScreen}
+        onEdit={handleEditPost}
       />
     ),
     [
@@ -592,6 +614,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   );
   
   const isFocused = useIsFocused();
+  const onlineCount = useOnlineUserCount();
 
   return (
     <>
@@ -679,14 +702,14 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                   </View>
                 }
                 data={posts}
-                // keyExtractor={(item) => `${item.id}_${item.likedBy?.includes(user?.uid)}`}
                 keyExtractor={item => item.id}
                 renderItem={memoizedRenderItem}
                 contentContainerStyle={styles.listContent}
-                // style={{ flex: 1, width: '100%' }} // Ensuring FlatList also takes full width
                 estimatedItemSize={280}
               />
             )}
+
+            <OnlineBanner count={onlineCount} />
 
             <Modal
               animationType="slide"
@@ -732,6 +755,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                   <TouchableOpacity onPress={() => setReportModalVisible(false)}>
                     <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
                   </TouchableOpacity>
+
                 </View>
               </TouchableOpacity>
             </Modal>
@@ -742,6 +766,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 {hasUnreadMessages && <View style={styles.unreadDot} />}
               </TouchableOpacity>
             </Animated.View>
+
 
           </View>
         </SafeAreaView>
@@ -1041,44 +1066,44 @@ const styles = StyleSheet.create({
   
 });
 
-const renderPostItem = (
-  user: any,
-  onDelete: any,
-  onReport: any,
-  onOpenImage: any,
-  onUserProfile: any,
-  formatDate: any,
-  isFullScreen: boolean,
-  toggleFullScreen: () => void
-) => useCallback(
-  ({ item }: { item: Post }) => (
-    <PostCard
-      item={item}
-      userId={user?.uid ?? ''}
-      user={{
-        uid: user?.uid ?? '',
-        name: user?.name ?? '',
-        avatar: user?.avatar ?? '',
-      }}
-      onDelete={onDelete}
-      onReport={onReport}
-      onOpenImage={onOpenImage}
-      onUserProfile={onUserProfile}
-      formatDate={formatDate}
-      isFullScreen={isFullScreen}
-      toggleFullScreen={toggleFullScreen}
-    />
-  ),
-  [
-    user?.uid,
-    user?.name,
-    user?.avatar,
-    onDelete,
-    onReport,
-    onOpenImage,
-    onUserProfile,
-    formatDate,
-    isFullScreen,
-    toggleFullScreen,
-  ]
-);
+// const renderPostItem = (
+//   user: any,
+//   onDelete: any,
+//   onReport: any,
+//   onOpenImage: any,
+//   onUserProfile: any,
+//   formatDate: any,
+//   isFullScreen: boolean,
+//   toggleFullScreen: () => void
+// ) => useCallback(
+//   ({ item }: { item: Post }) => (
+//     <PostCard
+//       item={item}
+//       userId={user?.uid ?? ''}
+//       user={{
+//         uid: user?.uid ?? '',
+//         name: user?.name ?? '',
+//         avatar: user?.avatar ?? '',
+//       }}
+//       onDelete={onDelete}
+//       onReport={onReport}
+//       onOpenImage={onOpenImage}
+//       onUserProfile={onUserProfile}
+//       formatDate={formatDate}
+//       isFullScreen={isFullScreen}
+//       toggleFullScreen={toggleFullScreen}
+//     />
+//   ),
+//   [
+//     user?.uid,
+//     user?.name,
+//     user?.avatar,
+//     onDelete,
+//     onReport,
+//     onOpenImage,
+//     onUserProfile,
+//     formatDate,
+//     isFullScreen,
+//     toggleFullScreen,
+//   ]
+// );
