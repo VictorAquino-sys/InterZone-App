@@ -19,6 +19,7 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "fire
 import mime from "mime";
 import { ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Toast from 'react-native-toast-message';
 import { RootStackParamList } from '../src/navigationTypes';
 import MembershipInfoModal from '@/components/MembershipInfoModal';
 import VerifyBusinessButton from '@/components/VerifyBusinessButton';
@@ -172,10 +173,19 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
           }
           setShowMembershipModal(false); // Optionally close modal
         } catch (e: any) {
-          if (!e.userCancelled) {
-            console.log('RevenueCat purchase error:', JSON.stringify(e, null, 2));
-            alert('There was a problem processing your payment.');
-          }
+            if (e.userCancelled) {
+                Toast.show({
+                  type: 'info',
+                  text1: 'Purchase cancelled',
+                  text2: 'You can subscribe anytime.',
+                });
+              } else {
+                Toast.show({
+                  type: 'error',
+                  text1: 'Subscription failed',
+                  text2: e?.message || 'Try again later.',
+                });
+            }
         }
       };
 

@@ -16,6 +16,8 @@
 		5EAFA1DE5193313FA5B0808B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 28E23AF17CA6B50F453ECCDD /* PrivacyInfo.xcprivacy */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		DF17C4792DEB066200A938D5 /* configurationIn-appPurchase.storekit in Resources */ = {isa = PBXBuildFile; fileRef = DF17C4782DEB066200A938D5 /* configurationIn-appPurchase.storekit */; };
+		DF17C47B2DEB07AE00A938D5 /* StoreKitTestCertificate.cer in Resources */ = {isa = PBXBuildFile; fileRef = DF17C47A2DEB07AE00A938D5 /* StoreKitTestCertificate.cer */; };
 		E36AB8250BCF41C5952AF685 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA20A041D40D4430B815612F /* noop-file.swift */; };
 		E942E2B86E6F4700AFF3BDDA /* notification_sound.wav in Resources */ = {isa = PBXBuildFile; fileRef = C76F2D6873FC4C8C82907B04 /* notification_sound.wav */; };
 /* End PBXBuildFile section */
@@ -35,6 +37,8 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		C76F2D6873FC4C8C82907B04 /* notification_sound.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = notification_sound.wav; path = InterZone/notification_sound.wav; sourceTree = "<group>"; };
 		C964019042BA47018D438371 /* InterZone-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "InterZone-Bridging-Header.h"; path = "InterZone/InterZone-Bridging-Header.h"; sourceTree = "<group>"; };
+		DF17C4782DEB066200A938D5 /* configurationIn-appPurchase.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = "configurationIn-appPurchase.storekit"; sourceTree = "<group>"; };
+		DF17C47A2DEB07AE00A938D5 /* StoreKitTestCertificate.cer */ = {isa = PBXFileReference; lastKnownFileType = file; name = StoreKitTestCertificate.cer; path = ../../../../../../Downloads/StoreKitTestCertificate.cer; sourceTree = "<group>"; };
 		EA0A13BC3A3148159D542230 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "InterZone/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FA20A041D40D4430B815612F /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "InterZone/noop-file.swift"; sourceTree = "<group>"; };
@@ -98,6 +102,8 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				DF17C4782DEB066200A938D5 /* configurationIn-appPurchase.storekit */,
+				DF17C47A2DEB07AE00A938D5 /* StoreKitTestCertificate.cer */,
 				13B07FAE1A68108700A75B9A /* InterZone */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -221,8 +227,10 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
+				DF17C47B2DEB07AE00A938D5 /* StoreKitTestCertificate.cer in Resources */,
 				594ED68359574AD08CE2E026 /* GoogleService-Info.plist in Resources */,
 				E942E2B86E6F4700AFF3BDDA /* notification_sound.wav in Resources */,
+				DF17C4792DEB066200A938D5 /* configurationIn-appPurchase.storekit in Resources */,
 				5EAFA1DE5193313FA5B0808B /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -624,10 +632,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -696,10 +701,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

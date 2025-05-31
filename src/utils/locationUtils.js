@@ -220,6 +220,52 @@ export const locationMapping = [
       { latitude: -11.904280859994254, longitude: -77.03344326982773 }
     ]
   },
+  {
+    city: "Mi Peru",
+    region: "Callao",
+    polygon: [
+      { latitude: -11.861916299529138, longitude: -77.12840280389715 },
+      { latitude: -11.861853301139064, longitude: -77.12896070337862 },
+      { latitude: -11.859501350833106, longitude: -77.1304198250994 },
+      { latitude: -11.85612038674961, longitude: -77.13011941768629 },
+      { latitude: -11.852025374074927, longitude: -77.12893924572928 },
+      { latitude: -11.849820341857392, longitude: -77.12662181711393 },
+      { latitude: -11.849862342637419, longitude: -77.12316713186328 },
+      { latitude: -11.848329309880535, longitude: -77.119841192689 },
+      { latitude: -11.84620825050973, longitude: -77.11881122441552 },
+      { latitude: -11.844423187781091, longitude: -77.1175666794184 },
+      { latitude: -11.842491106742816, longitude: -77.11537799683724 },
+      { latitude: -11.842554109600858, longitude: -77.11409053649538 },
+      { latitude: -11.84450719099456, longitude: -77.11351117934154 },
+      { latitude: -11.846397256468661, longitude: -77.11385450209937 },
+      { latitude: -11.84719528018677, longitude: -77.11398324813355 },
+      { latitude: -11.84847631338498, longitude: -77.11409053649538 },
+      { latitude: -11.849022325708685, longitude: -77.11389741744411 },
+      { latitude: -11.851374366417215, longitude: -77.1123524650402 },
+      { latitude: -11.854860389330739, longitude: -77.11267433012567 },
+      { latitude: -11.857023381166412, longitude: -77.11406907882936 },
+      { latitude: -11.858976359148281, longitude: -77.11632213439819 },
+      { latitude: -11.860404334142785, longitude: -77.11754522172295 },
+      { latitude: -11.861370312989237, longitude: -77.1185966476688 },
+      { latitude: -11.862399286693707, longitude: -77.11964807361466 },
+      { latitude: -11.863386257901007, longitude: -77.12067804184815 },
+      { latitude: -11.864352226187648, longitude: -77.12196550219001 },
+      { latitude: -11.863638249957779, longitude: -77.12280235141222 },
+      { latitude: -11.862546282696991, longitude: -77.12318858951477 },
+      { latitude: -11.861496310054566, longitude: -77.12340316623843 },
+      { latitude: -11.86023633754917, longitude: -77.12344608158314 },
+      { latitude: -11.859207355686614, longitude: -77.1234246239108 },
+      { latitude: -11.859679847840043, longitude: -77.12471208425264 },
+      { latitude: -11.860120839778357, longitude: -77.12561330649194 },
+      { latitude: -11.86060383013101, longitude: -77.1269007668338 },
+      { latitude: -11.860897823840082, longitude: -77.12776980256456 },
+      { latitude: -11.86109731939079, longitude: -77.12827405786511 },
+      { latitude: -11.861128818674935, longitude: -77.12835988855457 },
+      { latitude: -11.861695805167606, longitude: -77.1283491597184 },
+      { latitude: -11.861863800939124, longitude: -77.12845644808021 },
+      { latitude: -11.861916299596503, longitude: -77.12884268618276 }
+    ]
+  },
 ];
   
 function isPointInPolygon(point, polygon) {
