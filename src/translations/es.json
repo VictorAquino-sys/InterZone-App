@@ -592,13 +592,16 @@
         "redeem": "Canjear",
         "enterCodeManually": "Ingresar código manualmente",
         "useQrScanner": "Usar lector QR",
-        "showQr": "Muestra este QR en el local",
         "screenshotTip": "¡Toma una captura de pantalla para guardar este código si no vas a canjearlo ahora! De otro modo, lo perderás al cerrar esta ventana.",
         "loadingCode": "Cargando código...",
         "shortCodeLabel": "Código corto:",
         "manualEntryHint": "O comparte este código si no puedes escanear el QR.",
         "redemptionSuccessTitle": "Codigo exitosamente canjeado!",
-        "copied": "Copiado!"
+        "copied": "Copiado!",
+        "showQr": "🎉 ¡Muestra esto en el negocio!",
+        "claiming": "Reclamando tu promoción...",
+        "notAvailable": "Promoción no disponible o ya canjeada.",
+        "copyCode": "Copiar código"
     },
     "common": {
         "close": "Cerrar"

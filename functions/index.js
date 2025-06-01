@@ -439,13 +439,6 @@ exports.createPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     return result;
   };
 
-  const createSignedPayload = (claimId, shortCode) => {
-    const data = `${claimId}|${shortCode}`;
-    const hmac = crypto.createHmac("sha256", PROMO_HMAC_SECRET.value());
-    const signature = hmac.update(data).digest("hex");
-    return `${data}|${signature}`;
-  };
-
   return await db.runTransaction(async (tx) => {
     const postDoc = await tx.get(postRef);
     if (!postDoc.exists) {
@@ -473,7 +466,7 @@ exports.createPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     // Generate claim
     const claimId = crypto.randomUUID();
     const shortCode = generateShortCode();
-    const qrCodeData = createSignedPayload(claimId, shortCode);
+    const qrCodeData = claimId;
     const expiresAt = Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
 
     const claimData = {
@@ -515,21 +508,10 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     throw new HttpsError("invalid-argument", i18n[lang]?.promo?.invalidArgument || "Missing QR or code data.");
   }
 
-  const validateSignature = (qrData) => {
-    const [claimId, code, signature] = qrData.split("|");
-    const expected = crypto.createHmac("sha256", PROMO_HMAC_SECRET.value())
-      .update(`${claimId}|${code}`)
-      .digest("hex");
-    if (signature !== expected) 
-      throw new HttpsError("permission-denied", i18n[lang]?.promo?.invalidSignature || "Invalid QR code signature.");
-    return { claimId, code };
-  };
-
   let claimDoc;
 
   if (qrCodeData) {
-    const { claimId, code } = validateSignature(qrCodeData);
-    claimDoc = await db.collection("claims").doc(claimId).get();
+    claimDoc = await db.collection("claims").doc(qrCodeData).get();
   } else if (shortCode) {
     const query = await db.collection("claims")
       .where("shortCode", "==", shortCode.toUpperCase())
@@ -538,6 +520,8 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     if (query.empty) 
       throw new HttpsError("not-found", i18n[lang]?.promo?.notFound || "Claim not found.");
     claimDoc = query.docs[0];
+  } else {
+    throw new HttpsError("invalid-argument", i18n[lang]?.promo?.invalidArgument || "Missing QR or code data.");
   }
 
   const claim = claimDoc.data();
@@ -595,5 +579,3 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     message: i18n[lang]?.promo?.promoRedeemedTitle
   };
 });
-
-

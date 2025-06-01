@@ -23,7 +23,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { checkLocation } from '../../src/utils/locationUtils';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabParamList } from '../../src/navigationTypes';
-// import { ContentType } from 'expo-clipboard';
+import { Dimensions } from 'react-native';
 import { Video } from 'expo-av';
 import { app } from '../../src/config/firebase';
 import * as FileSystem from 'expo-file-system';
@@ -82,6 +82,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
   const [originalPrice, setOriginalPrice] = useState<number | null>(null);
   const [selectedDiscount, setSelectedDiscount] = useState<number | null>(null);
+  const screenWidth = Dimensions.get('window').width;
 
   const discountedPrice = originalPrice && selectedDiscount
   ? (originalPrice * (1 - selectedDiscount / 100)).toFixed(2)
@@ -770,7 +771,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                         postingAsBusiness && styles.identityOptionSelected
                       ]}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', maxWidth: 110 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, maxWidth: Math.min(screenWidth * 0.4, 200) }}>
                         <Text
                           numberOfLines={1}
                           ellipsizeMode='tail'
@@ -1160,7 +1161,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
                 </View>
 
-                {user?.accountType === 'individual' && !user?.verifications?.business && (
+                {user?.accountType === 'individual' && (
                     <TouchableOpacity
                       onPress={() => navigationRef.navigate('ApplyBusiness')}
                       style={styles.applyBusinessCard}

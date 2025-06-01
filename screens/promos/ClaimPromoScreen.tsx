@@ -5,6 +5,7 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/config/firebase';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '@/navigationTypes';
+import i18n from '@/i18n';
 
 type Props = RouteProp<RootStackParamList, 'ClaimPromoScreen'>;
 
@@ -16,19 +17,29 @@ const ClaimPromoScreen = () => {
     qrCodeData: string;
   }>(null);
 
+  const [debug, setDebug] = useState<string[]>([]);
+
+  function appendDebug(msg: string) {
+    setDebug(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`].slice(-10));
+    console.log(msg);
+  }
+
   useEffect(() => {
     const fetchClaim = async () => {
       try {
         const claimFn = httpsCallable(functions, 'createPromoClaim');
         const res: any = await claimFn({ postId });
 
+        appendDebug(`Received: shortCode=${res.data?.shortCode}, qrCodeData=${res.data?.qrCodeData}`);
         setClaim({
           shortCode: res.data.shortCode,
           qrCodeData: res.data.qrCodeData
         });
       } catch (error: any) {
+        appendDebug(`Promo claim error: ${error?.message || error}`);
+
         console.error("Promo claim error:", error);
-        Alert.alert("Claim Failed", error.message || "Unable to claim this promo.");
+        Alert.alert(i18n.t('promo.notAvailable'), error.message || i18n.t('promo.notAvailable'));
       } finally {
         setLoading(false);
       }
@@ -41,7 +52,7 @@ const ClaimPromoScreen = () => {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#4A90E2" />
-        <Text>Claiming your promo...</Text>
+        <Text>{i18n.t('promo.claiming')}</Text>
       </View>
     );
   }
@@ -49,17 +60,17 @@ const ClaimPromoScreen = () => {
   if (!claim) {
     return (
       <View style={styles.centered}>
-        <Text style={{ color: 'red' }}>Promo not available or already claimed.</Text>
+        <Text style={{ color: 'red' }}>{i18n.t('promo.notAvailable')}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>🎉 Show this at the business!</Text>
+      <Text style={styles.header}>{i18n.t('promo.showQr')}</Text>
       <Text style={styles.code}>{claim.shortCode}</Text>
       <View style={{ marginTop: 20 }}>
-        <QRCode value={claim.qrCodeData} size={200} />
+        <QRCode value={claim.qrCodeData} size={300} backgroundColor="white"/>
       </View>
     </View>
   );

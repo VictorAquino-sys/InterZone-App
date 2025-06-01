@@ -32,9 +32,17 @@ export default function RedeemPromoScreen() {
   const [successInfo, setSuccessInfo] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  const [debug, setDebug] = useState<string[]>([]);
+
+  function appendDebug(msg: string) {
+    setDebug(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`].slice(-8)); // keep last 8 lines
+    console.log(msg);
+  }
+
   useEffect(() => {
+    appendDebug(`Component mounted. hasPermission: ${hasPermission}, device: ${!!device}`);
     if (!hasPermission) requestPermission();
-  }, []);
+  }, [hasPermission, device]);
 
   useEffect(() => {
     if (showSuccessModal) {
@@ -48,6 +56,8 @@ export default function RedeemPromoScreen() {
   }, [showSuccessModal]);
 
   const handleRedeem = async ({ qrCodeData, shortCode }: { qrCodeData?: string, shortCode?: string }) => {
+    appendDebug(`handleRedeem called. qrCodeData: ${qrCodeData}, shortCode: ${shortCode}`);
+
     try {
       const redeemFn = httpsCallable(functions, 'redeemPromoClaim');
       const res: any = await redeemFn({ qrCodeData, shortCode });
@@ -62,6 +72,7 @@ export default function RedeemPromoScreen() {
       setShowSuccessModal(true); // show modal
     } catch (err: any) {
       console.error("🔥 Redeem failed:", err);
+      appendDebug(`🔥 Redeem failed: ${err?.message || err}`);
       Alert.alert(
         i18n.t('promo.redemptionFailedTitle'),
         err.message || i18n.t('promo.redemptionFailed')
@@ -74,20 +85,27 @@ export default function RedeemPromoScreen() {
   const codeScanner = useCodeScanner({
     codeTypes: ['qr'],
     onCodeScanned: async (codes) => {
+      appendDebug(`onCodeScanned called. scanned: ${scanned}, codes: ${JSON.stringify(codes)}`);
       if (scanned) return;
       const value = codes[0]?.value;
-      if (!value) return;
-
+      appendDebug(`QR value: ${value}`);
+      if (!value) {
+        appendDebug('QR value is empty.');
+        return;
+      }
       setScanned(true);
       await handleRedeem({ qrCodeData: value });
     },
   });
 
-  if (!hasPermission)
+  if (!hasPermission) {
+    appendDebug('No camera permission');
     return <Text style={styles.centered}>{i18n.t('promo.requestingCameraPermission')}</Text>;
-  if (!device && mode === 'scan')
+  }
+  if (!device && mode === 'scan') {
+    appendDebug('No camera device found');
     return <Text style={styles.centered}>{i18n.t('promo.noCamera')}</Text>;
-
+  }
 
   return (
     <KeyboardAvoidingView 

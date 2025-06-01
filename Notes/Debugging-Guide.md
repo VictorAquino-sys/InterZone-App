@@ -34,7 +34,7 @@
 * to test the app in dev, run:
     android
     - for local:
-        expo run:android
+        npx expo run:android
         
     - cloud builds:
         npx eas build --platform android --profile development

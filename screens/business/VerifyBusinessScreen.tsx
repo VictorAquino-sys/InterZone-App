@@ -62,8 +62,21 @@ export default function VerifyBusinessScreen() {
       const now = new Date();
       const expired = !data.expiresAt || data.expiresAt.toDate() < now;
 
-      if (!type || data.used || expired) {
+      if (!type) {
+        console.warn("⛔ QR code is missing 'type' field.");
+        Alert.alert("Error", "Invalid QR code: missing type.");
+        return;
+      }
+      
+      if (data.used) {
+        console.warn("⛔ QR code already used.");
         Alert.alert(i18n.t('qr.expiredOrUsed'), i18n.t('qr.codeAlreadyUsed'));
+        return;
+      }
+      
+      if (expired) {
+        console.warn("⛔ QR code expired.");
+        Alert.alert(i18n.t('qr.expiredOrUsed'), i18n.t('qr.codeExpired'));
         return;
       }
       
@@ -82,11 +95,15 @@ export default function VerifyBusinessScreen() {
         return;
       }
 
+      console.log('🔄 Attempting to mark QR code as used by:', user.uid);
+
       await updateDoc(ref, {
         used: true,
         usedAt: Timestamp.now(),
         usedBy: user.uid,
       });
+
+      console.log('✅ QR code successfully marked as used for:', user.uid);
 
       await updateDoc(userRef, {
         [`verifications.${type}`]: true,
