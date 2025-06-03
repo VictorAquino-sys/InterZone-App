@@ -5,6 +5,7 @@ import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import Avatar from './Avatar';
 import { Timestamp } from 'firebase/firestore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatDistanceToNow } from 'date-fns';
 import i18n from '@/i18n';
 
@@ -27,6 +28,8 @@ interface Review {
 const BusinessReviewListModal: React.FC<Props> = ({ visible, onClose, businessId, refreshTrigger  }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const insets = useSafeAreaInsets();
+
 
   useEffect(() => {
     if (visible || refreshTrigger) {
@@ -63,7 +66,7 @@ const BusinessReviewListModal: React.FC<Props> = ({ visible, onClose, businessId
   return (
       <Modal visible={visible} animationType="slide">
           <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-              <View style={styles.header}>
+            <View style={[styles.header, { paddingTop: insets.top + 6 }]}>
                   <View style={styles.flexSpacer} />
                       <Text style={styles.headerText}>{i18n.t('businessReviews.title')}</Text>
                   <TouchableOpacity onPress={onClose}>

@@ -72,7 +72,7 @@ exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (even
   const receiverId = message.receiverId;
   const senderName = message.senderName;
 
-  console.log(`📩 New message created. From: ${senderName}, To: ${receiverId}`);
+  // console.log(`📩 New message created. From: ${senderName}, To: ${receiverId}`);
 
   const receiverSnap = await db.collection("users").doc(receiverId).get();
   const receiver = receiverSnap.data();
@@ -82,7 +82,7 @@ exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (even
     return;
   }
 
-  const lang = i18n[receiver.language] ? receiver.language : 'en';
+  const lang = receiver?.language && i18n[receiver.language] ? receiver.language : 'en';
 
   const pushMessage = {
     to: receiver.expoPushToken,
@@ -146,6 +146,8 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
     const userLocationLabel = user.lastKnownLocation?.label;
     const tokenValid = expoPushToken && Expo.isExpoPushToken(expoPushToken);
 
+    const lang = language && i18n[language] ? language : 'en';
+
     if (
       uid !== posterUid &&
       userLocationLabel &&
@@ -155,8 +157,8 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
       messages.push({
         to: expoPushToken,
         sound: "default",
-        title: i18n[language].notification.newPostTitle,
-        body: `${posterName} ${i18n[language].notification.newPostBody} ${cityLabel}`,
+        title: i18n[lang].notification.newPostTitle,
+        body: `${posterName} ${i18n[lang].notification.newPostBody} ${cityLabel}`,
         data: {
           type: "post",
           postId: postId,

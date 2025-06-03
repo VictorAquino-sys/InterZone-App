@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Image, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { doc, getDoc } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/config/firebase';
 import { formatDistanceToNow } from 'date-fns';
 import { logEvent } from '@/utils/analytics';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigationTypes'; 
+
+type Navigation = NativeStackNavigationProp<RootStackParamList, 'PostDetail'>;
 
 const PostDetailScreen = () => {
   const route = useRoute();
@@ -12,6 +18,30 @@ const PostDetailScreen = () => {
 
   const [post, setPost] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation<Navigation>();
+  const canGoBack = navigation.canGoBack();
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <TouchableOpacity
+          onPress={() => {
+            if (canGoBack) navigation.goBack();
+            else navigation.navigate('BottomTabs');
+          }}
+          style={{ paddingHorizontal: 16 }}
+        >
+          <Ionicons
+            name={canGoBack ? "arrow-back" : "home-outline"}
+            size={26}
+            color="black"
+          />
+        </TouchableOpacity>
+      ),
+      // Optional: customize the title if needed
+      title: 'Publicación', // or i18n.t('post.detailTitle')
+    });
+  }, [navigation, canGoBack]);
 
   useEffect(() => {
     const fetchPost = async () => {

@@ -89,6 +89,10 @@ const MembershipInfoModal: React.FC<Props> = ({
             </TouchableOpacity>
           </View>
 
+          <Text style={styles.disclaimer}>
+            {i18n.t('subscriptionAutoRenew')}
+          </Text>
+
           {/* Close Button */}
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Ionicons name="close-circle" size={28} color="#777" />
@@ -191,5 +195,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#555',
     marginLeft: 7,
+  },
+  disclaimer: {
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 2,
   },
 });
