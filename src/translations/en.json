@@ -584,13 +584,16 @@
   "redeem": "Redeem",
   "enterCodeManually": "Enter code manually",
   "useQrScanner": "Use QR scanner",
-  "showQr": "Show this QR code at the business",
   "screenshotTip": "Take a screenshot to save this code if you're not redeeming now. Otherwise, you’ll lose it when closing this window!",
   "loadingCode": "Loading code...",
   "shortCodeLabel": "Short code:",
   "manualEntryHint": "Or share this code if you can't scan the QR.",
   "redemptionSuccessTitle": "Promo Successfully Redeemed!",
-  "copied": "Copied!"
+  "showQr": "🎉 Show this at the business!",
+  "claiming": "Claiming your promo...",
+  "notAvailable": "Promo not available or already claimed.",
+  "copied": "Copied!",
+  "copyCode": "Copy code"
 },
 "common": {
   "close": "Close"

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { collection, getDocs, updateDoc, doc, where, query, onSnapshot, deleteField } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, where, query, onSnapshot, deleteField, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface BusinessApplicant {
@@ -9,6 +9,9 @@ interface BusinessApplicant {
       name?: string;
       description?: string;
       category?: string;
+      location?: string;
+      email?: string;
+      avatar?: string;
     };
     pendingBusinessApplication?: boolean;
     businessVerified?: boolean;
@@ -35,19 +38,41 @@ const AdminApprovalScreen = () => {
   const handleDecision = async (uid: string, approve: boolean) => {
     try {
       const userRef = doc(db, 'users', uid);
-      await updateDoc(userRef, approve ? {
-        businessVerified: true,
-        pendingBusinessApplication: false,
-      } : {
-        accountType: 'individual',
-        businessVerified: false,
-        pendingBusinessApplication: false,
-        businessProfile: deleteField(),
-        category: deleteField(),
-      });
-
+  
+      if (approve) {
+        // Fetch the current user document
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : null;
+  
+        let updatePayload: any = {
+          businessVerified: true,
+          pendingBusinessApplication: false,
+        };
+  
+        // Add verifications.business = true if missing or false
+        const hasBusinessVerification =
+          !!userData?.verifications && userData.verifications.business === true;
+  
+        if (!hasBusinessVerification) {
+          updatePayload['verifications'] = {
+            ...(userData?.verifications || {}),
+            business: true,
+          };
+        }
+  
+        await updateDoc(userRef, updatePayload);
+      } else {
+        await updateDoc(userRef, {
+          accountType: 'individual',
+          businessVerified: false,
+          pendingBusinessApplication: false,
+          businessProfile: deleteField(),
+          category: deleteField(),
+        });
+      }
+  
       setApplicants(prev => prev.filter(applicant => applicant.uid !== uid));
-
+  
       Alert.alert(
         approve ? '✅ Approved' : '🚫 Rejected',
         `Business has been ${approve ? 'approved' : 'rejected'}.`
@@ -80,6 +105,12 @@ const AdminApprovalScreen = () => {
             <Text style={styles.name}>{item.businessProfile?.name || 'Unnamed Business'}</Text>
             <Text style={styles.category}>{item.businessProfile?.category || 'N/A'}</Text>
             <Text style={styles.description}>{item.businessProfile?.description || 'No description provided'}</Text>
+            <Text style={styles.location}>
+              📍 {item.businessProfile?.location || 'No location'}
+            </Text>
+            <Text style={styles.email}>
+              ✉️ {item.businessProfile?.email || 'No email'}
+            </Text>
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.approveButton} onPress={() => handleDecision(item.uid, true)}>
@@ -155,5 +186,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     textAlign: 'center',
+  },
+  location: {
+    fontSize: 13,
+    color: '#009688',
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 13,
+    color: '#1976D2',
+    marginBottom: 10,
   },
 });
