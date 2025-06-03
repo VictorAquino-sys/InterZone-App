@@ -889,6 +889,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   )}
                 </View>
 
+                {/* Show prompts when category or location is not ready */}
+                {!isCategorySelected && Platform.OS !== 'ios' &&(
+                  <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
+                )}
+
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={selectedCategory}
@@ -896,9 +901,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                     enabled={!locationLoading}                  
                     style={styles.pickerStyle}
                   >
-                    {Platform.OS !== 'ios' && (
-                      <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
-                    )}
+                    <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
                     <Picker.Item label={i18n.t('categories.restaurants')} value="restaurants" color="cornflowerblue"/>
                     {!isPeruvian && (
                       <Picker.Item label={i18n.t('categories.universities')} value="universities" color="cornflowerblue"/>
@@ -916,11 +919,6 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                     <Picker.Item label={i18n.t('categories.tutors')} value="tutors" color="cornflowerblue"/>            
                   </Picker>
                 </View>
-
-                {/* Show prompts when category or location is not ready */}
-                {!isCategorySelected && (
-                  <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
-                )}
 
                 {locationLoading && (
                   <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
@@ -1356,6 +1354,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginTop: 10,
+    marginBottom: 5,
     paddingHorizontal: 20, // Add some padding for better visual alignment
   },
   locationPrompt: {

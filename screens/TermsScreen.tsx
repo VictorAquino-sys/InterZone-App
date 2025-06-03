@@ -18,12 +18,12 @@ export default function TermsScreen() {
 
     const handleContinue = async () => {
       if (!agreed) {
-        Alert.alert('Please agree to the terms to continue.');
+        Alert.alert(i18n.t('terms.alertAgree'));
         return;
       }
     
       if (!user?.uid) {
-        Alert.alert("User data missing. Please try again.");
+        Alert.alert(i18n.t('terms.alertNoUser'));
         return;
       }
     
@@ -40,7 +40,7 @@ export default function TermsScreen() {
         console.log('✅ Terms accepted and saved in Firestore.');
       } catch (error) {
         console.error("❌ Failed to save terms acceptance in Firestore:", error);
-        Alert.alert("Failed to proceed", "There was a problem accepting the terms.");
+        Alert.alert(i18n.t('terms.alertFailTitle'), i18n.t('terms.alertFailText'));
       }
     };
 
@@ -55,7 +55,20 @@ export default function TermsScreen() {
         >
           <View style={styles.container}>
             <Text style={styles.title}>{i18n.t('terms.title')}</Text>
-      
+
+            {/* Subscription Info Section */}
+            <View style={styles.subsSection}>
+              <Text style={styles.planName}>
+                {i18n.t('terms.monthlyName')} <Text style={styles.planPrice}>{i18n.t('terms.monthlyPrice')}</Text>
+              </Text>
+              <Text style={styles.planDescription}>{i18n.t('terms.monthlyDescription')}</Text>
+              <Text style={styles.planName}>
+                {i18n.t('terms.yearlyName')} <Text style={styles.planPrice}>{i18n.t('terms.yearlyPrice')}</Text>
+              </Text>
+              <Text style={styles.planDescription}>{i18n.t('terms.yearlyDescription')}</Text>
+            </View>
+            <Text style={styles.renewalText}>{i18n.t('terms.autoRenewalDisclosure')}</Text>
+
             <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 40 }}>
               <Text style={styles.termsText}>
                 {i18n.t('terms.text')}
@@ -129,5 +142,33 @@ const styles = StyleSheet.create({
         color: '#007AFF',
         textDecorationLine: 'underline',
         marginVertical: 5,
-    }
+    },
+    subsSection: {
+      marginBottom: 10,
+      backgroundColor: '#f1f6fd',
+      borderRadius: 8,
+      padding: 12,
+    },
+    planName: {
+      fontWeight: 'bold',
+      fontSize: 16,
+      color: '#222',
+    },
+    planPrice: {
+      fontWeight: 'normal',
+      fontSize: 15,
+      color: '#007AFF',
+    },
+    planDescription: {
+      fontSize: 15,
+      color: '#555',
+      marginLeft: 6,
+      marginBottom: 2,
+    },
+    renewalText: {
+      fontSize: 13,
+      color: '#555',
+      marginBottom: 7,
+      fontStyle: 'italic',
+    },
 });
