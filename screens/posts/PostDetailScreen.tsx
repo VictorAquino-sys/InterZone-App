@@ -91,8 +91,14 @@ const PostDetailScreen = () => {
       <View style={styles.card}>
         <View style={styles.headerRow}>
           <Image source={{ uri: post.user?.avatar }} style={styles.avatar} />
-          <View>
-            <Text style={styles.userName}>{post.user?.name}</Text>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              style={styles.userName}
+              numberOfLines={2}       
+              ellipsizeMode="tail"    
+            >
+              {post.user?.name}
+            </Text>
             <Text style={styles.timestamp}>
               {post.timestamp
                 ? formatDistanceToNow(new Date(post.timestamp.toDate?.() || post.timestamp), {
@@ -160,10 +166,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#ccc',
     },
     userName: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        color: '#222',
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: '#222',
+      marginBottom: 4, 
+      flexShrink: 1,  
     },
     timestamp: {
         fontSize: 13,

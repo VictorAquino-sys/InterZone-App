@@ -3,18 +3,24 @@ import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Animated, Easing
 import { FontAwesome } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from '../config/firebase';
+import { themeColors } from '@/theme/themeColors';
+import { useTheme } from '@/contexts/ThemeContext';
+
 
 type LikeButtonProps = {
   postId: string;
   userId: string;
+  color?: string;
   likedCount?: number;
 };
 
-const LikeButton: React.FC<LikeButtonProps> = ({ postId, userId, likedCount = 0 }) => {
+const LikeButton: React.FC<LikeButtonProps> = ({ postId, userId, color, likedCount = 0 }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likedCount);
   const [loading, setLoading] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
 
   useEffect(() => {
     const fetchLikeStatus = async () => {
@@ -86,10 +92,11 @@ const LikeButton: React.FC<LikeButtonProps> = ({ postId, userId, likedCount = 0 
         <ActivityIndicator size="small" color="grey" style={{ marginRight: 6 }} />
       ) : (
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          <FontAwesome name={liked ? 'heart' : 'heart-o'} size={21} color={liked ? 'red' : 'grey'} />
+          <FontAwesome name={liked ? 'heart' : 'heart-o'} size={21} color={ liked ? 'red'
+      : color || 'grey'} />
         </Animated.View>
       )}
-      <Text style={styles.count}>{likeCount}</Text>
+      <Text style={[styles.count, {color: colors.text}]}>{likeCount}</Text>
     </TouchableOpacity>
   );
 };

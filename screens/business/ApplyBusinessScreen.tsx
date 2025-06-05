@@ -33,6 +33,7 @@ const ApplyBusinessScreen = () => {
         pendingBusinessApplication: true,
         businessProfile: {
           name: businessName.trim(),
+          ownerUid: user!.uid,
           description: description.trim(),
           avatar: '',
           category: category.trim(),
@@ -47,6 +48,7 @@ const ApplyBusinessScreen = () => {
         businessVerified: false,
         businessProfile: {
           name: businessName.trim(),
+          ownerUid: user!.uid,
           description: description.trim(),
           avatar: '',
           category: category.trim(),

@@ -48,7 +48,7 @@ const AdminApprovalScreen = () => {
           businessVerified: true,
           pendingBusinessApplication: false,
         };
-  
+
         // Add verifications.business = true if missing or false
         const hasBusinessVerification =
           !!userData?.verifications && userData.verifications.business === true;
@@ -57,6 +57,17 @@ const AdminApprovalScreen = () => {
           updatePayload['verifications'] = {
             ...(userData?.verifications || {}),
             business: true,
+          };
+        }
+
+        // After fetching userData
+        const needsOwnerUid =
+        userData?.businessProfile && !userData.businessProfile.ownerUid;
+
+        if (needsOwnerUid) {
+          updatePayload['businessProfile'] = {
+            ...userData.businessProfile,
+            ownerUid: userData.uid, // fallback, should match user's own UID
           };
         }
   

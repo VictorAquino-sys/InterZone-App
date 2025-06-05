@@ -13,12 +13,35 @@ type Props = {
   loading?: boolean;
 };
 
+const isUserFromPeru = (country?: string) => {
+  if (!country) return false;
+  // Normalize to lowercase and remove accents
+  const normalized = country
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return (
+    normalized === 'peru' ||
+    normalized === 'pe'
+  );
+};
+
 const MembershipInfoModal: React.FC<Props> = ({
   visible, onClose, onSubscribe, monthlyPrice, yearlyPrice, loading
 }) => {
   
   const { user } = useUser();
   const isBusiness = user?.businessVerified;
+
+  // 1. Use user.country to check for Peru (case-insensitive)
+  const isPeruvian = isUserFromPeru(user?.country);
+
+  // 2. Set price values based on location (customize PEN prices to match your RevenueCat/StoreKit setup)
+  const penMonthly = 'S/ 4.99';
+  const penYearly = 'S/ 49.99';
+
+  const monthly = isPeruvian ? penMonthly : (monthlyPrice ?? '$4.99');
+  const yearly = isPeruvian ? penYearly : (yearlyPrice ?? '$29.99');
+  const saveText = isPeruvian ? '¡Ahorra 2 meses!' : i18n.t('saveTwoMonths');
 
   return (
     <Modal
@@ -75,7 +98,7 @@ const MembershipInfoModal: React.FC<Props> = ({
 
             >
               <Text style={styles.planLabel}>{i18n.t('monthlyPlan')}</Text>
-              <Text style={styles.planPrice}>{monthlyPrice ?? '$4.99'}</Text>
+              <Text style={styles.planPrice}>{monthly}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.planButton, { backgroundColor: '#ffd70022', borderWidth: 2, borderColor: '#ffd700' }]}
@@ -84,8 +107,8 @@ const MembershipInfoModal: React.FC<Props> = ({
 
             >
               <Text style={[styles.planLabel, { color: '#c09c00' }]}>{i18n.t('yearlyPlan')}</Text>
-              <Text style={[styles.planPrice, { color: '#c09c00' }]}>{yearlyPrice ?? '$29.99'}</Text>
-              <Text style={styles.savings}>{i18n.t('saveTwoMonths')}</Text>
+              <Text style={[styles.planPrice, { color: '#c09c00' }]}>{yearly}</Text>
+              <Text style={styles.savings}>{saveText}</Text>
             </TouchableOpacity>
           </View>
 

@@ -13,6 +13,8 @@ import catolicaLogo from '@/../assets/catolica_logo.png';
 import upcLogo from '@/../assets/upc_logo.png';
 import ucvLogo from ' @/../assets/ucv_logo.png';
 import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationModal';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
 
   type StudyHubContentProps = {
     toggleHistoryTrivia: () => void;
@@ -20,6 +22,8 @@ import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationMo
 
   const StudyHubContent: React.FC<StudyHubContentProps> = ({ toggleHistoryTrivia }) => {
     const { user } = useUser();
+    const { resolvedTheme } = useTheme();
+    const colors = themeColors[resolvedTheme];
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
     const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -176,7 +180,7 @@ import SchoolEmailVerificationModal from '@/components/SchoolEmailVerificationMo
         </Pressable>
 
         <View style={styles.testTitleContainer}>
-            <Text style={styles.testTitle}>🧠 {i18n.t('testYourKnowledge')}</Text>
+            <Text style={[styles.testTitle, {color: colors.text}]}>🧠 {i18n.t('testYourKnowledge')}</Text>
             <TouchableOpacity style={styles.triviaButton} onPress={toggleHistoryTrivia}>
                 <Text style={styles.triviaButtonText}>Villareal - Historia Universal</Text>
             </TouchableOpacity>

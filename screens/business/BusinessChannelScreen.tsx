@@ -74,12 +74,15 @@ const BusinessChannelScreen = () => {
 
   useLayoutEffect(() => {
     if (!business || user?.uid === businessUid) return;
+
+      // Use ownerUid from businessProfile, fallback to business.uid if not set
+    const ownerUid = business.businessProfile?.ownerUid || business.uid;
   
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
           onPress={() => navigation.navigate('ChatScreen', {
-            friendId: businessUid,
+            friendId: ownerUid,
             friendName: business.businessProfile?.name || business.name || 'Business',
           })}
           style={{ marginRight: 16 }}
