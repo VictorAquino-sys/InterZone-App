@@ -23,6 +23,9 @@ import Toast from 'react-native-toast-message';
 import { RootStackParamList } from '../src/navigationTypes';
 import MembershipInfoModal from '@/components/MembershipInfoModal';
 import VerifyBusinessButton from '@/components/VerifyBusinessButton';
+import { themeColors } from '@/theme/themeColors';
+import { useTheme } from '@/contexts/ThemeContext';
+import ThemedStatusBar from '@/components/ThemedStatusBar';
 
 type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'ProfileScreen'>;
 
@@ -52,6 +55,8 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
     const verificationTypes: Array<'business' | 'musician' | 'tutor'> = ['business', 'musician', 'tutor'];
     const [unverifiedTypes, setUnverifiedTypes] = useState<Array<'business' | 'musician' | 'tutor'>>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const { resolvedTheme } = useTheme();
+    const colors = themeColors[resolvedTheme];
 
     useEffect(() => {
         navigation.setOptions({
@@ -348,18 +353,15 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
 
     return (
         <>
-            <StatusBar
-                backgroundColor={Platform.OS === 'android' ? 'aliceblue' : 'transparent'}
-                barStyle="dark-content"
-            />
-                <SafeAreaView style={{ flex: 1, backgroundColor: 'aliceblue'}}>
+            <ThemedStatusBar/>
+                <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundprofile}}>
 
                     <KeyboardAvoidingView
                         style={{ flex: 1 }}
                         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                     >
                         <ScrollView
-                            contentContainerStyle={[styles.container, { flexGrow: 1 }]}
+                            contentContainerStyle={[styles.container, { flexGrow: 1 }, { backgroundColor: colors.backgroundprofile}]}
                             keyboardShouldPersistTaps="handled"
                         >
                             <View style={styles.topSection}>
@@ -367,7 +369,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                 <View style={styles.headerRow}>
                                     <View style={{ flex: 1 }} />
                                     <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.settingsIconContainer}>
-                                    <Ionicons name="settings-outline" size={26} color="#555" />
+                                    <Ionicons name="settings-outline" size={26} color={ colors.iconColor } />
                                     </TouchableOpacity>
                                 </View>
 
@@ -412,7 +414,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                     loading={offeringsLoading}
                                 />
 
-                                <Text style={styles.title}>{i18n.t('profileTitle')}</Text>
+                                <Text style={[styles.title, { color: colors.text}]}>{i18n.t('profileTitle')}</Text>
                             
                                 <TouchableOpacity onPress={pickImageProfile}>
                                     <Avatar key={profilePic} name={newName} imageUri={profilePic} size={150} />
@@ -425,7 +427,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                         <TextInput
                                             value={newName}
                                             onChangeText={setNewName}
-                                            style={styles.input}
+                                            style={[styles.input, { color: colors.text}, {borderColor: colors.border}]}
                                             autoFocus={true}
                                             onBlur={() => setIsEditing(false)}  // Optionally stop editing when input is blurred
                                             maxLength={20}
@@ -433,7 +435,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                     ) : (
                                         <View style={{ flexDirection: 'column', alignItems: 'center' }}>
                                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                                <Text style={styles.newName}>{newName}</Text>
+                                                <Text style={[styles.newName, { color: colors.text }]}>{newName}</Text>
                                                 <TouchableOpacity onPress={toggleEdit} style={{ marginLeft: 10 }}>
                                                     <Ionicons name="pencil" size={20} color="gray"/>
                                                 </TouchableOpacity>
@@ -472,12 +474,13 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                             
                             {/* 📝 Description Editor Section */}
                             <View style={styles.descriptionWrapper}>
-                                <Text style={styles.label}>{i18n.t('yourNote')}</Text>
+                                <Text style={[styles.label, { color: colors.text }]}>{i18n.t('yourNote')}</Text>
 
                                 {isEditingNote ? (
                                     <>
                                     <TextInput
-                                        style={styles.descriptionInput}
+                                        style={[styles.descriptionInput, {color: colors.text}, {borderColor: colors.border}, {backgroundColor: colors.card}]}
+                                        // placeholderTextColor={colors.placeholder}                   
                                         multiline
                                         maxLength={80}
                                         placeholder={i18n.t('descriptionPlaceholder')}
@@ -485,7 +488,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                         onChangeText={setDescription}
                                     />
                                     <View style={styles.characterCountWrapper}>
-                                        <Text style={styles.characterCount}>{description.length}/80</Text>
+                                        <Text style={[styles.characterCount, { color: colors.text }]}>{description.length}/80</Text>
                                     </View>
                                     <TouchableOpacity
                                         onPress={handleSaveDescription}
@@ -499,7 +502,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                     </>
                                 ) : (
                                     <View style={styles.noteRow}>
-                                        <Text style={styles.noteText}>
+                                        <Text style={[styles.noteText, { color: colors.text }]}>
                                             {description ? description : i18n.t('noNote')}
                                         </Text>
                                         <TouchableOpacity onPress={() => setIsEditingNote(true)}>
@@ -539,16 +542,6 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
 
                             <View style={styles.bottomSection}>
 
-                            {/* {user?.accountType === 'individual' && !user?.verifications?.business && (
-                                <TouchableOpacity
-                                    style={[styles.buttonContainer, { backgroundColor: '#FFA000' }]}
-                                    onPress={() => navigation.navigate('ApplyBusiness')}
-                                >
-                                    <Text style={styles.buttonText}>{i18n.t('applyForBusiness')}</Text>
-                                    
-                                </TouchableOpacity>
-                                )} */}
-
                                 {user?.businessVerified && (
                                 <TouchableOpacity
                                     style={[styles.buttonContainer, { backgroundColor: '#009688' }]}
@@ -577,7 +570,7 @@ const ProfileScreen: FunctionComponent<ProfileScreenProps> = ({ navigation }) =>
                                 {user?.claims?.admin && (
                                 <>
                                     <View style={{ marginVertical: 20 }}>
-                                    <Text style={{ fontWeight: '600', fontSize: 16, marginBottom: 10 }}>
+                                    <Text style={[{ fontWeight: '600', fontSize: 16, marginBottom: 10 }, { color: colors.text }]}>
                                         Admin Controls
                                     </Text>
                                     <TouchableOpacity
@@ -727,7 +720,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 10,
         textAlignVertical: 'top',
-        backgroundColor: 'white',
+        // backgroundColor: 'white',
         fontSize: 14,
         marginBottom: 12,
     },

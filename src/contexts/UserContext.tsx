@@ -39,6 +39,7 @@ export interface User {
   };
   businessProfile?: {
     name: string;        // Business display name
+    ownerUid: string;
     avatar?: string;     // Business logo
     description?: string;
     category?: string;   // ✅ Add this line
@@ -75,6 +76,7 @@ export interface UserData {
   businessVerified?: boolean;
   businessProfile?: {
     name: string;        // Business display name
+    ownerUid: string;
     avatar?: string;     // Business logo
     description?: string;
     location?: string; // ✅ Add this
@@ -191,12 +193,6 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
               country: updatedUser.country || 'unknown',
             });
 
-            // console.log("Setting presence for:", firebaseUser?.uid, "currentUser in auth:", auth.currentUser?.uid);
-
-            // setTimeout(() => {
-            //   setUserOnlineStatus({ uid: firebaseUser.uid });
-            // }, 1000);         
-
 
           } else {
             console.log("No user data available");
@@ -208,9 +204,6 @@ export const UserProvider = ({ children }: UserProviderProps ) => {
         }
       } else {
         console.log("User logged out");
-        // if (user && user.uid) {
-        //   remove(ref(rtdb, `presence/${user.uid}`));
-        // }
         setUser(null);
         setLoading(false);
       }

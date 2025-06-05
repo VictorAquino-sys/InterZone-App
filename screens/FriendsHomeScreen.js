@@ -2,16 +2,20 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import i18n from '../src/i18n';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
+import ThemedStatusBar from '@/components/ThemedStatusBar';
 
 const FriendsHomeScreen = ({ navigation }) => {
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
+
   return (
     <>
-      <StatusBar
-        backgroundColor={Platform.OS === 'android' ? '#f9f9f9' : 'transparent'}
-        barStyle="dark-content"
-      />
-        <View style={styles.container}>
-            <Text style={styles.title}>👥 {i18n.t('friendsTitle')}</Text>
+      <ThemedStatusBar/>
+
+        <View style={[styles.container, { backgroundColor: colors.backgroundprofile}]}>
+            <Text style={[styles.title, { color: colors.text }]}>👥 {i18n.t('friendsTitle')}</Text>
 
           <View style={styles.cardContainer}>
             <TouchableOpacity
@@ -55,7 +59,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 60,
-    paddingHorizontal: 20,
+    paddingHorizontal: 60,
     backgroundColor: '#f9f9f9',
   },
   title: {

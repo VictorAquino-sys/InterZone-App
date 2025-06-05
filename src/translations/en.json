@@ -109,7 +109,7 @@
     "removeFriendMessage": "Are you sure you want to unfriend this person?",
     "unfriend": "Unfriend",
     "noFriends": "You have no friends yet 😢",
-    "peopleNearby": "People Nearby",
+    "peopleNearby": "Contacts",
     "addFriend": "Add Friend",
     "requestSent": "Sent",
     "friends": "Amigos",
@@ -185,7 +185,7 @@
     "deleteErrorMessage": "There was an error deleting the post: {error}",
     "noPosts": "No posts yet in your city. Be the first to share something!",
     "loadingPost": "Loading posts...",
-    "friendshome": "Friends",
+    "friendshome": "Home",
     "peoplehome": "People",
 
     "report": {
@@ -316,7 +316,7 @@
     "error": "Error",
 
     "messages": {
-      "title": "Messages",
+      "title": "Home",
       "noConversations": "💬 You don’t have any conversations yet.",
       "findFriends": "Find Friends",
       "startChatting": "Start chatting..."

@@ -22,14 +22,20 @@ import i18n from '@/i18n';
 import { RootStackParamList } from '../src/navigationTypes';
 import { Timestamp, serverTimestamp, addDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useTheme } from '@/contexts/ThemeContext';
 import UpdateChecker from '../src/components/UpdateChecker';
 import { useOnlineUserCount } from '@/hooks/useOnlineUserCount';
 import OnlineBanner from '@/components/OnlineBanner';
 import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
+import { themeColors } from '@/theme/themeColors';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
 import { useQrVisibility } from '@/contexts/QrVisibilityContext';
 import PostCard from '@/components/PostCard';
+import cities from '@/config/citiesData';
+import Purchases from 'react-native-purchases';
+import Toast from 'react-native-toast-message';
+import MembershipInfoModal from '@/components/MembershipInfoModal';
 
 import Animated, {
   useAnimatedStyle,
@@ -43,6 +49,7 @@ import Animated, {
   useDerivedValue,
   runOnJS,
 } from 'react-native-reanimated';
+import ThemedStatusBar from '@/components/ThemedStatusBar';
 
 export type HomeScreenRef = {
   scrollToTop: () => void;
@@ -82,8 +89,21 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
 
   const [fallbackUpdate, setFallbackUpdate] = useState(false);
   const { setQrVisible } = useQrVisibility();
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
 
   const [isFullScreen, setIsFullScreen] = useState(false); // State to control full-screen mode
+
+  const [citySelectorVisible, setCitySelectorVisible] = useState(false);
+  const [selectedBrowseCity, setSelectedBrowseCity] = useState<string | null>(null);
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
+
+  const { refreshUser } = useUser();
+
+  const [monthlyPrice, setMonthlyPrice] = useState<string | undefined>(undefined);
+  const [yearlyPrice, setYearlyPrice] = useState<string | undefined>(undefined);
+  const [offeringsLoading, setOfferingsLoading] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const toggleFullScreen = () => {
     console.log('Toggling full-screen state');
@@ -108,7 +128,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   }, []);
 
   useEffect(() => {
-
     async function handleCityOrUserChange() {
       if (!user?.uid || !city) {
         setLoading(false);
@@ -150,6 +169,12 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     
     handleCityOrUserChange();
   }, [user?.uid, city]);
+
+  useEffect(() => {
+    if (user?.premium && showMembershipModal) {
+      setShowMembershipModal(false);
+    }
+  }, [user?.premium, showMembershipModal]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -265,6 +290,57 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     }
   };
 
+  const handleShowMembershipModal = async () => {
+    setShowMembershipModal(true);
+    setOfferingsLoading(true);
+    try {
+      const offerings = await Purchases.getOfferings();
+      setMonthlyPrice(offerings.current?.monthly?.product?.priceString || 'S/ 4.99');
+      setYearlyPrice(offerings.current?.annual?.product?.priceString || 'S/ 49.99');
+    } catch (e) {
+      setMonthlyPrice('S/ 4.99');
+      setYearlyPrice('S/ 49.99');
+    } finally {
+      setOfferingsLoading(false);
+    }
+  };
+  
+  const handleSubscribe = async (plan: 'monthly' | 'yearly') => {
+    if (isSubscribing) return;
+    setIsSubscribing(true);
+  
+    try {
+      const offerings = await Purchases.getOfferings();
+      let selectedPackage = null;
+      if (plan === 'monthly') selectedPackage = offerings.current?.monthly;
+      else if (plan === 'yearly') selectedPackage = offerings.current?.annual;
+  
+      if (!selectedPackage) {
+        Toast.show({ type: 'error', text1: 'No plan found', text2: 'Try again later.' });
+        return;
+      }
+  
+      const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
+  
+      if (customerInfo.entitlements.active["premium_access"]) {
+        setUser(prev => prev ? { ...prev, premium: true } : prev);
+        await refreshUser();
+        Toast.show({ type: 'success', text1: 'Membership Activated', text2: 'Enjoy your premium perks!' });
+        setShowMembershipModal(false);
+      } else {
+        Toast.show({ type: 'error', text1: 'Subscription not activated', text2: 'Try again.' });
+      }
+    } catch (e: any) {
+      if (e.userCancelled) {
+        Toast.show({ type: 'info', text1: 'Purchase cancelled', text2: 'You can subscribe anytime.' });
+      } else {
+        Toast.show({ type: 'error', text1: 'Subscription failed', text2: e?.message || 'Try again later.' });
+      }
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
   const handleReportPress = (postId: string, postUserId: string) => {
     setSelectedPostId(postId);
     setSelectedUserId(postUserId);
@@ -358,7 +434,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     if (!cityName) return; //Prevent running if city isn't set
 
     try {
-      // console.log("Fetching posts for city:", cityName);
+      console.log("Fetching posts for city:", cityName);
       const postsRef = collection(db, "posts");
       const q = query(postsRef, where("city", "==", cityName), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
@@ -403,6 +479,8 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
           promo: data.promo || null,
         };
       }));
+
+      // console.log(" Checking postData: ", postsData);
 
       const blockedUserIds = user?.blocked ?? [];
       const filteredPosts = postsData.filter(post => !blockedUserIds.includes(post.user.uid));
@@ -569,6 +647,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
         extrapolateRight: Extrapolation.CLAMP,
       }
     );
+    
     return { opacity };
   });
   
@@ -597,6 +676,8 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
         isFullScreen={isFullScreen}
         toggleFullScreen={toggleFullScreen}
         onEdit={handleEditPost}
+        cardColor={colors.card}
+        textColor={colors.text}
       />
     ),
     [
@@ -619,15 +700,13 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   return (
     <>
       {isFocused && (
-      <StatusBar
-        backgroundColor={Platform.OS === 'android' ? '#ECEFF4' : 'transparent'}
-        barStyle="dark-content"
-        />
+        <ThemedStatusBar/>
       )}
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.container}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+          <View style={[styles.container, { backgroundColor: colors.background }]}>
           {/* Top Bar with Profile Icon and Search Bar */}
-            <View style={styles.topBar}>
+            <View style={[styles.topBar, { backgroundColor: colors.background }]}>
+
               <TouchableOpacity 
                 style={styles.profilePicContainer} 
                 onPress={() => {
@@ -641,17 +720,56 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                   size={36}
                 />
               </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.mapIconContainer}
+                onPress={() => {
+                  if (user?.premium || user?.claims?.admin) {
+                    setCitySelectorVisible(true);
+                  } else {
+                    handleShowMembershipModal();
+                  }
+                }}
+                activeOpacity={0.7}
+                accessibilityLabel={i18n.t('browseOtherCities')}
+              >
+                <Ionicons
+                  name="map-outline"
+                  size={24}
+                  color={colors.text}
+                />
+              </TouchableOpacity>
               
               <View style={styles.searchWithIcon}>
                 {/* Search Bar */}
                 <TextInput
-                  style={styles.searchBar}
+                  style={[
+                    styles.searchBar,
+                    {
+                      backgroundColor: colors.searchBar,
+                      color: colors.text,
+                      borderColor: colors.border,
+                    },
+                  ]}
                   placeholder={i18n.t('searchPlaceholder')}
-                  placeholderTextColor="#888"
+                  placeholderTextColor={colors.placeholder}
                   value={searchText}
                   onChangeText={setSearchText}
                   maxLength={20}
                 />
+
+                <TouchableOpacity
+                    onPress={toggleTheme}
+                    style={styles.themeToggleButton}
+                    activeOpacity={0.7}
+                    accessibilityLabel={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                  >
+                  <Ionicons
+                    name={resolvedTheme === "dark" ? "sunny-outline" : "moon-outline"}
+                    size={26}
+                    color={resolvedTheme === "dark" ? "#FFD600" : "#222"}
+                  />
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => navigation.navigate('FriendsHome')}
@@ -689,16 +807,29 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 scrollEventThrottle={16}
                 ListHeaderComponent={
                   <View>
-                      {/* Categories (Now Scrollable) */}
-                      <View style={styles.categoriesContainer}>
-                          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                              {filteredCategories.map((item) => (
-                                  <TouchableOpacity key={item.key} style={styles.categoryItem} onPress={() => handleCategoryClick(item.key)}>
-                                      <Text style={styles.categoryText}>{item.label}</Text>
-                                  </TouchableOpacity>
-                              ))}
-                          </ScrollView>
-                      </View>
+
+                    <View style={[styles.categoriesContainer, { backgroundColor: colors.background }]}>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {filteredCategories.map((item) => (
+                          <TouchableOpacity
+                            key={item.key}
+                            style={[
+                              styles.categoryItem,
+                              {
+                                backgroundColor: colors.categoryBg,
+                                borderColor: colors.categoryBorder,
+                              },
+                            ]}
+                            onPress={() => handleCategoryClick(item.key)}
+                          >
+                            <Text style={[styles.categoryText, { color: colors.categoryText }]}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+
                   </View>
                 }
                 data={posts}
@@ -760,6 +891,65 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
               </TouchableOpacity>
             </Modal>
 
+            <Modal
+              visible={citySelectorVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setCitySelectorVisible(false)}
+            >
+              <TouchableOpacity 
+                style={styles.modalOverlay} 
+                activeOpacity={1} 
+                onPressOut={() => setCitySelectorVisible(false)}
+              >
+                <View style={styles.modalBox}>
+                  <Text style={styles.modalTitle}>{i18n.t('selectCity')}</Text>
+                  <ScrollView>
+                    {cities.map((c) => (
+                      <TouchableOpacity
+                        key={c.city}
+                        onPress={() => {
+                          setSelectedBrowseCity(c.city + ", " + c.region);
+                          setCity(c.city + ", " + c.region);
+                          setCitySelectorVisible(false);
+                        }}
+                        style={[
+                          styles.modalOption,
+                          city === c.city && { backgroundColor: '#eaf6ff' },
+                        ]}
+                      >
+                        <Text style={{ fontWeight: city === c.city ? 'bold' : 'normal', color: '#222' }}>
+                          {c.city}
+                          <Text style={{ color: '#aaa', fontSize: 13 }}> – {c.region}</Text>
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setCitySelectorVisible(false);
+                      setCity(null);
+                    }}
+                    style={[styles.modalOption, { marginTop: 10 }]}
+                  >
+                    <Text style={{ color: 'green' }}>{i18n.t('backToMyCity')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setCitySelectorVisible(false)}>
+                    <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            </Modal>
+
+            <MembershipInfoModal
+              visible={showMembershipModal && user?.premium !== true}
+              onClose={() => setShowMembershipModal(false)}
+              onSubscribe={handleSubscribe}
+              monthlyPrice={monthlyPrice}
+              yearlyPrice={yearlyPrice}
+              loading={offeringsLoading || isSubscribing}
+            />
+
             <Animated.View style={[styles.chatButton, fadeStyle, bounceStyle]}>
               <TouchableOpacity onPress={() => navigation.navigate('MessagesScreen')}>
                 <Ionicons name="chatbubbles-outline" size={30} color="#007AFF" />
@@ -779,11 +969,11 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ECEFF4', // or any other background color you want
+    // backgroundColor: '#ECEFF4', // or any other background color you want
   },
   container: {
     flex: 1,
-    backgroundColor: '#ECEFF4',
+    // backgroundColor: '#ECEFF4',
   },
   topRightIcons: {
     flexDirection: 'row',
@@ -793,7 +983,13 @@ const styles = StyleSheet.create({
     padding: 2,
     marginBottom: 35,
   },
-  modalOverlay: { flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 20 },
+  modalOverlay: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+    padding: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 60, // Add this line
+  },
   modalBox: { backgroundColor: '#fff', borderRadius: 10, padding: 20 },
   modalTitle: { fontWeight: 'bold', fontSize: 18, marginBottom: 10 },
   modalOption: { paddingVertical: 10 },
@@ -860,7 +1056,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    backgroundColor: '#ECEFF4',
+    // backgroundColor: '#ECEFF4',
     borderBottomColor: '#ddd',
   },
   searchWithIcon: {
@@ -887,7 +1083,6 @@ const styles = StyleSheet.create({
   searchBar: {
     flex: 1,
     height: 40,
-    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ccc',  // Light gray border
     shadowColor: '#000',
@@ -897,61 +1092,54 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     paddingHorizontal: 16,
     elevation: 2, // Shadow effect for Android
-    marginRight: 25,  // Adjust the right spacing
+    marginRight: 3,  // Adjust the right spacing
     marginLeft: 10,
     fontSize: 14,
   },
+  mapIconContainer: {
+    marginRight: 2,
+    marginLeft: 0,
+    padding: 4,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  themeToggleButton: {
+    marginHorizontal: 5,
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Optionally: Add shadow or background on press
+  },
   categoriesContainer: {
     flexDirection: 'row',
-    marginTop: 5,
+    marginTop: 1,
     marginLeft: 8,
-    marginBottom: 5,
+    marginBottom: 2,
     alignItems: 'center',
-    backgroundColor: '#ECEFF4',
+    // backgroundColor: '#ECEFF4',
     shadowColor: '#000',
     // shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     // elevation: 2,
-    paddingVertical: 6,
+    paddingVertical: 1,
   },
   categoryItem: {
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: 20,
     marginRight: 10,
-    borderColor: '#007aff',
+    // borderColor: '#007aff',
     borderWidth: 1,
   },
   categoryText: {
-    color: '#0097a7',
+    // color: '#0097a7',
     fontWeight: '600',
-  },
-  funnyMessage: {
-    fontSize: 14,
-    color: '#555',
-    textAlign: 'center',
-    marginTop: 10,
-    backgroundColor: '#fffae6',
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ffd700',
-  },
-  postItem: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginVertical: 8,
-    marginHorizontal: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   postText: {
     fontSize: 14,
@@ -981,9 +1169,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     // width: '100%'
-    paddingBottom: 20,
-    paddingTop: 10,
-    backgroundColor: '#ECEFF4',
+    paddingBottom: 10,
+    paddingTop: 6,
+    // backgroundColor: '#ECEFF4',
   },
   deleteButton: {
     paddingVertical: 5,  // Small vertical padding for easier tapping
@@ -1065,45 +1253,3 @@ const styles = StyleSheet.create({
   },
   
 });
-
-// const renderPostItem = (
-//   user: any,
-//   onDelete: any,
-//   onReport: any,
-//   onOpenImage: any,
-//   onUserProfile: any,
-//   formatDate: any,
-//   isFullScreen: boolean,
-//   toggleFullScreen: () => void
-// ) => useCallback(
-//   ({ item }: { item: Post }) => (
-//     <PostCard
-//       item={item}
-//       userId={user?.uid ?? ''}
-//       user={{
-//         uid: user?.uid ?? '',
-//         name: user?.name ?? '',
-//         avatar: user?.avatar ?? '',
-//       }}
-//       onDelete={onDelete}
-//       onReport={onReport}
-//       onOpenImage={onOpenImage}
-//       onUserProfile={onUserProfile}
-//       formatDate={formatDate}
-//       isFullScreen={isFullScreen}
-//       toggleFullScreen={toggleFullScreen}
-//     />
-//   ),
-//   [
-//     user?.uid,
-//     user?.name,
-//     user?.avatar,
-//     onDelete,
-//     onReport,
-//     onOpenImage,
-//     onUserProfile,
-//     formatDate,
-//     isFullScreen,
-//     toggleFullScreen,
-//   ]
-// );

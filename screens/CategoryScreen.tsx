@@ -19,7 +19,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigationTypes'
 import StudyHubContent from '@/components/category/studyHubContent';
-
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
 
 const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'CategoryScreen'>> = ({ route }) => {
     const { posts, setPosts } = usePosts();
@@ -34,6 +35,8 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
     const [isAdmin, setIsAdmin] = useState(false);
     const [showAdminOverrideMsg, setShowAdminOverrideMsg] = useState(false);
     const [checkedPermissions, setCheckedPermissions] = useState(false);
+    const { resolvedTheme, toggleTheme } = useTheme();
+    const colors = themeColors[resolvedTheme];
 
     useFocusEffect(
         React.useCallback(() => {
@@ -184,18 +187,16 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
     
 
     return (
-        <SafeAreaView  style={[styles.container, {backgroundColor: category?.backgroundColor || '#FFF'}]}>
-        
+        <SafeAreaView style={[styles.container, {backgroundColor: colors.background} ]}>
 
             {/* universities: show Peruvian universities instead of post list */}
             {categoryKey === 'universities' && (isPeruvian || isAdmin) && !historyTriviaActive && (
             <ScrollView 
-                contentContainerStyle={{ paddingBottom: 80 }}
-                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 80, backgroundColor: colors.background }}                showsVerticalScrollIndicator={false}
             >
                 {showAdminOverrideMsg && (
-                <Text style={{ textAlign: 'center', color: 'orange', marginBottom: 10 }}>
-                    You are seeing this as Admin. This screen is only available for Peruvian users.
+                <Text style={{ textAlign: 'center', color: colors.text || 'orange', marginBottom: 10 }}>
+                  You are seeing this as Admin. This screen is only available for Peruvian users.
                 </Text>
                 )}
                 <StudyHubContent toggleHistoryTrivia={toggleHistoryTrivia} />

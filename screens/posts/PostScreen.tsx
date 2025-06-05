@@ -30,6 +30,9 @@ import * as FileSystem from 'expo-file-system';
 import { getReadableVideoPath, saveVideoToAppStorage, validateVideoFile, uploadVideoWithCompression } from '@/utils/videoUtils';
 import { isValidFile, showEditor } from 'react-native-video-trim';
 import { getProfaneWords } from '@/utils/profanityFilter';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
+import ThemedStatusBar from '@/components/ThemedStatusBar';
 
 type PostScreenProps = BottomTabScreenProps<TabParamList, 'PostScreen'>;
 
@@ -83,6 +86,8 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [originalPrice, setOriginalPrice] = useState<number | null>(null);
   const [selectedDiscount, setSelectedDiscount] = useState<number | null>(null);
   const screenWidth = Dimensions.get('window').width;
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
 
   const discountedPrice = originalPrice && selectedDiscount
   ? (originalPrice * (1 - selectedDiscount / 100)).toFixed(2)
@@ -701,21 +706,18 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   return (
     <>
     {isFocused && (
-      <StatusBar
-        backgroundColor={Platform.OS === 'android' ? '#b2dfdb' : 'transparent'}
-        barStyle="dark-content"
-        />
+      <ThemedStatusBar/>
     )}
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#b2dfdb' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundprofile }}>
           <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS === 'ios' ? "padding": undefined}>
             <ScrollView contentContainerStyle={{ flexGrow: 1}}>
-              <View style={styles.container}>
-                <Text style={styles.screenTitle}>{i18n.t('createPost')}</Text>
+              <View style={[styles.container, { backgroundColor: colors.backgroundprofile}]}>
+                <Text style={[styles.screenTitle, {color: colors.text,}]}>{i18n.t('createPost')}</Text>
 
                 {user?.accountType === 'business' && user.businessVerified && (
 
                   <View style={styles.postAsRow}>
-                    <Text style={{ marginRight: 10 }}>{i18n.t('postAs')}</Text>
+                    <Text style={[{ marginRight: 10 }, {color: colors.text}]}>{i18n.t('postAs')}</Text>
 
                     {/* User Option */}
                     <TouchableOpacity
@@ -761,7 +763,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                       </View>
                     </TouchableOpacity>
 
-                    <Text style={styles.dividerText}>/</Text>
+                    <Text style={[styles.dividerText, {color: colors.text}]}>/</Text>
 
                     {/* Business Option */}
                     <TouchableOpacity
@@ -809,19 +811,20 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   </View>
                 )}
 
-                <View style={styles.inputContainer}>
+                <View style={[styles.inputContainer, {backgroundColor: colors.background}]}>
                   <TextInput
                     multiline
                     placeholder={i18n.t('postPlaceholder')}
+                    placeholderTextColor={colors.placeholder}
                     maxLength={500}
-                    style={{height: 150}}
+                    style={[{height: 150}, {backgroundColor: colors.background}, {color: colors.text}]}
                     value={postText}
                     onChangeText={(text) => {
                       setPostText(text);
                       setCharCount(text.length); // Update character count as user types
                     }}
                   />
-                  <Text style={styles.charCount}>
+                  <Text style={[styles.charCount, {color: colors.text}]}>
                     {charCount} / 500
                   </Text>
                 </View>
@@ -875,19 +878,24 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   {locationIconVisible ? (
                     <TouchableOpacity onPress={handleAddLocation}>
                       {locationLoading ? (
-                        <ActivityIndicator size="small" color="blue" />
+                        <ActivityIndicator size="small" color="#26c6da" />
                       ) : (
                         <Ionicons name="location-outline" size={28} color="#b388ff" />
                       )}
                     </TouchableOpacity>
                   ) : (
                     location && (
-                      <Text style={{ textAlign: 'center', color: '#333', marginTop: 8 }}>
+                      <Text style={[{ textAlign: 'center', color: '#333', marginTop: 8 }, {color: colors.text}]}>
                         📍 {location}
                       </Text>
                     )
                   )}
                 </View>
+
+                {/* Show prompts when category or location is not ready */}
+                {!isCategorySelected && Platform.OS !== 'ios' &&(
+                  <Text style={[styles.categoryPrompt, { color: colors.text }]}>{i18n.t('selecCategoryPrompt')}</Text>
+                )}
 
                 <View style={styles.pickerContainer}>
                   <Picker
@@ -896,9 +904,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                     enabled={!locationLoading}                  
                     style={styles.pickerStyle}
                   >
-                    {Platform.OS !== 'ios' && (
-                      <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
-                    )}
+                    <Picker.Item label={i18n.t('selectCategory')} value="" color="grey"/>
                     <Picker.Item label={i18n.t('categories.restaurants')} value="restaurants" color="cornflowerblue"/>
                     {!isPeruvian && (
                       <Picker.Item label={i18n.t('categories.universities')} value="universities" color="cornflowerblue"/>
@@ -917,18 +923,13 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   </Picker>
                 </View>
 
-                {/* Show prompts when category or location is not ready */}
-                {!isCategorySelected && (
-                  <Text style={styles.categoryPrompt}>{i18n.t('selecCategoryPrompt')}</Text>
-                )}
-
                 {locationLoading && (
                   <Text style={styles.locationPrompt}>{i18n.t('waitingForLocation')}</Text>
                 )}
 
                 {user?.accountType === 'business' && (
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-                    <Text>{i18n.t('featureOnChannel')}</Text>
+                    <Text style={{color: colors.text}}>{i18n.t('featureOnChannel')}</Text>
 
 
                     <Switch 
@@ -1137,7 +1138,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   <Text style={styles.buttonText}>{uploading ? i18n.t('uploading') : i18n.t('doneButton')}</Text>
                 </TouchableOpacity>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, paddingHorizontal: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 15, paddingHorizontal: 10,marginBottom: 15 }}>
                   <TouchableOpacity
                     onPress={() => setcommentsEnabled(prev => !prev)}
                     style={{ 
@@ -1155,7 +1156,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                     />
                   </TouchableOpacity>
 
-                  <Text style={{ fontSize: 16, color: '#333' }}>
+                  <Text style={[{ fontSize: 16, color: '#333'}, { color: colors.text }]}>
                     {commentsEnabled ? i18n.t('allowComments') : i18n.t('noComments')}
                   </Text>
 
@@ -1201,7 +1202,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     paddingTop: 1,
-    backgroundColor: '#b2dfdb',
+    // backgroundColor: '#b2dfdb',
   },
   screenTitle: {
     fontSize: 24,
@@ -1221,7 +1222,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
-    backgroundColor: 'white', // Ensure background matches
+    backgroundColor: 'white',
   },
   postAsRow: {
     flexDirection: 'row',
@@ -1356,6 +1357,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginTop: 10,
+    marginBottom: 5,
     paddingHorizontal: 20, // Add some padding for better visual alignment
   },
   locationPrompt: {

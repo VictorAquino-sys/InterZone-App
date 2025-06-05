@@ -74,7 +74,7 @@ const BusinessPostCard = ({ post, onOpenImage, onDelete, userId }: Props) => {
         )}
 
         {/* Like + Comment Count Row */}
-        <View style={styles.actionsRow}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'nowrap' }}>
             <LikeButton postId={post.id} userId={userId} />
 
             {post.commentsEnabled !== false && (
@@ -175,7 +175,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 12,
-    marginVertical: 8,
+    // paddingBottom: 12,
+    marginVertical: 1,
+    marginTop: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,

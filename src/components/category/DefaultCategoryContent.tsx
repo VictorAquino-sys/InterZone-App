@@ -11,6 +11,8 @@ import { FlashList } from '@shopify/flash-list';
 import Avatar from '@/components/Avatar';
 import Video from 'react-native-video';
 import i18n from '@/i18n';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
 
 type Post = {
   id: string;
@@ -41,7 +43,11 @@ const DefaultCategoryContent: React.FC<Props> = ({
   onOpenImageModal,
   categoryKey,
 }) => {
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
+
   const formatDate = (timestamp: any) => {
+
     if (!timestamp) return 'Unknown';
     const date = new Date(timestamp.seconds * 1000);
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
@@ -53,25 +59,25 @@ const DefaultCategoryContent: React.FC<Props> = ({
   if (categoryKey === 'universities') return null;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <FlashList<Post>
         data={posts}
         keyExtractor={(item) => item.id}
         estimatedItemSize={280} // Or another good average for your post height
         renderItem={({ item }) => (
-          <View style={styles.postItem}>
+          <View style={[styles.postItem, { backgroundColor: colors.card, shadowColor: colors.shadow || '#000' }]}>
             <View style={styles.userContainer}>
               <TouchableOpacity onPress={() => onOpenImageModal(item.user?.avatar ?? null)}>
                 <Avatar name={item.user?.name} imageUri={item.user?.avatar} />
               </TouchableOpacity>
               <View style={styles.postDetails}>
-                <Text style={styles.userName}>{item.user?.name}</Text>
-                <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-                <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+                <Text style={[styles.userName, { color: colors.text }]}>{item.user?.name}</Text>
+                <Text style={[styles.postCity, { color: colors.muted }]}>{item.city || i18n.t('unknown')}</Text>
+                <Text style={[styles.postTimestamp, { color: colors.muted }]}>{formatDate(item.timestamp)}</Text>
               </View>
             </View>
 
-            <Text style={styles.postText}>{item.content}</Text>
+            <Text style={[styles.postText, { color: colors.text }]}>{item.content}</Text>
 
             {item.imageUrl && (
               <TouchableOpacity onPress={() => onOpenImageModal(item.imageUrl ?? null)}>
@@ -105,7 +111,7 @@ const DefaultCategoryContent: React.FC<Props> = ({
         )}
         ListEmptyComponent={
           categoryKey !== 'universities' ? (
-            <Text style={styles.emptyCategoryText}>{i18n.t('EmptyCategoryScreen')}</Text>
+            <Text style={[styles.emptyCategoryText, { color: colors.text}]}>{i18n.t('EmptyCategoryScreen')}</Text>
           ) : null
         }
         />
@@ -154,6 +160,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     marginTop: 10,
+    marginBottom: 10,
     borderRadius: 10,
   },
   videoWrapper: {

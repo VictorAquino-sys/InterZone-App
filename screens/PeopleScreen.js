@@ -7,6 +7,8 @@ import { useUser } from '../src/contexts/UserContext';
 import i18n from '../src/i18n';
 import { useNavigation } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
 
 const PeopleScreen = () => {
   const [users, setUsers] = useState([]);
@@ -17,6 +19,8 @@ const PeopleScreen = () => {
   const [loading, setLoading] = useState(true);
   const currentUserId = user?.uid;
   const navigation = useNavigation();
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
 
   const fetchData = async () => {
     setLoading(true);
@@ -106,7 +110,10 @@ const PeopleScreen = () => {
     const avatarUri = item.avatar || null;
 
     return (
-      <View style={styles.card}>
+      <View style={[
+        styles.card,
+        { backgroundColor: colors.card, shadowColor: colors.shadow }
+      ]}>        
         <TouchableOpacity
           style={styles.userInfo}
           onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
@@ -114,29 +121,30 @@ const PeopleScreen = () => {
           {avatarUri ? (
             <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
           ) : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarText}>{(item.name || item.id).slice(0, 2).toUpperCase()}</Text>
+            <View style={[styles.avatarFallback, { backgroundColor: colors.avatarBg || '#e0e0e0' }]}>
+              <Text style={[styles.avatarText, { color: colors.avatarText || '#444' }]}>
+                {(item.name || item.id).slice(0, 2).toUpperCase()}</Text>
             </View>
           )}
-          <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
             {item.name || item.id}
           </Text>
         </TouchableOpacity>
 
         {isIncoming ? (
-          <TouchableOpacity style={styles.addButton} onPress={() => handleAcceptRequest(item.id)}>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => handleAcceptRequest(item.id)}>
             <Text style={styles.addButtonText}>{i18n.t('accept')}</Text>
           </TouchableOpacity>
         ) : isFriend ? (
-          <TouchableOpacity style={styles.friendButton} disabled>
+          <TouchableOpacity style={[styles.friendButton, { backgroundColor: colors.success }]} disabled>
             <Text style={styles.friendButtonText}>{i18n.t('friends')}</Text>
           </TouchableOpacity>
         ) : isPending ? (
-          <TouchableOpacity style={styles.pendingButton} disabled>
+          <TouchableOpacity style={[styles.pendingButton, { backgroundColor: colors.pending || '#ccc' }]} disabled>
             <Text style={styles.pendingButtonText}>{i18n.t('requestSent')}</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.addButton} onPress={() => handleAddFriend(item.id)}>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => handleAddFriend(item.id)}>
             <Text style={styles.addButtonText}>{i18n.t('addFriend')}</Text>
           </TouchableOpacity>
         )}
@@ -147,16 +155,16 @@ const PeopleScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.loadingText}>{i18n.t('loading') || 'Loading nearby users...'}</Text>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { color: colors.text }]}>{i18n.t('loading') || 'Loading nearby users...'}</Text>
       </View>
     );
   }
 
   if (!loading && users.length === 0) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyText}>{i18n.t('noNearbyUsers') || 'No users found nearby.'}</Text>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.emptyText, { color: colors.text }]}>{i18n.t('noNearbyUsers') || 'No users found nearby.'}</Text>
       </View>
     );
   }
@@ -166,7 +174,7 @@ const PeopleScreen = () => {
       data={users}
       keyExtractor={item => item.id}
       renderItem={renderItem}
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[styles.list, { backgroundColor: colors.background }]}
       ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
     />
   );
@@ -176,16 +184,16 @@ const PeopleScreen = () => {
 const styles = StyleSheet.create({
   list: {
     padding: 16,
-    backgroundColor: '#f2f2f2',
+    // backgroundColor: '#f2f2f2',
   },
   card: {
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff',
     borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 3,
-    shadowColor: '#000',
+    // shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },

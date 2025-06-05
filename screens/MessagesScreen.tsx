@@ -11,12 +11,12 @@ import { RootStackParamList } from '../src/navigationTypes';
 import i18n from '@/i18n';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
 import 'dayjs/locale/es';
 import 'dayjs/locale/en';
 
 dayjs.extend(relativeTime);
-const currentLang = i18n.language || 'en';
-dayjs.locale(currentLang === 'es' ? 'es' : 'en');
 
 type MessagesScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'MessagesScreen'>;
 
@@ -39,6 +39,11 @@ const MessagesScreen = () => {
   const navigation = useNavigation<MessagesScreenNavProp>();
   const [conversations, setConversations] = useState<ConversationPreview[]>([]);
   const [loading, setLoading] = useState(true);
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
+    // Set dayjs locale on every render
+    const currentLang = i18n.language || 'en';
+    dayjs.locale(currentLang === 'es' ? 'es' : 'en');
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -91,12 +96,12 @@ const MessagesScreen = () => {
 
   if (!conversations.length) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>
+      <View style={[styles.emptyContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.emptyText, { color: colors.textSecondary || '#777' }]}>
             {i18n.t('messages.noConversations')} {/* 💬 No conversations */}
          </Text>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={() => navigation.navigate('People')}
         >
         <Text style={styles.buttonText}>
@@ -111,21 +116,28 @@ const MessagesScreen = () => {
     <FlatList
       data={conversations}
       keyExtractor={(item) => item.id}
+      style={{ backgroundColor: colors.background }}
       renderItem={({ item }) => (
         <TouchableOpacity
-          style={styles.item}
+          style={[
+            styles.item,
+            {
+              backgroundColor: colors.card,
+              shadowColor: colors.shadow || '#000',
+            },
+          ]}
           onPress={() =>
             navigation.navigate('ChatScreen', { friendId: item.friend.uid, friendName: item.friend.name || '' })
           }
         >
           <Avatar name={item.friend.name || 'Unknown'} imageUri={item.friend.avatar} />
           <View style={styles.textContainer}>
-            <Text style={styles.name}>{item.friend.name || 'Unknown'}</Text>
-            <Text numberOfLines={1} style={styles.preview}>
+            <Text style={[styles.name, { color: colors.text }]}>{item.friend.name || 'Unknown'}</Text>
+            <Text numberOfLines={1} style={[styles.preview, { color: colors.textSecondary || '#aaa' }]}>
                 {item.lastMsg?.text || i18n.t('messages.startChatting')}
             </Text>
           </View>
-          <Text style={styles.time}>
+          <Text style={[styles.time, { color: colors.muted || colors.textSecondary || '#999' }]}>
             {item.lastMsg?.timestamp ? dayjs(item.lastMsg.timestamp.toDate()).fromNow() : ''}
         </Text>
 

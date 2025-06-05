@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "239395273948",
+    "firebase_url": "https://interzone-production-default-rtdb.firebaseio.com",
     "project_id": "interzone-production",
     "storage_bucket": "interzone-production.firebasestorage.app"
   },
@@ -19,6 +20,22 @@
           "android_info": {
             "package_name": "com.zhd.interzone",
             "certificate_hash": "d1035a3590b32da2ab7a86be57820e08ba99da84"
+          }
+        },
+        {
+          "client_id": "239395273948-bp7sqrm5ga9lih0n9nj84fg6ujigj92o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zhd.interzone",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "239395273948-n3usmf4mlo6s7qhhcsfv412j4req82vc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zhd.interzone",
+            "certificate_hash": "055481182ad15196a3ff3ca15e2f0a942a1030dd"
           }
         },
         {

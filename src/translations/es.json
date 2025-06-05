@@ -106,7 +106,7 @@
     "removeFriendMessage": "¿Estás seguro de que quieres eliminar a esta persona?",
     "unfriend": "Eliminar",
     "noFriends": "Aún no tienes amigos 😢",
-    "peopleNearby": "Personas Cercanas",
+    "peopleNearby": "Amigos",
     "addFriend": "Agregar",
     "requestSent": "Enviado",
     "updateAvailable": "🔄 Hay una nueva versión de InterZone disponible. ¡Toca aquí para actualizar!",
@@ -183,7 +183,7 @@
     "deleteErrorMessage": "Se produjo un error al eliminar la publicación: {error}",
     "noPosts": "Aún no hay publicaciones en tu ciudad. ¡Sé el primero en compartir algo!",
 
-    "friendshome": "Contactos",
+    "friendshome": "Inicio",
 
     "loadingPost": "Cargando publicaciones...",
 
@@ -328,7 +328,7 @@
     "error": "Error",
     
     "messages": {
-        "title": "Mensajes",
+        "title": "Inicio",
         "noConversations": "💬 Aún no tienes conversaciones.",
         "findFriends": "Buscar amigos",
         "startChatting": "Comienza a chatear..."
@@ -619,6 +619,8 @@
         "close": "Cerrar"
     },
     "promoClaimed": "Codigo exitosamente canjeado!",
-    "gotBusinessGetVerified": "¿Tienes un negocio? Verifícalo y desbloquea funciones para tus publicaciones."
+    "gotBusinessGetVerified": "¿Tienes un negocio? Verifícalo y desbloquea funciones para tus publicaciones.",
+    "selectCity": "Seleccionar ciudad",
+    "backToMyCity": "Volver a mi ciudad"
 
 } 

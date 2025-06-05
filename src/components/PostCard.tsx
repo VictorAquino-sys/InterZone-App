@@ -19,6 +19,8 @@ import { functions } from '@/config/firebase';
 import Video, { VideoRef } from 'react-native-video'; // Import VideoRef for type
 import { User } from '@/contexts/UserContext';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigationTypes';
 
@@ -39,7 +41,8 @@ interface PostCardProps {
     toggleFullScreen: () => void;
     isShowcase?: boolean;
     onEdit: (postId: string, newContent: string) => void;
-
+    cardColor?: string;
+    textColor?: string;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -51,12 +54,10 @@ const PostCard: React.FC<PostCardProps> = ({
   onOpenImage,
   onUserProfile,
   formatDate,
-  
-  // onVideoClick, // Add this prop
-  isFullScreen,  // Full-screen state passed from HomeScreen
-  toggleFullScreen,  // Full-screen toggle passed from HomeScreen
   isShowcase,
   onEdit,
+  cardColor = '#FFFFFF',
+  textColor = '#2C2C2C',
 
 }) => {
   const category = getCategoryByKey(item.categoryKey);
@@ -99,6 +100,8 @@ const PostCard: React.FC<PostCardProps> = ({
   const [editingPost, setEditingPost] = useState(false);
   const [editedPostText, setEditedPostText] = useState(item.content || '');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const { resolvedTheme, toggleTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
 
   const fetchRecentComments = async () => {
     const q = query(
@@ -237,8 +240,8 @@ const PostCard: React.FC<PostCardProps> = ({
         // Show only one badge, matching BusinessChannelScreen style
         return (
             <View style={styles.badge}>
-              <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-              <Text style={styles.badgeText}>{i18n.t('businessChannel.verifiedBusiness')}</Text>
+              <Ionicons name="checkmark-circle" size={16} color={ colors.checkmark } />
+              <Text style={[styles.badgeText , {color: colors.text}]}>{i18n.t('businessChannel.verifiedBusiness')}</Text>
           </View>
         );
       }
@@ -253,8 +256,8 @@ const PostCard: React.FC<PostCardProps> = ({
     if (verification.business) {
       badges.push(
         <View key="business" style={styles.badge}>
-          <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
-          <Text style={styles.badgeText}>{i18n.t('businessVerified')}</Text>
+          <Ionicons name="checkmark-circle" size={16} color={ colors.checkmark} />
+          <Text style={[styles.badgeText, {color: colors.text}]}>{i18n.t('businessVerified')}</Text>
         </View>
       );
     }
@@ -262,8 +265,8 @@ const PostCard: React.FC<PostCardProps> = ({
     if (verification.musician) {
       badges.push(
         <View key="musician" style={styles.badge}>
-          <Ionicons name="musical-notes" size={16} color="#3F51B5" />
-          <Text style={styles.badgeText}>{i18n.t('musicianVerified')}</Text>
+          <Ionicons name="musical-notes" size={16} color={ colors.checkmarkmusic} />
+          <Text style={[styles.badgeText, {color: colors.text}]}>{i18n.t('musicianVerified')}</Text>
         </View>
       );
     }
@@ -271,8 +274,8 @@ const PostCard: React.FC<PostCardProps> = ({
     if (verification.tutor) {
       badges.push(
         <View key="tutor" style={styles.badge}>
-          <Ionicons name="school" size={16} color="#FF9800" />
-          <Text style={styles.badgeText}>{i18n.t('tutorVerified')}</Text>
+          <Ionicons name="school" size={16}  color={ colors.checkmarkTutor} />
+          <Text style={[styles.badgeText, {color: colors.text}]}>{i18n.t('tutorVerified')}</Text>
         </View>
       );
     }
@@ -440,7 +443,11 @@ const PostCard: React.FC<PostCardProps> = ({
 
 
   return (
-    <View style={[styles.postItem, isShowcase && styles.showcaseBorder]}>
+    <View style={[
+      styles.postItem,
+      isShowcase && styles.showcaseBorder,
+      { backgroundColor: cardColor }
+    ]}>
       <View style={styles.postHeader}>
         <View style={styles.userContainer}>
           <TouchableOpacity onPress={() => {
@@ -478,17 +485,17 @@ const PostCard: React.FC<PostCardProps> = ({
             >
               <View style={{ flexDirection: 'column', alignItems: 'center'}}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <Text style={styles.userName}>
+                  <Text style={[styles.userName, { color: textColor }]}>
                     {item.user?.name || i18n.t('anonymous')}
                   </Text>
                   {item.user?.mode === 'business' && businessRating && (
-                    <Text style={styles.ratingInline}>
+                    <Text style={[styles.ratingInline, { color: textColor }]}>
                       &nbsp;★ {businessRating.average.toFixed(1)} ({businessRating.count})
                     </Text>
                   )}
                 </View>
-                <Text style={styles.postCity}>{item.city || i18n.t('unknown')}</Text>
-                <Text style={styles.postTimestamp}>{formatDate(item.timestamp)}</Text>
+                <Text style={[styles.postCity, { color: textColor }]}>{item.city || i18n.t('unknown')}</Text>
+                <Text style={[styles.postTimestamp, { color: textColor }]}>{formatDate(item.timestamp)}</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -560,7 +567,7 @@ const PostCard: React.FC<PostCardProps> = ({
         </>
       ) : (
         <TouchableOpacity onPress={handleCopyText}>
-          <Text style={styles.postText}>{item.content}</Text>
+          <Text style={[styles.postText, { color: textColor }]}>{item.content}</Text>
         </TouchableOpacity>
       )}
 
@@ -700,12 +707,12 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Left Side: Like + Comment */}
         <View style={styles.leftActions}>
 
-          <LikeButton postId={item.id} userId={userId} />
+          <LikeButton postId={item.id} userId={userId} color={ colors.iconColor} />
 
           {item.commentsEnabled !== false && (
             <TouchableOpacity onPress={handleToggleComments} style={styles.commentButton}>
-              <Ionicons name="chatbubble-outline" size={20} color="#888" />
-              <Text style={styles.commentCount}>{commentCount}</Text>
+              <Ionicons name="chatbubble-outline" size={20} color={ colors.iconColor} />
+              <Text style={[styles.commentCount, {color: colors.text} ]}>{commentCount}</Text>
             </TouchableOpacity>
           )}
 
@@ -718,7 +725,7 @@ const PostCard: React.FC<PostCardProps> = ({
               style={{ marginLeft: 20, marginRight: 4, padding: 2 }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="pencil" size={18} color="#1976D2"/>
+              <Ionicons name="pencil" size={18} color={ colors.iconColor }/>
             </TouchableOpacity>
           )}
 
@@ -743,13 +750,13 @@ const PostCard: React.FC<PostCardProps> = ({
               {isDeleting ? (
                 <ActivityIndicator size="small" color="red" />
               ) : (
-                <Ionicons name="trash-outline" size={20} color="red" />
+                <Ionicons name="trash-outline" size={20} color={ colors.iconColor } />
               )}
             </TouchableOpacity>
           )}
 
           <TouchableOpacity onPress={() => onReport(item.id, item.user.uid)} style={styles.ellipsisWrapper}>
-            <Ionicons name="ellipsis-vertical" size={20} color="#888" />
+            <Ionicons name="ellipsis-vertical" size={20} color={ colors.iconColor } />
           </TouchableOpacity>
         </View>
       </View>
@@ -762,7 +769,9 @@ const PostCard: React.FC<PostCardProps> = ({
             <View key={comment.id} style={styles.commentItem}>
               <View style={styles.commentHeader}>
                 <TouchableOpacity onPress={() => handlePressUserProfile(comment.userId)}>
-                  <Text style={styles.commentAuthor}>{comment.userName || i18n.t('anonymous')}</Text>
+                  <Text style={[styles.commentAuthor, { color: colors.text }]}>
+                    {comment.userName || i18n.t('anonymous')}
+                  </Text>
                 </TouchableOpacity>
                 {(() => {
                   const isCommentAuthor = comment.userId === user.uid;
@@ -771,7 +780,7 @@ const PostCard: React.FC<PostCardProps> = ({
                   
                   return shouldShowEllipsis ? (
                     <TouchableOpacity onPress={() => handleCommentMenu(comment)}>
-                      <Ionicons name="ellipsis-horizontal" size={16} color="#888" style={{ padding: 4 }} />
+                      <Ionicons name="ellipsis-horizontal" size={16} color={ colors.iconColor} style={{ padding: 4 }} />
                     </TouchableOpacity>
                   ) : null;
                 })()}
@@ -782,11 +791,14 @@ const PostCard: React.FC<PostCardProps> = ({
                   <TextInput
                     value={editedComment}
                     onChangeText={text => setEditedComment(text.slice(0, MAX_COMMENT_LENGTH))}
-                    style={styles.commentInput}
+                    style={[
+                      styles.commentInput,
+                      { color: colors.text, backgroundColor: colors.card, borderColor: colors.border },
+                    ]} 
+                    placeholderTextColor={colors.placeholder}                   
                   />
-                  <Text style={styles.charCount}>
-                    {editedComment.length} / {MAX_COMMENT_LENGTH}
-                  </Text>
+                  <Text style={[styles.charCount, { color: colors.placeholder }]}>{editedComment.length} / {MAX_COMMENT_LENGTH}</Text>
+
                   <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
                     <Button
                       title={isSubmitting ? i18n.t("postCard.updating") : i18n.t("postCard.update")}
@@ -825,7 +837,7 @@ const PostCard: React.FC<PostCardProps> = ({
                   </View>
                 </>
               ) : (
-                <Text>{comment.content}</Text>
+                <Text style={{ color: colors.text }}>{comment.content}</Text>
               )}
 
               {comment.userId === user.uid && editingCommentId !== comment.id && (
@@ -899,14 +911,17 @@ const PostCard: React.FC<PostCardProps> = ({
           >
             <View style={{ paddingBottom: 12 }}>
               <TextInput
+                style={[styles.commentInput, 
+                  { color: colors.text, backgroundColor: colors.card },                
+                ]}
                 placeholder={
                   commentCount >= MAX_COMMENTS
                     ? i18n.t("postCard.maxReached")
                     : i18n.t("postCard.writePlaceholder")
                 }
+                placeholderTextColor={colors.placeholder}
                 value={newComment}
                 onChangeText={text => setNewComment(text.slice(0, MAX_COMMENT_LENGTH))}
-                style={styles.commentInput}
                 editable={commentCount < MAX_COMMENTS && !isSubmitting}
               />
               <Text style={styles.charCount}>
@@ -945,7 +960,7 @@ export default React.memo(PostCard, areEqual);
 
 const styles = StyleSheet.create({
   postItem: {
-    backgroundColor: '#FFFFFF',
+    // backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 14,
     marginVertical: 10,
@@ -1266,6 +1281,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#555',
     fontWeight: '500',
-    // gap: 4,
   },
 });

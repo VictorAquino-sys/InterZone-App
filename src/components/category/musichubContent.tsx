@@ -62,18 +62,19 @@ const MusicHubContent = () => {
                 
                 return (
                     <PostCard
-                    item={item}
-                    userId={user.uid}
-                    user={user}
-                    onDelete={() => {}}
-                    onReport={() => {}}
-                    onOpenImage={() => {}}
-                    onUserProfile={() => {}}
-                    formatDate={(timestamp) =>
-                        timestamp?.toDate().toLocaleString() || 'Unknown'
-                    }
-                    isFullScreen={false}
-                    toggleFullScreen={() => {}}
+                      item={item}
+                      userId={user.uid}
+                      user={user}
+                      onDelete={() => {}}
+                      onReport={() => {}}
+                      onOpenImage={() => {}}
+                      onUserProfile={() => {}}
+                      formatDate={(timestamp) =>
+                          timestamp?.toDate().toLocaleString() || 'Unknown'
+                      }
+                      isFullScreen={false}
+                      toggleFullScreen={() => {}}
+                      onEdit={() => {}}
                     />
                 );
             }}

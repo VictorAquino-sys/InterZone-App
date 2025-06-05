@@ -1,5 +1,6 @@
 import React, { createContext, useEffect, useState, useCallback } from 'react';
 import { StyleSheet, ActivityIndicator, Text, View, TouchableOpacity, Image, Dimensions, Platform, ImageBackground, StatusBar, Alert, Pressable } from 'react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useFocusEffect } from '@react-navigation/native';
 import { getLocales } from 'expo-localization';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +22,7 @@ import type { HomeScreenProps } from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PostScreen from './screens/posts/PostScreen';
 import TermsScreen from 'screens/TermsScreen';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 import NameInputScreen from './screens/NameInputScreen';
 import { PostsProvider } from './src/contexts/PostsContext';
 import { UserProvider, useUser } from './src/contexts/UserContext';
@@ -68,8 +69,8 @@ import EmptyScreen from '@/utils/EmptyScreen';
 import { QrVisibilityProvider, useQrVisibility } from '@/contexts/QrVisibilityContext';
 import ProfessorSuggestionsReviewScreen from 'screens/studyhub/professorSuggestionsReviewScreen';
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
-import { createNavigationContainerRef } from '@react-navigation/native';
-// export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+import { useTheme } from './src/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
 export const homeScreenRef = React.createRef<HomeScreenRef>();
 
 Notifications.setNotificationHandler({
@@ -127,6 +128,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
 function HomeStack(){
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
+
   return (
     <Stack.Navigator>
       <Stack.Screen 
@@ -142,7 +146,16 @@ function HomeStack(){
 
       <Stack.Screen
         name="CategoryScreen"
-        options={({ route }) => ({ title: route.params.title })}
+        options={
+          ({ route }) => ({ 
+            title: route.params.title,
+            headerStyle: { backgroundColor: colors.backgroundprofile },
+            headerTintColor: colors.text,
+            headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
+            headerBackTitleVisible: false,
+            // Optionally add shadow for light mode, or none for dark:
+            headerShadowVisible: resolvedTheme !== 'dark',
+          })}
         children={(props) => (
           <MusicHubProvider>
             <CategoryScreen {...props} />
@@ -150,23 +163,51 @@ function HomeStack(){
         )}
       />
 
-      <Stack.Screen name="FriendsHome" component={FriendsHomeScreen}   
+      <Stack.Screen 
+        name="FriendsHome" 
+        component={FriendsHomeScreen}   
         options={{ 
           title: i18n.t('friendshome'), 
-          headerShown: true  // ✅ ensure this is not false
+          headerShown: true, 
+          headerStyle: { backgroundColor: colors.backgroundprofile },
+          headerTintColor: colors.text,
+          headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
+          headerBackTitleVisible: false,
+          // Optionally add shadow for light mode, or none for dark:
+          headerShadowVisible: resolvedTheme !== 'dark',
         }} />
-      <Stack.Screen name="People" component={PeopleScreen}
+      <Stack.Screen 
+        name="People" 
+        component={PeopleScreen}
         options={{ 
           title: i18n.t('peopleNearby'), 
-          headerShown: true  // ✅ ensure this is not false
+          headerShown: true, 
+          headerStyle: { backgroundColor: colors.backgroundprofile },
+          headerTintColor: colors.text,
+          headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
+          headerBackTitleVisible: false,
+          // Optionally add shadow for light mode, or none for dark:
+          headerShadowVisible: resolvedTheme !== 'dark',
         }} />
-      <Stack.Screen name="Requests" component={FriendRequestsScreen}
+      <Stack.Screen 
+        name="Requests" 
+        component={FriendRequestsScreen}
         options={{ 
           title: i18n.t('incomingRequests'), 
-          headerShown: true  // ✅ ensure this is not false
+          headerShown: true, 
+          headerStyle: { backgroundColor: colors.backgroundprofile },
+          headerTintColor: colors.text,
+          headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
+          headerBackTitleVisible: false,
+          // Optionally add shadow for light mode, or none for dark:
+          headerShadowVisible: resolvedTheme !== 'dark',
         }} />
-      <Stack.Screen name="UserProfile" component={UserProfileScreen} />
-      <Stack.Screen name="FriendsList" component={FriendsScreen} options={{ title: i18n.t('myFriends') }} />
+      <Stack.Screen 
+        name="UserProfile" 
+        component={UserProfileScreen} />
+      <Stack.Screen 
+        name="FriendsList" 
+        component={FriendsScreen} options={{ title: i18n.t('myFriends') }} />
 
       <Stack.Screen
         name="DeleteAccount"
@@ -339,6 +380,8 @@ function BottomTabs() {
 function AuthenticatedApp() {
   const { user, loading } = useUser();
   const { activeConversationId } = useChatContext();
+  const { resolvedTheme } = useTheme();
+  const colors = themeColors[resolvedTheme];
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -436,7 +479,15 @@ function AuthenticatedApp() {
           <Stack.Screen
             name="MessagesScreen"
             component={MessagesScreen}
-            options={{ title: i18n.t('messages.title') }}
+            options={{ 
+              title: i18n.t('messages.title'), 
+              headerStyle: { backgroundColor: colors.backgroundprofile },
+              headerTintColor: colors.text,
+              headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
+              headerBackTitleVisible: false,
+              // Optionally add shadow for light mode, or none for dark:
+              headerShadowVisible: resolvedTheme !== 'dark',
+            }}
           />
           <Stack.Screen
             name="BlockedUsers"
@@ -519,35 +570,37 @@ export default function App() {
   }, []);
 
   return (
-    <UserProvider> 
-      <VerifiedSchoolProvider>
-        <PostsProvider>
-          <TriviaProvider>
-            <HistoryTriviaProvider>
-              <QrVisibilityProvider>
-                <ChatProvider>
-                  <NavigationContainer 
-                    ref={navigationRef}
-                    linking={linking}
-                    onReady={() => {
-                      const route = navigationRef.getCurrentRoute();
-                      if (route) logScreen(route.name);
-                    }}
-                    onStateChange={() => {
-                      const route = navigationRef.getCurrentRoute();
-                      if (route) logScreen(route.name);
-                    }}
-                  >
-                    <AuthenticatedApp />
-                  </NavigationContainer>
-                  <Toast />
-                </ChatProvider>
-              </QrVisibilityProvider>
-            </HistoryTriviaProvider>
-          </TriviaProvider>
-        </PostsProvider>
-      </VerifiedSchoolProvider>
-    </UserProvider>
+    <ThemeProvider>
+      <UserProvider> 
+        <VerifiedSchoolProvider>
+          <PostsProvider>
+            <TriviaProvider>
+              <HistoryTriviaProvider>
+                <QrVisibilityProvider>
+                  <ChatProvider>
+                    <NavigationContainer 
+                      ref={navigationRef}
+                      linking={linking}
+                      onReady={() => {
+                        const route = navigationRef.getCurrentRoute();
+                        if (route) logScreen(route.name);
+                      }}
+                      onStateChange={() => {
+                        const route = navigationRef.getCurrentRoute();
+                        if (route) logScreen(route.name);
+                      }}
+                    >
+                      <AuthenticatedApp />
+                    </NavigationContainer>
+                    <Toast />
+                  </ChatProvider>
+                </QrVisibilityProvider>
+              </HistoryTriviaProvider>
+            </TriviaProvider>
+          </PostsProvider>
+        </VerifiedSchoolProvider>
+      </UserProvider>
+    </ThemeProvider>
   );
 }
 
