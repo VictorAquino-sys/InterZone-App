@@ -57,6 +57,12 @@ export type HomeScreenRef = {
 
 export type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'HomeScreen'>;
 
+function isPeru(country: any) {
+  if (!country) return false;
+  const c = country.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  return c === "PERU" || c === "PE";
+}
+
 const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, ref) => {
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
@@ -99,11 +105,20 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const [showMembershipModal, setShowMembershipModal] = useState(false);
 
   const { refreshUser } = useUser();
+  const [cityModalType, setCityModalType] = useState<'peru' | 'us' | null>(null);
+  const [countrySelectorVisible, setCountrySelectorVisible] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<'usa' | 'peru' | null> (null);
 
   const [monthlyPrice, setMonthlyPrice] = useState<string | undefined>(undefined);
   const [yearlyPrice, setYearlyPrice] = useState<string | undefined>(undefined);
   const [offeringsLoading, setOfferingsLoading] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [citySelectionTimestamp, setCitySelectionTimestamp] = useState<number | null>(null);
+  const maxDurationMs = 48 * 60 * 60 * 1000; // 48 hours
+  const timeLeftMs = citySelectionTimestamp ? maxDurationMs - (Date.now() - citySelectionTimestamp) : 0;
+  const hoursLeft = Math.ceil(timeLeftMs / (60 * 60 * 1000));
+  const [cityLimitDismissed, setCityLimitDismissed] = useState(false);
 
   const toggleFullScreen = () => {
     console.log('Toggling full-screen state');
@@ -170,11 +185,39 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     handleCityOrUserChange();
   }, [user?.uid, city]);
 
+  
+  useEffect(() => {
+    // Load from AsyncStorage
+    const loadData = async () => {
+      const cities = await AsyncStorage.getItem('selectedCities');
+      const ts = await AsyncStorage.getItem('citySelectionTimestamp');
+      if (cities) setSelectedCities(JSON.parse(cities));
+      if (ts) setCitySelectionTimestamp(Number(ts));
+    };
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem('selectedCities', JSON.stringify(selectedCities));
+    if (citySelectionTimestamp !== null)
+      AsyncStorage.setItem('citySelectionTimestamp', citySelectionTimestamp.toString());
+  }, [selectedCities, citySelectionTimestamp]);
+
   useEffect(() => {
     if (user?.premium && showMembershipModal) {
       setShowMembershipModal(false);
     }
   }, [user?.premium, showMembershipModal]);
+
+  useEffect(() => {
+    const now = Date.now();
+    if (citySelectionTimestamp && now - citySelectionTimestamp > 48 * 60 * 60 * 1000) {
+      setSelectedCities([]);
+      setCitySelectionTimestamp(null);
+      AsyncStorage.removeItem('selectedCities');
+      AsyncStorage.removeItem('citySelectionTimestamp');
+    }
+  }, [citySelectionTimestamp, citySelectorVisible]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -237,6 +280,12 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     useCallback(() => {
       setQrVisible(true); // Set this in a shared context
       return () => setQrVisible(false); // Hide when screen loses focus
+    }, [])
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setCityLimitDismissed(false);
     }, [])
   );
 
@@ -724,12 +773,25 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
               <TouchableOpacity
                 style={styles.mapIconContainer}
                 onPress={() => {
+
+                  // Premium/admin always get the country picker
                   if (user?.premium || user?.claims?.admin) {
-                    setCitySelectorVisible(true);
-                  } else {
-                    handleShowMembershipModal();
+                    setCountrySelectorVisible(true);
+                    setSelectedCountry(null);
+                    return;
                   }
+
+                  // Non-premium Peruvian users get the country picker (but only PERU is available for them)
+                  if (isPeru(user?.country)) {
+                    setCountrySelectorVisible(true);
+                    setSelectedCountry(null);
+                    return;
+                  }
+
+                  // Everyone else (non-premium, not Peru) must upgrade
+                  handleShowMembershipModal();
                 }}
+
                 activeOpacity={0.7}
                 accessibilityLabel={i18n.t('browseOtherCities')}
               >
@@ -807,6 +869,17 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 scrollEventThrottle={16}
                 ListHeaderComponent={
                   <View>
+
+                    {!user?.premium && selectedCities.length >= 3 && citySelectionTimestamp && !cityLimitDismissed && (
+                      <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFE6E6', paddingVertical: 4, paddingHorizontal: 10, marginBottom: 5}}>
+                        <Text style={{color: '#D32F2F', fontSize: 13, flex: 1, textAlign: 'center'}}>
+                          {i18n.t('cityLimitReachedWithTime', { time: hoursLeft })}
+                        </Text>
+                        <TouchableOpacity onPress={() => setCityLimitDismissed(true)} style={{marginLeft: 8}}>
+                          <Ionicons name="close" size={18} color="#D32F2F" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
 
                     <View style={[styles.categoriesContainer, { backgroundColor: colors.background }]}>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -892,6 +965,63 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
             </Modal>
 
             <Modal
+              visible={countrySelectorVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setCountrySelectorVisible(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPressOut={() => setCountrySelectorVisible(false)}
+              >
+                <View style={styles.modalBox}>
+                  <Text style={styles.modalTitle}>{i18n.t('chooseCountry')}</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                    {/* USA Button */}
+                    <TouchableOpacity
+                      style={[styles.modalOption, { flex: 1, marginRight: 10, alignItems: 'center', borderWidth: 1, borderColor: '#1976D2', borderRadius: 8 }]}
+                      onPress={() => {
+                        setSelectedCountry('usa');
+                        // Show city modal for USA (future), but for now show membership modal if not premium
+                        if (user?.premium || user?.claims?.admin) {
+                          setCountrySelectorVisible(false);
+                          setCityModalType('us');
+                          setCitySelectorVisible(true);
+                        } else if (isPeru(user?.country)) {
+                          // Non-premium Peruvians tapping USA get membership modal
+                          setCountrySelectorVisible(false);
+                          handleShowMembershipModal();
+                        } else {
+                          // fallback, should not hit due to first guard
+                          setCountrySelectorVisible(false);
+                          handleShowMembershipModal();
+                        }
+                      }}
+                    >
+                      <Text style={{ fontWeight: 'bold', fontSize: 16 }}>USA</Text>
+                    </TouchableOpacity>
+                    {/* PERU Button */}
+                    <TouchableOpacity
+                      style={[styles.modalOption, { flex: 1, marginLeft: 10, alignItems: 'center', borderWidth: 1, borderColor: '#43A047', borderRadius: 8 }]}
+                      onPress={() => {
+                        setSelectedCountry('peru');
+                        setCountrySelectorVisible(false);
+                        setCityModalType('peru');
+                        setCitySelectorVisible(true);
+                      }}
+                    >
+                      <Text style={{ fontWeight: 'bold', fontSize: 16 }}>PERU</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity onPress={() => setCountrySelectorVisible(false)} style={{ marginTop: 18 }}>
+                    <Text style={{ color: 'red', textAlign: 'center' }}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            </Modal>
+
+            <Modal
               visible={citySelectorVisible}
               transparent
               animationType="slide"
@@ -905,12 +1035,52 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 <View style={styles.modalBox}>
                   <Text style={styles.modalTitle}>{i18n.t('selectCity')}</Text>
                   <ScrollView>
-                    {cities.map((c) => (
+                    {cityModalType === 'peru' && cities
+                      .filter(c => c.country === 'PE')
+                      .map((c) => (                      
                       <TouchableOpacity
                         key={c.city}
                         onPress={() => {
-                          setSelectedBrowseCity(c.city + ", " + c.region);
-                          setCity(c.city + ", " + c.region);
+                          const cityLabel = c.city + ", " + c.region;
+                        
+                          if (user?.premium || user?.claims?.admin) {
+                            setSelectedBrowseCity(cityLabel);
+                            setCity(cityLabel);
+                            setCitySelectorVisible(false);
+                            return;
+                          }
+                        
+                          // Check if 48 hours have passed, reset if needed
+                          const now = Date.now();
+                          if (
+                            citySelectionTimestamp &&
+                            now - citySelectionTimestamp > 48 * 60 * 60 * 1000
+                          ) {
+                            setSelectedCities([]);
+                            setCitySelectionTimestamp(null);
+                          }
+                        
+                          if (!selectedCities.includes(cityLabel)) {
+                            if (selectedCities.length >= 3) {
+                              Toast.show({
+                                type: 'info',
+                                text1: i18n.t('cityLimitReachedTitle', 'City Limit Reached'),
+                                text2: i18n.t('cityLimitReachedMsg', 'You’ve reached your city selection limit. Become a member to browse more cities!'),
+                              });
+                              setCitySelectorVisible(false);
+                              setTimeout(() => {
+                                handleShowMembershipModal();
+                              }, 900);                              
+                              return;
+                            }
+                            // First city of this period: set timestamp
+                            if (selectedCities.length === 0) {
+                              setCitySelectionTimestamp(Date.now());
+                            }
+                            setSelectedCities([...selectedCities, cityLabel]);
+                          }
+                          setSelectedBrowseCity(cityLabel);
+                          setCity(cityLabel);
                           setCitySelectorVisible(false);
                         }}
                         style={[
@@ -923,17 +1093,82 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                           <Text style={{ color: '#aaa', fontSize: 13 }}> – {c.region}</Text>
                         </Text>
                       </TouchableOpacity>
-                    ))}
+                    ))
+                    }
+
+                    {cityModalType === 'us' && cities
+                      .filter(c => c.country === 'US')
+                      .map((c) => (
+                        <TouchableOpacity
+                          key={c.city}
+                          onPress={() => {
+                            const cityLabel = c.city + ", " + c.region;
+                            // Same selection logic as above, or custom for US if you want
+                            if (user?.premium || user?.claims?.admin) {
+                              setSelectedBrowseCity(cityLabel);
+                              setCity(cityLabel);
+                              setCitySelectorVisible(false);
+                              return;
+                            }
+                            const now = Date.now();
+                            if (
+                              citySelectionTimestamp &&
+                              now - citySelectionTimestamp > 48 * 60 * 60 * 1000
+                            ) {
+                              setSelectedCities([]);
+                              setCitySelectionTimestamp(null);
+                            }
+                            if (!selectedCities.includes(cityLabel)) {
+                              if (selectedCities.length >= 3) {
+                                Toast.show({
+                                  type: 'info',
+                                  text1: i18n.t('cityLimitReachedTitle', 'City Limit Reached'),
+                                  text2: i18n.t('cityLimitReachedMsg', 'You’ve reached your city selection limit. Become a member to browse more cities!'),
+                                });
+                                setCitySelectorVisible(false);
+                                setTimeout(() => {
+                                  handleShowMembershipModal();
+                                }, 900);
+                                return;
+                              }
+                              if (selectedCities.length === 0) {
+                                setCitySelectionTimestamp(Date.now());
+                              }
+                              setSelectedCities([...selectedCities, cityLabel]);
+                            }
+                            setSelectedBrowseCity(cityLabel);
+                            setCity(cityLabel);
+                            setCitySelectorVisible(false);
+                          }}
+                          style={[
+                            styles.modalOption,
+                            city === c.city && { backgroundColor: '#eaf6ff' },
+                          ]}
+                        >
+                          <Text style={{ fontWeight: city === c.city ? 'bold' : 'normal', color: '#222' }}>
+                            {c.city}
+                            <Text style={{ color: '#aaa', fontSize: 13 }}> – {c.region}</Text>
+                          </Text>
+                        </TouchableOpacity>
+                      ))
+                    }
+
+
+
                   </ScrollView>
+
                   <TouchableOpacity
-                    onPress={() => {
+                    onPress={async () => {
                       setCitySelectorVisible(false);
-                      setCity(null);
+                      await fetchLocation();
+                      Toast.show({ type: 'success', text1: i18n.t('nowViewingYourCity') || "Ahora ves tu ciudad actual" });
                     }}
+
                     style={[styles.modalOption, { marginTop: 10 }]}
                   >
                     <Text style={{ color: 'green' }}>{i18n.t('backToMyCity')}</Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity onPress={() => setCitySelectorVisible(false)}>
                     <Text style={{ color: 'red', marginTop: 10, textAlign: 'center' }}>Cancel</Text>
                   </TouchableOpacity>
@@ -956,7 +1191,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 {hasUnreadMessages && <View style={styles.unreadDot} />}
               </TouchableOpacity>
             </Animated.View>
-
 
           </View>
         </SafeAreaView>

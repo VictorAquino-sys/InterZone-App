@@ -611,6 +611,12 @@
     "close": "Close"
   },
   "promoClaimed": "Promo Successfully Redeemed!",
-  "gotBusinessGetVerified": "Got a business? Get verified and unlock features for your posts."
+  "gotBusinessGetVerified": "Got a business? Get verified and unlock features for your posts.",
+  "cityLimitReached": "You can select 3 more cities in {{time}} hours. Upgrade for unlimited access!",
+  "cityLimitReachedTitle": "City Limit Reached",
+  "cityLimitReachedMsg": "You’ve reached your city selection limit. Become a member to browse more cities!",
+  "chooseCountry": "Choose a country",
+  "nowViewingYourCity": "Now viewing your current city.",
+  "cityLimitReachedWithTime": "You can select 3 more cities in {{time}} hours. Subscribe for unlimited access!"
 
 }  

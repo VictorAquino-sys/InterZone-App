@@ -621,6 +621,12 @@
     "promoClaimed": "Codigo exitosamente canjeado!",
     "gotBusinessGetVerified": "¿Tienes un negocio? Verifícalo y desbloquea funciones para tus publicaciones.",
     "selectCity": "Seleccionar ciudad",
-    "backToMyCity": "Volver a mi ciudad"
+    "backToMyCity": "Volver a mi ciudad",
+    "cityLimitReached": "Podrás seleccionar 3 ciudades más en {{time}} horas. ¡Suscríbete para acceso ilimitado!",
+    "cityLimitReachedTitle": "Límite de ciudades alcanzado",
+    "cityLimitReachedMsg": "Has alcanzado tu límite de ciudades. ¡Hazte miembro para explorar más ciudades!",
+    "chooseCountry": "Elige un país",
+    "nowViewingYourCity": "Ahora ves tu ciudad actual.",
+    "cityLimitReachedWithTime": "Podrás seleccionar 3 ciudades más en {{time}} horas. ¡Suscríbete para acceso ilimitado!"
 
 } 

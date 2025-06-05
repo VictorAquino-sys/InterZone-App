@@ -170,13 +170,15 @@ const PeopleScreen = () => {
   }
 
   return (
-    <FlatList
-      data={users}
-      keyExtractor={item => item.id}
-      renderItem={renderItem}
-      contentContainerStyle={[styles.list, { backgroundColor: colors.background }]}
-      ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-    />
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <FlatList
+        data={users}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={[styles.list, { backgroundColor: colors.background }]}
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+      />
+    </View>
   );
 };
 
@@ -185,6 +187,13 @@ const styles = StyleSheet.create({
   list: {
     padding: 16,
     // backgroundColor: '#f2f2f2',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent', // Will use parent color!
+    padding: 20,
   },
   card: {
     // backgroundColor: '#fff',
