@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useUser } from '../src/contexts/UserContext';
 import { fetchMessages, sendMessage, getOrCreateConversation } from '../services/chatService';
@@ -29,6 +29,7 @@ const ChatScreen = () => {
   const route = useRoute();
   const { friendId, friendName, conversationId: convoIdFromParams } = route.params as RouteParams;
   const { setActiveConversationId } = useChatContext();
+  const [loading, setLoading] = useState(true);
   
   if (!friendId && !convoIdFromParams) {
     return (
@@ -37,9 +38,7 @@ const ChatScreen = () => {
       </SafeAreaView>
     );
   }
-  
-  // const { friendId, friendName } = params;
-  
+    
   const insets = useSafeAreaInsets(); // 👈 grab safe area insets
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -48,6 +47,7 @@ const ChatScreen = () => {
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
+    setLoading(true);
     let unsubscribe: (() => void) | null = null;
   
     const init = async () => {
@@ -61,7 +61,7 @@ const ChatScreen = () => {
       }      
       
       setConversationId(convoId ?? null);
-      setActiveConversationId(convoIdFromParams || null);
+      setActiveConversationId(convoId ?? null);
   
       const msgRef = collection(db, `conversations/${convoId}/messages`);
       const q = query(msgRef, orderBy('timestamp', 'asc'));
@@ -72,7 +72,8 @@ const ChatScreen = () => {
       unsubscribe = onSnapshot(q, (snapshot) => {
         const loaded = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
         setMessages(loaded);
-  
+        setLoading(false);
+
         // Auto-scroll to bottom
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: true });
@@ -95,13 +96,13 @@ const ChatScreen = () => {
   const handleSend = async () => {
     if (!newMessage.trim() || !conversationId) return;
 
-    await sendMessage(conversationId, user!.uid, newMessage.trim());
+    await sendMessage(conversationId, user!.uid, newMessage.trim(), user?.name);
     setNewMessage('');
   };
 
   const handleInputChange = (text: string) => {
-    if (text.length > 200) {
-      setNewMessage(text.slice(0, 200));
+    if (text.length > 100) {
+      setNewMessage(text.slice(0, 100));
     } else {
       setNewMessage(text);
     }
@@ -120,6 +121,10 @@ const ChatScreen = () => {
   return (
     <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 32 }} size="large" />
+      ) : (
+
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -127,33 +132,36 @@ const ChatScreen = () => {
           renderItem={renderItem}
           contentContainerStyle={{ padding: 12 }}
         />
+      )}
 
-        <View style={styles.inputRow}>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              value={newMessage}
-              onChangeText={handleInputChange}
-              placeholder={i18n.t('typeMessage')}
-              style={styles.input}
-              multiline
-              maxLength={100} 
-              placeholderTextColor="#888"
-            />
-            <Text style={styles.counter}>
-              {newMessage.length}/100
-            </Text>
+        {conversationId && (
+          <View style={styles.inputRow}>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                value={newMessage}
+                onChangeText={handleInputChange}
+                placeholder={i18n.t('typeMessage')}
+                style={styles.input}
+                multiline
+                maxLength={100} 
+                placeholderTextColor="#888"
+              />
+              <Text style={styles.counter}>
+                {newMessage.length}/100
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleSend}
+              style={[
+                styles.sendButton,
+                !newMessage.trim() && { backgroundColor: '#b0b0b0', opacity: 0.6 }
+              ]}
+              disabled={!newMessage.trim()}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>{i18n.t('send')}</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={handleSend}
-            style={[
-              styles.sendButton,
-              !newMessage.trim() && { backgroundColor: '#b0b0b0', opacity: 0.6 }
-            ]}
-            disabled={!newMessage.trim()}
-          >
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>{i18n.t('send')}</Text>
-          </TouchableOpacity>
-        </View>
+        )}
 
       </KeyboardAvoidingView>
     </SafeAreaView>

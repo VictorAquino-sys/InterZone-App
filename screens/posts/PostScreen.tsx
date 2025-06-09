@@ -928,7 +928,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                 )}
 
                 {user?.accountType === 'business' && (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10, marginTop: 25 }}>
                     <Text style={{color: colors.text}}>{i18n.t('featureOnChannel')}</Text>
 
 
@@ -954,7 +954,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                 )}
 
                 {user?.accountType === 'business' && (
-                  <View style={{ padding: 10, backgroundColor: '#e3f2fd', borderRadius: 10, marginBottom: 15 }}>
+                  <View style={{ padding: 10, backgroundColor: '#e3f2fd', borderRadius: 10, marginBottom: 5 }}>
                     <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 6 }}>
                       🎁 {i18n.t('promoSettingsTitle') || 'Promo Settings'}
                     </Text>
@@ -1307,7 +1307,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 20,
-    marginBottom: Platform.OS == 'ios' ? '5%': 15,
+    marginBottom: Platform.OS == 'ios' ? '1%': 15,
   },
   imagePreviewContainer: {
     alignItems: 'flex-start',
@@ -1329,14 +1329,15 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   pickerContainer: {
-    marginBottom: Platform.OS === 'ios' ? '20%' : 30,
+    marginBottom: Platform.OS === 'ios' ? '40%' : 30,
+    // marginTop: Platform.OS === 'ios' ? '2%' : 0,
     marginHorizontal: 20,
     borderWidth: Platform.OS === 'ios' ? 0 : 1,
     borderColor: '#4fc',
     backgroundColor: Platform.OS === 'ios' ? 'transparent': 'azure', // Background color for the picker container
   },
   buttonContainer: {
-    marginTop: Platform.OS === 'ios' ? '35%' : 40,
+    marginTop: Platform.OS === 'ios' ? '5%' : 40,
     width: '80%',
     alignSelf: 'center',
     backgroundColor: '#4A90E2', // Set the background color of the button

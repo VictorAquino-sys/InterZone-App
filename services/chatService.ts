@@ -64,19 +64,30 @@ export const getOrCreateConversation = async (user1Id: string, user2Id: string) 
 export const sendMessage = async (
   conversationId: string,
   senderId: string,
-  text: string
+  text: string,
+  senderName?: string
 ) => {
+  const convoRef = doc(db, 'conversations', conversationId);
+  const convoSnap = await getDoc(convoRef);
+  const convoData = convoSnap.data();
+
+  if (!convoData?.users || convoData.users.length !== 2) throw new Error('Invalid conversation');
+
+  // Receiver is the user who is NOT the sender
+  const receiverId = convoData.users.find((uid: string) => uid !== senderId);
+
   const messagesRef = collection(db, `conversations/${conversationId}/messages`);
 
   // Add the message to the subcollection
   await addDoc(messagesRef, {
     senderId,
+    receiverId,
+    ...(senderName && { senderName }),
     text,
     timestamp: serverTimestamp(),
   });
 
   // Update the conversation metadata
-  const convoRef = doc(db, 'conversations', conversationId);
   await updateDoc(convoRef, {
     lastMessage: text,
     updatedAt: serverTimestamp(),

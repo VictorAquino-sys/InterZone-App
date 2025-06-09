@@ -1,3 +1,6 @@
+// To deploy, run the following command:
+// firebase deploy -only functions
+
 const { onDocumentCreated, onDocumentDeleted, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
@@ -67,13 +70,28 @@ const i18n = {
   }
 };
 
-exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (event) => {
+exports.notifyNewMessage = onDocumentCreated("conversations/{conversationId}/messages/{messageId}", async (event) => {
   const message = event.data.data();
-  const receiverId = message.receiverId;
-  const senderName = message.senderName;
+  const conversationId = event.params.conversationId;
+  const senderId = message.senderId;
+  let receiverId = message.receiverId;
 
-  // console.log(`📩 New message created. From: ${senderName}, To: ${receiverId}`);
+  // If receiverId is not present, fetch from conversation doc
+  if (!receiverId) {
+    const convoSnap = await db.collection("conversations").doc(conversationId).get();
+    const convo = convoSnap.data();
+    if (!convo?.users) return;
+    receiverId = convo.users.find(uid => uid !== senderId);
+  }
+  
+  // Fetch sender's name
+  let senderName = message.senderName;
+  if (!senderName) {
+    const senderSnap = await db.collection("users").doc(senderId).get();
+    senderName = senderSnap.data()?.name || "Someone";
+  }
 
+  // Fetch receiver data
   const receiverSnap = await db.collection("users").doc(receiverId).get();
   const receiver = receiverSnap.data();
 
@@ -88,10 +106,10 @@ exports.notifyNewMessage = onDocumentCreated("messages/{messageId}", async (even
     to: receiver.expoPushToken,
     sound: "default",
     title: i18n[lang].notification.newMessageTitle,
-    body: message.text || `${i18n[lang].notification.newMessageBody} ${senderName}`,
+    body: message.text ? `${senderName}: ${message.text}` : `${i18n[lang].notification.newMessageBody} ${senderName}`,
     data: {
       type: "message",
-      conversationId: message.conversationId,
+      conversationId: conversationId,
       url: `interzone://chat/${message.conversationId}`
     }
   };
