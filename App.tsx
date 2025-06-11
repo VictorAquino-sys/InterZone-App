@@ -9,6 +9,7 @@ import { auth, db } from '@/config/firebase';
 import { NavigationContainer, useNavigationContainerRef} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import homeIcon from './assets/home_icon_transparent.png';
 import limasunset from './assets/lima_sunset_image.png';
@@ -41,6 +42,7 @@ import ChatScreen from 'screens/ChatScreen';
 import RedeemPromoScreen from 'screens/business/RedeemPromoScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import Purchases from 'react-native-purchases';
+import MusicScreen from 'screens/MusicScreen';
 import { navigationRef } from './src/navigation/navigationRef'; // Adjust path as needed
 
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
@@ -70,6 +72,7 @@ import { QrVisibilityProvider, useQrVisibility } from '@/contexts/QrVisibilityCo
 import ProfessorSuggestionsReviewScreen from 'screens/studyhub/professorSuggestionsReviewScreen';
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
 import { useTheme } from './src/contexts/ThemeContext';
+import MusicApprovalScreen from 'screens/admin/MusicApprovalScreen';
 import { themeColors } from '@/theme/themeColors';
 export const homeScreenRef = React.createRef<HomeScreenRef>();
 
@@ -551,6 +554,10 @@ function AuthenticatedApp() {
             options={{ title: 'Redeem Promo' }}
           />
 
+          <Stack.Screen name="MusicScreen" component={MusicScreen} options={{ title: i18n.t('music.Title') }} />
+
+          <Stack.Screen name="MusicApproval" component={MusicApprovalScreen} />
+
         </>
       )}
     </Stack.Navigator>
@@ -571,35 +578,37 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <UserProvider> 
-        <VerifiedSchoolProvider>
-          <PostsProvider>
-            <TriviaProvider>
-              <HistoryTriviaProvider>
-                <QrVisibilityProvider>
-                  <ChatProvider>
-                    <NavigationContainer 
-                      ref={navigationRef}
-                      linking={linking}
-                      onReady={() => {
-                        const route = navigationRef.getCurrentRoute();
-                        if (route) logScreen(route.name);
-                      }}
-                      onStateChange={() => {
-                        const route = navigationRef.getCurrentRoute();
-                        if (route) logScreen(route.name);
-                      }}
-                    >
-                      <AuthenticatedApp />
-                    </NavigationContainer>
-                    <Toast />
-                  </ChatProvider>
-                </QrVisibilityProvider>
-              </HistoryTriviaProvider>
-            </TriviaProvider>
-          </PostsProvider>
-        </VerifiedSchoolProvider>
-      </UserProvider>
+      <MusicPlayerProvider>
+        <UserProvider> 
+          <VerifiedSchoolProvider>
+            <PostsProvider>
+              <TriviaProvider>
+                <HistoryTriviaProvider>
+                  <QrVisibilityProvider>
+                    <ChatProvider>
+                      <NavigationContainer 
+                        ref={navigationRef}
+                        linking={linking}
+                        onReady={() => {
+                          const route = navigationRef.getCurrentRoute();
+                          if (route) logScreen(route.name);
+                        }}
+                        onStateChange={() => {
+                          const route = navigationRef.getCurrentRoute();
+                          if (route) logScreen(route.name);
+                        }}
+                      >
+                        <AuthenticatedApp />
+                      </NavigationContainer>
+                      <Toast />
+                    </ChatProvider>
+                  </QrVisibilityProvider>
+                </HistoryTriviaProvider>
+              </TriviaProvider>
+            </PostsProvider>
+          </VerifiedSchoolProvider>
+        </UserProvider>
+      </MusicPlayerProvider>
     </ThemeProvider>
   );
 }

@@ -47,6 +47,18 @@ const AdminDashboardScreen = () => {
                 <Text style={styles.buttonText}>🔗 {i18n.t('adminDashboard.distributeQr')}</Text>
             </TouchableOpacity>
         )}
+
+        {(isAdmin || user?.claims?.canReviewMusic) && (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('MusicApproval')}
+          >
+            <Ionicons name="musical-notes-outline" size={30} color="#333" />
+            <Text style={styles.cardText}>{i18n.t('adminDashboard.reviewMusic')}</Text>
+          </TouchableOpacity>
+        )}
+
+
         </View>
     );
 

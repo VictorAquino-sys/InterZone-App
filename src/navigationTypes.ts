@@ -41,6 +41,8 @@ export type RootStackParamList = {
     AdminDashboard: undefined;
     ClaimPromoScreen: { postId: string };
     RedeemPromoScreen: undefined;
+    MusicScreen: undefined;
+    MusicApproval: undefined;
 
   };
 

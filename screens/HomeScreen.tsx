@@ -1185,11 +1185,22 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
               loading={offeringsLoading || isSubscribing}
             />
 
+            <Animated.View style={[styles.musicButton, fadeStyle, bounceStyle]}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MusicScreen')}
+              >
+                <Ionicons name="musical-note" size={28} color= "#4f46e5" />
+              </TouchableOpacity>
+            </Animated.View>
+
+
             <Animated.View style={[styles.chatButton, fadeStyle, bounceStyle]}>
+
               <TouchableOpacity onPress={() => navigation.navigate('MessagesScreen')}>
                 <Ionicons name="chatbubbles-outline" size={30} color="#007AFF" />
                 {hasUnreadMessages && <View style={styles.unreadDot} />}
               </TouchableOpacity>
+
             </Animated.View>
 
           </View>
@@ -1444,6 +1455,24 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: 60,
     height: 60,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6, // Android shadow
+    shadowColor: '#000', // iOS shadow
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 999,
+  },
+  musicButton: {
+    position: 'absolute',
+    bottom: 115, // Push it up a bit above the tab bar
+    right: 15,
+    backgroundColor: '#eeeeee',
+    borderRadius: 30,
+    width: 50,
+    height: 50,
     padding: 8,
     justifyContent: 'center',
     alignItems: 'center',
