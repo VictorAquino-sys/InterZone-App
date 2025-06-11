@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Linking} from 'react-native';
-import { getFirestore, collection, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, query, where, orderBy, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
+import { getStorage, ref as storageRef, deleteObject } from 'firebase/storage';
 import i18n from '@/i18n';
 
 const firestore = getFirestore();
@@ -168,12 +169,24 @@ export default function MusicApprovalScreen() {
             }
         };
 
-    const handleReject = async (songId: string) => {
+    const handleReject = async (song: Song) => {
         try {
-        await updateDoc(doc(firestore, 'songs', songId), { status: 'rejected' });
-        setPendingSongs(pendingSongs.filter(s => s.id !== songId));
+            // Delete the audio file from Firebase Storage
+            if (song.fileUrl) {
+                const filePath = decodeURIComponent(song.fileUrl.split('/o/')[1].split('?')[0]);
+                const storage = getStorage();
+                try {
+                    await deleteObject(storageRef(storage, filePath));
+                } catch (err: any) {
+                    // Ignore "object-not-found" errors
+                    if (!err.code || err.code !== 'storage/object-not-found') throw err;
+                }
+            }
+            // Delete the Firestore document
+            await deleteDoc(doc(firestore, 'songs', song.id));
+            setPendingSongs(pendingSongs.filter(s => s.id !== song.id));
         } catch (e: any) {
-        Alert.alert('Error', e.message);
+            Alert.alert('Error', e.message);
         }
     };
 
@@ -259,7 +272,7 @@ export default function MusicApprovalScreen() {
 
                                     <TouchableOpacity 
                                         style={[styles.rejectButton, songActive && styles.disabledButton]}
-                                        onPress={() => handleReject(item.id)}
+                                        onPress={() => handleReject(item)}
                                         disabled={songActive}
                                     >
                                         <Text style={styles.buttonText}>{i18n.t('reject')}</Text>
