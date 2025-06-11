@@ -15,7 +15,7 @@ import i18n from '@/i18n';
 
 const storage = getStorage();
 const firestore = getFirestore();
-const MAX_UPLOADS_PER_DAY = 3;
+const MAX_UPLOADS_PER_DAY = 1;
 
 
 const genres = [
@@ -468,13 +468,15 @@ const MusicScreen = () => {
                                 </TouchableOpacity>
                             )}
 
-                            <TouchableOpacity
-                            style={styles.fabReportIcon}
-                            onPress={() => handleReportSong(item)}
-                            hitSlop={{ top: 18, bottom: 18, left: 18, right: 18 }}
-                            >
-                            <Ionicons name="flag-outline" size={25} color="#FFC107" />
-                            </TouchableOpacity>
+                            {user?.uid !== item.uploadedBy && (
+                                <TouchableOpacity
+                                style={styles.fabReportIcon}
+                                onPress={() => handleReportSong(item)}
+                                hitSlop={{ top: 18, bottom: 18, left: 18, right: 18 }}
+                                >
+                                <Ionicons name="flag-outline" size={25} color="#FFC107" />
+                                </TouchableOpacity>
+                            )}
 
                         </View>
                         )}
