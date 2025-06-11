@@ -689,7 +689,15 @@
     "compressedSize": "Compressed Size",
     "duration": "Duration",
     "minutes": "min",
-    "seconds": "sec"
+    "seconds": "sec",
+    "reportSongTitle": "Report Song",
+    "reportSongMessage": "Why are you reporting this song? (e.g. inappropriate, spam, copyright, etc.)",
+    "enterReportReason": "Please enter a reason for reporting.",
+    "reportThanksTitle": "Thanks for reporting",
+    "reportThanksMessage": "Your report was submitted and will be reviewed.",
+    "reportFailed": "Failed to report song",
+    "submit": "Submit",
+    "submitting": "Submitting..."
   },
   "play": "Play",
   "approve": "Approve",

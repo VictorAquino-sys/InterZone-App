@@ -700,7 +700,15 @@
         "duration": "Duración",
         "minutes": "min",
         "seconds": "seg",
-        "note": "Nota: Solo música original. Canciones con derechos de autor, duplicadas o de mala calidad NO serán aprobadas. Para mejores resultados, sube archivos MP3 de alta calidad."
+        "note": "Nota: Solo música original. Canciones con derechos de autor, duplicadas o de mala calidad NO serán aprobadas. Para mejores resultados, sube archivos MP3 de alta calidad.",
+        "reportSongTitle": "Reportar canción",
+        "reportSongMessage": "¿Por qué quieres reportar esta canción? (ej. inapropiada, spam, derechos de autor, etc.)",
+        "enterReportReason": "Por favor, ingresa un motivo para el reporte.",
+        "reportThanksTitle": "¡Gracias por reportar!",
+        "reportThanksMessage": "Tu reporte fue enviado y será revisado.",
+        "reportFailed": "No se pudo reportar la canción",
+        "submit": "Enviar",
+        "submitting": "Enviando..."
     },
     "play": "Escuchar",
     "approve": "Aprobar",

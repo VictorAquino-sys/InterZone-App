@@ -49,6 +49,10 @@ const MusicScreen = () => {
     const [compressedSize, setCompressedSize] = useState<number | null>(null); // in bytes
     const [audioDuration, setAudioDuration] = useState<number | null>(null); // in seconds
 
+    const [reportingSong, setReportingSong] = useState<Song | null>(null);
+    const [reportReason, setReportReason] = useState('');
+    const [reportSubmitting, setReportSubmitting] = useState(false);    
+
     const allowedExtensions = ['mp3', 'wav'];
 
     function isAllowedFile(file: DocumentPickerAsset | null): boolean {
@@ -63,12 +67,21 @@ const MusicScreen = () => {
         setLoadingSongs(true);
         const fetchSongs = async () => {
         try {
-            const q = query(
-            collection(firestore, 'songs'),
-            where('city', '==', city), // You can remove filter to show all for now
-            where('status', '==', 'approved'), // or 'approved' if you add moderation
-            orderBy('createdAt', 'desc')
-            );
+            let q;
+            if (city) {
+              q = query(
+                collection(firestore, 'songs'),
+                where('city', '==', city), // You can remove filter to show all for now
+                where('status', '==', 'approved'), // or 'approved' if you add moderation
+                orderBy('createdAt', 'desc')
+                );
+            } else {
+                // Optional: fetch no songs or all songs; here we fetch none
+                setSongs([]);
+                setLoadingSongs(false);
+                return;
+            }
+
             const snap = await getDocs(q);
             const docs = snap.docs
             .map(doc => {
@@ -167,6 +180,12 @@ const MusicScreen = () => {
         setSocial('');
         setFile(null);
     };
+
+    const handleReportSong = (song: Song) => {
+        setReportingSong(song);
+        setReportReason('');
+      };
+      
 
     function formatSize(bytes?: number | null) {
         if (bytes === undefined || bytes === null) return 'Unknown';
@@ -449,6 +468,14 @@ const MusicScreen = () => {
                                 </TouchableOpacity>
                             )}
 
+                            <TouchableOpacity
+                            style={styles.fabReportIcon}
+                            onPress={() => handleReportSong(item)}
+                            hitSlop={{ top: 18, bottom: 18, left: 18, right: 18 }}
+                            >
+                            <Ionicons name="flag-outline" size={25} color="#FFC107" />
+                            </TouchableOpacity>
+
                         </View>
                         )}
                         contentContainerStyle={{ paddingBottom: 24 }}
@@ -484,6 +511,71 @@ const MusicScreen = () => {
                         </TouchableOpacity>
                     </View>
                     )}
+
+                    {reportingSong && (
+                    <View style={{
+                        position: 'absolute', left: 0, right: 0, bottom: 0, top: 0,
+                        backgroundColor: 'rgba(0,0,0,0.22)', justifyContent: 'center', alignItems: 'center', zIndex: 100,
+                    }}>
+                        <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 24, width: '90%', maxWidth: 340 }}>
+                        <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
+                            {i18n.t('music.reportSongTitle')}
+                        </Text>
+                        <Text style={{ fontSize: 14, color: '#444', marginBottom: 12 }}>
+                            {i18n.t('music.reportSongMessage')}
+                        </Text>
+                        <TextInput
+                            style={{
+                            borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+                            padding: 10, minHeight: 40, marginBottom: 16
+                            }}
+                            placeholder={i18n.t('music.enterReportReason')}
+                            value={reportReason}
+                            onChangeText={setReportReason}
+                            multiline
+                            autoFocus
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                            <TouchableOpacity
+                            onPress={() => setReportingSong(null)}
+                            style={{ marginRight: 20 }}
+                            >
+                            <Text style={{ color: '#888', fontWeight: 'bold' }}>{i18n.t('music.cancel')}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                            onPress={async () => {
+                                if (!reportReason.trim()) {
+                                Alert.alert(i18n.t('music.enterReportReason'));
+                                return;
+                                }
+                                setReportSubmitting(true);
+                                try {
+                                await addDoc(collection(firestore, 'songReports'), {
+                                    songId: reportingSong?.id,
+                                    reporterId: userId,
+                                    reason: reportReason.trim(),
+                                    createdAt: Timestamp.now(),
+                                });
+                                setReportingSong(null);
+                                Alert.alert(i18n.t('music.reportThanksTitle'), i18n.t('music.reportThanksMessage'));
+                                } catch (e: any) {
+                                    console.log("Report failed:", e);
+                                    Alert.alert(i18n.t('music.reportFailed'), e.message);
+                                } finally {
+                                setReportSubmitting(false);
+                                }
+                            }}
+                            disabled={reportSubmitting}
+                            >
+                            <Text style={{ color: '#4f46e5', fontWeight: 'bold' }}>
+                                {reportSubmitting ? i18n.t('music.submitting') : i18n.t('music.submit')}
+                            </Text>
+                            </TouchableOpacity>
+                        </View>
+                        </View>
+                    </View>
+                    )}
+
                 </View>
                 ) : (   
                 <View style={{ flex: 1 }}>
@@ -679,6 +771,20 @@ fabDeleteIcon: {
     position: 'absolute',
     bottom: 10,
     right: 10,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 4,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    zIndex: 10,
+  },
+  fabReportIcon: {
+    position: 'absolute',
+    bottom: 10,
+    right: 50, // Don't overlap delete
     backgroundColor: '#fff',
     borderRadius: 24,
     padding: 4,
