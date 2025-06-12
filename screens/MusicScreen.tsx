@@ -417,11 +417,15 @@ const MusicScreen = () => {
                         renderItem={({ item }) => (
                         <View style={styles.songRow}>
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.songTitle}>{item.title}</Text>
+                                <Text style={styles.songTitle}>{item.title} - {item.artist}</Text>
                                 <Text style={styles.songMeta}>
 
-                                {item.artist} • {item.genre}
+                                <Text>{i18n.t('music.genreLabel')}: {item.genre}</Text>
                                 {item.duration ? ` • ${item.duration}` : ''}
+                                </Text>
+
+                                <Text style={[styles.songMeta, { color: '#009688', fontWeight: 'bold' }]}>
+                                    <Ionicons name="location-outline" size={14} color="#009688" /> {item.city}
                                 </Text>
 
                                 {item.description ? (

@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     flexDirection: 'row',
     gap: 12,
   },
@@ -91,6 +92,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+    textAlign: 'center',
   },
   button: {
     backgroundColor: '#007AFF',
