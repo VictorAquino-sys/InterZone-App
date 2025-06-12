@@ -708,7 +708,9 @@
         "reportThanksMessage": "Tu reporte fue enviado y será revisado.",
         "reportFailed": "No se pudo reportar la canción",
         "submit": "Enviar",
-        "submitting": "Enviando..."
+        "submitting": "Enviando...",
+        "fileTooLargeTitle": "Archivo demasiado grande",
+        "fileTooLargeMessage": "Los archivos de audio deben ser menores de {{max}} MB. Por favor, comprime o recorta tu audio."
     },
     "play": "Escuchar",
     "approve": "Aprobar",

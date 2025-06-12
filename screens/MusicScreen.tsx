@@ -16,6 +16,7 @@ import i18n from '@/i18n';
 const storage = getStorage();
 const firestore = getFirestore();
 const MAX_UPLOADS_PER_DAY = 1;
+const MAX_FILE_SIZE_MB = 20;
 
 
 const genres = [
@@ -130,12 +131,14 @@ const MusicScreen = () => {
             }
       
             // 4. Check file.size Fallback
-            if (!picked.size) {
+            if (picked && (!picked.size || picked.size === 0)) {
                 Alert.alert(
-                    i18n.t('music.fileSizeUnknownTitle'),
-                    i18n.t('music.fileSizeUnknownMessage')
-                  );
+                  i18n.t('music.fileSizeUnknownTitle'),
+                  i18n.t('music.fileSizeUnknownMessage')
+                );
+                return;
             }
+
             setFileSize(picked.size || null);
       
             // 1. Warn for WAV Re-compression
@@ -264,6 +267,16 @@ const MusicScreen = () => {
             );
             return;
         }
+
+        if (file && file.size && file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            Alert.alert(
+              i18n.t('music.fileTooLargeTitle') || 'File Too Large',
+              i18n.t('music.fileTooLargeMessage', { max: MAX_FILE_SIZE_MB }) ||
+              `Audio files must be smaller than ${MAX_FILE_SIZE_MB} MB. Please compress or trim your audio.`
+            );
+            return;
+        }
+
         setUploading(true);
 
         try {
@@ -277,13 +290,13 @@ const MusicScreen = () => {
             );
             const uploadsSnap = await getDocs(uploadsQuery);
             if (uploadsSnap.size >= MAX_UPLOADS_PER_DAY) {
-            Alert.alert(
-                i18n.t('music.tooManyUploadsTitle') || 'Upload limit reached',
-                i18n.t('music.tooManyUploadsMessage', { n: MAX_UPLOADS_PER_DAY }) ||
-                `You can only upload ${MAX_UPLOADS_PER_DAY} songs per day.`
-            );
-            setUploading(false);
-            return;
+                Alert.alert(
+                    i18n.t('music.tooManyUploadsTitle') || 'Upload limit reached',
+                    i18n.t('music.tooManyUploadsMessage', { n: MAX_UPLOADS_PER_DAY }) ||
+                    `You can only upload ${MAX_UPLOADS_PER_DAY} songs per day.`
+                );
+                setUploading(false);
+                return;
             }
 
             // 2. Duplicate check: block if (title + artist) already exists (approved or pending)
@@ -295,12 +308,12 @@ const MusicScreen = () => {
             );
             const duplicateSnap = await getDocs(duplicateQuery);
             if (!duplicateSnap.empty) {
-            Alert.alert(
-                i18n.t('music.duplicateSongTitle') || 'Duplicate song',
-                i18n.t('music.duplicateSongMessage') || 'A song with this title and artist has already been uploaded.'
-            );
-            setUploading(false);
-            return;
+                Alert.alert(
+                    i18n.t('music.duplicateSongTitle') || 'Duplicate song',
+                    i18n.t('music.duplicateSongMessage') || 'A song with this title and artist has already been uploaded.'
+                );
+                setUploading(false);
+                return;
             }
 
             const ext = file.name.split('.').pop()?.toLowerCase();

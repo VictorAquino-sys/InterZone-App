@@ -1,5 +1,5 @@
 // To deploy, run the following command:
-// firebase deploy -only functions
+// firebase deploy --only functions
 
 const { onDocumentCreated, onDocumentDeleted, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
