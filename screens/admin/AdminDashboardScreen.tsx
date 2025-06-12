@@ -47,6 +47,18 @@ const AdminDashboardScreen = () => {
                 <Text style={styles.buttonText}>🔗 {i18n.t('adminDashboard.distributeQr')}</Text>
             </TouchableOpacity>
         )}
+
+        {(isAdmin || user?.claims?.canReviewMusic) && (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('MusicApproval')}
+          >
+            <Ionicons name="musical-notes-outline" size={30} color="#333" />
+            <Text style={styles.cardText}>{i18n.t('adminDashboard.reviewMusic')}</Text>
+          </TouchableOpacity>
+        )}
+
+
         </View>
     );
 
@@ -72,6 +84,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     flexDirection: 'row',
     gap: 12,
   },
@@ -79,6 +92,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+    textAlign: 'center',
   },
   button: {
     backgroundColor: '#007AFF',

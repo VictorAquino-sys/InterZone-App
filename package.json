@@ -101,7 +101,8 @@
     "react-native-vision-camera": "^4.6.4",
     "react-native-web": "~0.19.6",
     "sp-react-native-in-app-updates": "^1.4.1",
-    "uuid": "^7.0.3"
+    "uuid": "^7.0.3",
+    "expo-document-picker": "~12.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
