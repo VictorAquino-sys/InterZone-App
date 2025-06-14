@@ -32,6 +32,10 @@ const i18n = {
       likeTitle: "👍 New Like!",
       likeBody: "liked your post.",
       someone: "Someone",
+      businessApprovedTitle: "✅ Business Approved!",
+      businessApprovedBody: name => `Your business "${name}" has been approved and is now live on InterZone.`,
+      musicApprovedTitle: "🎶 Song Approved!",
+      musicApprovedBody: (title, city) => `Your song "${title}" is now live in ${city}.`,
     },
     promo: {
       promoRedeemedTitle: "Discount Redeemed!",
@@ -55,6 +59,10 @@ const i18n = {
       likeTitle: "👍 Nuevo Me Gusta!",
       likeBody: "le dio me gusta a tu publicación.",
       someone: "Alguien",
+      businessApprovedTitle: "✅ Negocio Aprobado",
+      businessApprovedBody: name => `Tu perfil de negocio "${name}" ha sido aprobado y ya está visible en InterZone.`,
+      musicApprovedTitle: "🎶 Canción Aprobada",
+      musicApprovedBody: (title, city) => `Tu canción "${title}" ya está disponible en ${city}.`,
     },
     promo: {
       promoRedeemedTitle: "¡Descuento canjeado!",
@@ -598,4 +606,57 @@ exports.redeemPromoClaim = onCall({ secrets: [PROMO_HMAC_SECRET] }, async (reque
     redeemedAt: new Date().toISOString(),
     message: i18n[lang]?.promo?.promoRedeemedTitle
   };
+});
+
+exports.sendApprovalNotification = onCall(async (request) => {
+  const { userId, type, extraData = {} } = request.data;
+
+  if (!userId || !type) {
+    throw new HttpsError("invalid-argument", "Missing userId or type.");
+  }
+
+  const userDoc = await db.collection("users").doc(userId).get();
+  const user = userDoc.data();
+
+  if (!user?.expoPushToken || !Expo.isExpoPushToken(user.expoPushToken)) {
+    console.warn(`❌ Invalid or missing Expo token for user: ${userId}`);
+    return { success: false, message: "Invalid or missing push token." };
+  }
+
+  const lang = user.language && i18n[user.language] ? user.language : 'en';
+  const t = i18n[lang].notification;
+
+  let title = '';
+  let body = '';
+
+  if (type === 'business') {
+    title = t.businessApprovedTitle;
+    body = t.businessApprovedBody(extraData.name || 'your business');
+  } else if (type === 'music') {
+    title = t.musicApprovedTitle;
+    body = t.musicApprovedBody(extraData.title || 'your song', extraData.city || 'your city');
+  } else {
+    throw new HttpsError('invalid-argument', 'Invalid notification type.');
+  }
+
+  const message = {
+    to: user.expoPushToken,
+    sound: 'default',
+    title,
+    body,
+    data: {
+      type,
+      userId,
+      ...(extraData?.songId && { songId: extraData.songId }),
+    },
+  };
+
+  try {
+    await expo.sendPushNotificationsAsync([message]);
+    console.log(`✅ Sent approval notification to ${userId}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Error sending approval notification:', error);
+    throw new HttpsError('internal', 'Failed to send push notification.');
+  }
 });

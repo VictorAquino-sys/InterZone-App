@@ -42,7 +42,19 @@ const userClaims = {
   '3q4gfcQ7YdftSMrlshKGoN7J4QO2': {
     isQrDistributor: true,
     canReviewBusiness: true // Kaina Rojas - limited scoped access
-  }
+  },
+  'qExFO5HwRBTQa7Lq7ShXBFzo9I53': { // Sheyla blues
+    premium: true,
+  },
+  '5YB5xUGdzsa5xfyQ3WLeLPMpS0w2': { // Lina Maria
+    premium: true,
+  },
+  '2Sjf5Y1oFOfwfX3cjipLicQpRjV2': { // Teddy
+    premium: true,
+  },
+  '1J5eld53XMWOntFLjdzwyK1pK2N2': { // Ragazzi negocio constante de la 24.
+    premium: true,
+  },
 };
 
 (async () => {

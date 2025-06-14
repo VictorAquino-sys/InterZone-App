@@ -22,7 +22,6 @@ type MusicPlayerContextType = {
   stop: () => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
-
 };
 
 const MusicPlayerContext = createContext<MusicPlayerContextType>({

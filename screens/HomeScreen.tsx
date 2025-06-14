@@ -2,12 +2,9 @@ import React, { useContext, forwardRef, useEffect, useImperativeHandle, useLayou
 import { useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert, StatusBar, Platform } from 'react-native';
 import { Image } from 'react-native';
-
 import { FlashList } from '@shopify/flash-list';
-
 import friendsIcon from '../assets/addfriends_icon.png'
 import { Ionicons } from '@expo/vector-icons';
-// import defaultProfileImg from '../assets/unknownuser.png';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Post, usePosts } from '../src/contexts/PostsContext';

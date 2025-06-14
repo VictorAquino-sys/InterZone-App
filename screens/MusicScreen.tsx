@@ -8,6 +8,7 @@ import { getFirestore, collection, addDoc, Timestamp, query, where, getDocs, ord
 import { useUser } from '../src/contexts/UserContext';
 import { Audio as RNCompressorAudio } from 'react-native-compressor';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { logScreen, logEvent } from '@/utils/analytics';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import type { Song } from '@/contexts/MusicPlayerContext';
 import { Audio } from 'expo-av';
@@ -61,6 +62,14 @@ const MusicScreen = () => {
         const ext = file.name.split('.').pop()?.toLowerCase();
         return allowedExtensions.includes(ext || "");
     }
+
+    useEffect(() => {
+        logScreen('MusicScreen');
+    }, []);
+
+    useEffect(() => {
+        logEvent('music_tab_selected', { tab: selectedTab });
+    }, [selectedTab]);      
 
     // Fetch songs from Firestore on mount and when uploads change
     useEffect(() => {
@@ -197,10 +206,26 @@ const MusicScreen = () => {
 
     // Basic playback logic
     const handlePlay = async (song: any) => {
+        logEvent('music_song_played', {
+            songId: song.id,
+            title: song.title,
+            artist: song.artist,
+            city: song.city,
+            genre: song.genre,
+        });
+
         await play(song);
     };
 
     const handleDeleteSong = async (song: any) => {
+
+        logEvent('music_song_deleted', {
+            songId: song.id,
+            userId: user?.uid,
+            city: song.city,
+            genre: song.genre,
+        });
+
         Alert.alert(
             i18n.t('music.deleteSongTitle'),
             i18n.t('music.deleteSongMessage'),
@@ -226,6 +251,16 @@ const MusicScreen = () => {
     };
 
     const handleStop = async () => {
+        if (nowPlaying) {
+            logEvent('music_song_stopped', {
+                songId: nowPlaying.id,
+                userId,
+                city: nowPlaying.city,
+                genre: nowPlaying.genre,
+            });
+        } else {
+            logEvent('music_stop_pressed_no_song', { userId });
+        }
         await stop();
     };
 
@@ -278,6 +313,14 @@ const MusicScreen = () => {
         }
 
         setUploading(true);
+
+        logEvent('music_upload_attempt', {
+            userId,
+            city,
+            genre,
+            fileSize: file?.size || 0,
+            ext: file?.name?.split('.').pop(),
+          });
 
         try {
 
@@ -372,6 +415,15 @@ const MusicScreen = () => {
                 i18n.t('music.uploadSuccess'),
                 i18n.t('music.uploadPendingReview')
             );
+
+            logEvent('music_upload_success', {
+                userId,
+                city,
+                genre,
+                fileSize: file?.size || 0,
+                ext: file?.name?.split('.').pop(),
+            });
+
             resetForm();
             setAgreed(false);
         } catch (err: any) {
@@ -379,7 +431,15 @@ const MusicScreen = () => {
             Alert.alert(
                 i18n.t('music.uploadFailed'),
                 err.message
-            );        
+            ); 
+            
+            logEvent('music_upload_failure', {
+                userId,
+                city,
+                genre,
+                error: err?.message || String(err),
+            });
+
         } finally {
         setUploading(false);
         }
@@ -525,7 +585,7 @@ const MusicScreen = () => {
                             </Text>
                         </TouchableOpacity>
                         )}
-                        <TouchableOpacity onPress={stop}>
+                        <TouchableOpacity onPress={handleStop}>
                         <Text style={styles.stopButton}>{i18n.t('music.stop')}</Text>
                         </TouchableOpacity>
                     </View>
@@ -575,7 +635,14 @@ const MusicScreen = () => {
                                     reason: reportReason.trim(),
                                     createdAt: Timestamp.now(),
                                 });
+
                                 setReportingSong(null);
+                                // After successful report submission:
+                                logEvent('music_song_reported', {
+                                    songId: reportingSong?.id,
+                                    userId,
+                                    reason: reportReason.trim(),
+                                });
                                 Alert.alert(i18n.t('music.reportThanksTitle'), i18n.t('music.reportThanksMessage'));
                                 } catch (e: any) {
                                     console.log("Report failed:", e);
