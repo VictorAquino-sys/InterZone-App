@@ -58,6 +58,9 @@ const userClaims = {
   '1J5eld53XMWOntFLjdzwyK1pK2N2': { // Ragazzi negocio constante de la 24.
     premium: true,
   },
+  'fys6JZLNW6TVgFFiaA0y3JGlZ792': { // Gregory italia
+    premium: true,
+  },
 };
 
 (async () => {
