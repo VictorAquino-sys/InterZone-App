@@ -233,6 +233,66 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
   }
 });
 
+exports.notifyNewSongInCity = onDocumentUpdated("songs/{songId}", async (event) => {
+  const before = event.data.before.data();
+  const after = event.data.after.data();
+
+  // Only trigger when status goes from 'pending' to 'approved'
+  if (before.status === 'pending' && after.status === 'approved') {
+    const cityLabel = after.city; // The city the song is for
+    const songTitle = after.title || 'a new song';
+    const artist = after.artist || '';
+    const songId = event.params.songId;
+
+    // Fetch all users in that city
+    const usersSnap = await db.collection("users").get();
+
+    const messages = [];
+    usersSnap.forEach(doc => {
+      const user = doc.data();
+      const { expoPushToken, language = 'en', lastKnownLocation } = user;
+      const tokenValid = expoPushToken && Expo.isExpoPushToken(expoPushToken);
+
+      const userCity = lastKnownLocation?.label;
+      const lang = i18n[language] ? language : "en";
+
+      // Only notify users in the same city, with valid tokens
+      if (userCity && tokenValid && userCity.toLowerCase() === cityLabel.toLowerCase()) {
+        messages.push({
+          to: expoPushToken,
+          sound: "default",
+          title: lang === 'es' ? `🎶 Nueva canción en ${cityLabel}!` : `🎶 New Song in ${cityLabel}!`,
+          body: lang === 'es'
+            ? `Ya puedes escuchar "${songTitle}" de ${artist}.`
+            : `Listen to "${songTitle}" by ${artist} now.`,
+          data: {
+            type: "music",
+            songId,
+            city: cityLabel,
+            url: `interzone://music?city=${encodeURIComponent(cityLabel)}`
+          }
+        });
+      }
+    });
+
+    if (messages.length === 0) {
+      console.log("No users to notify for new song in city:", cityLabel);
+      return;
+    }
+
+    // Send notifications in chunks
+    const chunks = expo.chunkPushNotifications(messages);
+    for (const chunk of chunks) {
+      try {
+        await expo.sendPushNotificationsAsync(chunk);
+        console.log(`✅ Sent new music notification to ${chunk.length} users in ${cityLabel}`);
+      } catch (err) {
+        console.error("❌ Error sending song notifications:", err);
+      }
+    }
+  }
+});
+
 
 // Add reverse friendship
 exports.addReverseFriend = onDocumentCreated("users/{userId}/friends/{friendId}", async (event) => {

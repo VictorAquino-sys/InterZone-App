@@ -49,6 +49,9 @@ const userClaims = {
   '5YB5xUGdzsa5xfyQ3WLeLPMpS0w2': { // Lina Maria
     premium: true,
   },
+  '6kxnKnNJMeMdL6rxtOwA7GBM8ME3': { // Lina Maria
+    premium: true,
+  },
   '2Sjf5Y1oFOfwfX3cjipLicQpRjV2': { // Teddy
     premium: true,
   },

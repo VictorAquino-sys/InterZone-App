@@ -710,7 +710,11 @@
         "submit": "Enviar",
         "submitting": "Enviando...",
         "fileTooLargeTitle": "Archivo demasiado grande",
-        "fileTooLargeMessage": "Los archivos de audio deben ser menores de {{max}} MB. Por favor, comprime o recorta tu audio."
+        "fileTooLargeMessage": "Los archivos de audio deben ser menores de {{max}} MB. Por favor, comprime o recorta tu audio.",
+        "showingMusicForCity": "Mostrando música para {{city}}",
+        "chooseCity": "Elige una ciudad en la pantalla de inicio para ver música local",
+        "adminUnlimitedUploads": "Como administrador, tu puedes subir ilimitadas canciones por dia.",
+        "playCount": "reproducciones"
     },
     "play": "Escuchar",
     "approve": "Aprobar",

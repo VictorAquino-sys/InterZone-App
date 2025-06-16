@@ -43,8 +43,8 @@ import RedeemPromoScreen from 'screens/business/RedeemPromoScreen';
 import MessagesScreen from 'screens/MessagesScreen';
 import Purchases from 'react-native-purchases';
 import MusicScreen from 'screens/MusicScreen';
-import { navigationRef } from './src/navigation/navigationRef'; // Adjust path as needed
-
+import { navigationRef } from './src/navigation/navigationRef'; 
+import { CityProvider } from '@/contexts/cityContext'; 
 import BlockedUsersScreen from 'screens/BlockedUsersScreen';
 import DeleteAccountScreen from 'screens/DeleteAccountScreen';
 import { registerForPushNotificationsAsync, setupNotificationChannelAsync } from './services/notifications';
@@ -580,33 +580,35 @@ export default function App() {
     <ThemeProvider>
       <MusicPlayerProvider>
         <UserProvider> 
-          <VerifiedSchoolProvider>
-            <PostsProvider>
-              <TriviaProvider>
-                <HistoryTriviaProvider>
-                  <QrVisibilityProvider>
-                    <ChatProvider>
-                      <NavigationContainer 
-                        ref={navigationRef}
-                        linking={linking}
-                        onReady={() => {
-                          const route = navigationRef.getCurrentRoute();
-                          if (route) logScreen(route.name);
-                        }}
-                        onStateChange={() => {
-                          const route = navigationRef.getCurrentRoute();
-                          if (route) logScreen(route.name);
-                        }}
-                      >
-                        <AuthenticatedApp />
-                      </NavigationContainer>
-                      <Toast />
-                    </ChatProvider>
-                  </QrVisibilityProvider>
-                </HistoryTriviaProvider>
-              </TriviaProvider>
-            </PostsProvider>
-          </VerifiedSchoolProvider>
+          <CityProvider>
+            <VerifiedSchoolProvider>
+              <PostsProvider>
+                <TriviaProvider>
+                  <HistoryTriviaProvider>
+                    <QrVisibilityProvider>
+                      <ChatProvider>
+                        <NavigationContainer 
+                          ref={navigationRef}
+                          linking={linking}
+                          onReady={() => {
+                            const route = navigationRef.getCurrentRoute();
+                            if (route) logScreen(route.name);
+                          }}
+                          onStateChange={() => {
+                            const route = navigationRef.getCurrentRoute();
+                            if (route) logScreen(route.name);
+                          }}
+                        >
+                          <AuthenticatedApp />
+                        </NavigationContainer>
+                        <Toast />
+                      </ChatProvider>
+                    </QrVisibilityProvider>
+                  </HistoryTriviaProvider>
+                </TriviaProvider>
+              </PostsProvider>
+            </VerifiedSchoolProvider>
+          </CityProvider>
         </UserProvider>
       </MusicPlayerProvider>
     </ThemeProvider>

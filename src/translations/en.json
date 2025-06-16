@@ -699,7 +699,11 @@
     "submit": "Submit",
     "submitting": "Submitting...",
     "fileTooLargeTitle": "File Too Large",
-    "fileTooLargeMessage": "Audio files must be smaller than {{max}} MB. Please compress or trim your audio."
+    "fileTooLargeMessage": "Audio files must be smaller than {{max}} MB. Please compress or trim your audio.",
+    "showingMusicForCity": "Showing music for {{city}}",
+    "chooseCity": "Choose a city in Home Screen to see local music",
+    "adminUnlimitedUploads": "You can upload unlimited songs as an admin.",
+    "playCount": "plays"
   },
   "play": "Play",
   "approve": "Approve",
