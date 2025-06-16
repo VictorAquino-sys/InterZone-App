@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { useEffect } from 'react';
 
 export type Song = {
@@ -100,6 +100,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             setIsPaused(false);
         }
     }, [isPaused]);
+
+    useEffect(() => {
+      Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true, // background play!
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+    }, []);
 
     React.useEffect(() => {
         return () => {

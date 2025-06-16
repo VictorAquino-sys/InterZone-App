@@ -36,6 +36,10 @@ Open the simulator first through Xcode, this mounts the new simulator bundle, th
     npx eas build --platform android --profile development
     
     to test on IOS
+    local:
+        npx expo run:ios
+
+    cloud:
     npx eas build --platform ios --profile ios-simulator
 
     To test on android device:
