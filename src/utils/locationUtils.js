@@ -11,7 +11,7 @@ export const locationMapping = [
   },
   {
     city: "Ciudad Pachacutec",
-    region: "Lima",
+    region: "Callao",
     bounds: {
         latitude: { min: -11.858844974971413, max: -11.821767492420388 },
         longitude: { min: -77.18510401578465, max: -77.12648740408099 }

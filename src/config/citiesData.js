@@ -1,7 +1,7 @@
 const cities = [
     // Peru
     { city: "Ancon", region: "Lima", country: "PE"},
-    { city: "Ciudad Pachacutec", region: "Lima", country: "PE"},
+    { city: "Ciudad Pachacutec", region: "Callao", country: "PE"},
     { city: "San Juan de Lurigancho", region: "Lima", country: "PE" },
     { city: "Puente Piedra", region: "Lima", country: "PE" },
     { city: "San Martin de Porres", region: "Lima", country: "PE" },

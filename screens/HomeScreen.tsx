@@ -2,12 +2,9 @@ import React, { useContext, forwardRef, useEffect, useImperativeHandle, useLayou
 import { useRoute, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { StyleSheet, ActivityIndicator, View, Text, TouchableOpacity, Button, TextInput, FlatList, Modal, ScrollView, Alert, StatusBar, Platform } from 'react-native';
 import { Image } from 'react-native';
-
 import { FlashList } from '@shopify/flash-list';
-
 import friendsIcon from '../assets/addfriends_icon.png'
 import { Ionicons } from '@expo/vector-icons';
-// import defaultProfileImg from '../assets/unknownuser.png';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Post, usePosts } from '../src/contexts/PostsContext';
@@ -27,6 +24,7 @@ import UpdateChecker from '../src/components/UpdateChecker';
 import { useOnlineUserCount } from '@/hooks/useOnlineUserCount';
 import OnlineBanner from '@/components/OnlineBanner';
 import { checkNativeUpdate  } from '@/components/NativeUpdateChecker';
+import { useCity } from '@/contexts/cityContext';
 import { themeColors } from '@/theme/themeColors';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
@@ -84,7 +82,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const [searchText, setSearchText] = useState<string>('');
 
   // variables for user's location
-  const [city, setCity] = useState<string | null>(null); // To store the city name
+  // const [city, setCity] = useState<string | null>(null); // To store the city name
   const [loading, setLoading] = useState<boolean>(true); // Loading state for better UX
   const prevCityRef = useRef<string | null>(null);
 
@@ -119,6 +117,8 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const timeLeftMs = citySelectionTimestamp ? maxDurationMs - (Date.now() - citySelectionTimestamp) : 0;
   const hoursLeft = Math.ceil(timeLeftMs / (60 * 60 * 1000));
   const [cityLimitDismissed, setCityLimitDismissed] = useState(false);
+
+  const { city, setCity, country, setCountry } = useCity();
 
   const toggleFullScreen = () => {
     console.log('Toggling full-screen state');

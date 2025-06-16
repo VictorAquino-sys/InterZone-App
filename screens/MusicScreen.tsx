@@ -2,12 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Platform, TextInput, Switch, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Linking } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import type { DocumentPickerAsset } from 'expo-document-picker';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { deleteObject, ref as storageRef } from 'firebase/storage';
-import { getFirestore, collection, addDoc, Timestamp, query, where, getDocs, orderBy, deleteDoc, doc } from 'firebase/firestore';
+// import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// import { deleteObject, ref as storageRef } from 'firebase/storage';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getFirestore, collection, addDoc, Timestamp, query, where, getDocs, orderBy, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { useUser } from '../src/contexts/UserContext';
 import { Audio as RNCompressorAudio } from 'react-native-compressor';
+import { useCity } from '@/contexts/cityContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { logScreen, logEvent } from '@/utils/analytics';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import type { Song } from '@/contexts/MusicPlayerContext';
 import { Audio } from 'expo-av';
@@ -41,7 +44,8 @@ const MusicScreen = () => {
     const artistNormalized = artistName.trim().toLowerCase();
     const { user } = useUser();
     const userId = user?.uid;
-    const city = user?.lastKnownLocation?.label; 
+    const isAdmin = !!user?.claims?.admin; // This is the key line
+    // const city = user?.lastKnownLocation?.label; 
 
     const [songs, setSongs] = useState<Song[]>([]);
     const [loadingSongs, setLoadingSongs] = useState(false);
@@ -53,6 +57,7 @@ const MusicScreen = () => {
     const [reportingSong, setReportingSong] = useState<Song | null>(null);
     const [reportReason, setReportReason] = useState('');
     const [reportSubmitting, setReportSubmitting] = useState(false);    
+    const { city } = useCity();
 
     const allowedExtensions = ['mp3', 'wav'];
 
@@ -61,6 +66,14 @@ const MusicScreen = () => {
         const ext = file.name.split('.').pop()?.toLowerCase();
         return allowedExtensions.includes(ext || "");
     }
+
+    useEffect(() => {
+        logScreen('MusicScreen');
+    }, []);
+
+    useEffect(() => {
+        logEvent('music_tab_selected', { tab: selectedTab });
+    }, [selectedTab]);      
 
     // Fetch songs from Firestore on mount and when uploads change
     useEffect(() => {
@@ -197,10 +210,40 @@ const MusicScreen = () => {
 
     // Basic playback logic
     const handlePlay = async (song: any) => {
+        logEvent('music_song_played', {
+            songId: song.id,
+            title: song.title,
+            artist: song.artist,
+            city: song.city,
+            genre: song.genre,
+        });
+
         await play(song);
+
+        try {
+            await updateDoc(doc(firestore, 'songs', song.id), {
+                playCount: increment(1),
+            });
+    
+            // Update the local state immediately for a responsive UI
+            setSongs(songs => songs.map(s => 
+                s.id === song.id ? { ...s, playCount: (s.playCount || 0) + 1 } : s
+            ));
+        } catch (err) {
+            console.log('Failed to increment playCount:', err);
+        }
+
     };
 
     const handleDeleteSong = async (song: any) => {
+
+        logEvent('music_song_deleted', {
+            songId: song.id,
+            userId: user?.uid,
+            city: song.city,
+            genre: song.genre,
+        });
+
         Alert.alert(
             i18n.t('music.deleteSongTitle'),
             i18n.t('music.deleteSongMessage'),
@@ -213,7 +256,7 @@ const MusicScreen = () => {
                 // 2. Delete from Storage
                 // The file path you used for uploading
                 const filePath = decodeURIComponent(song.fileUrl.split('/o/')[1].split('?')[0]);
-                await deleteObject(storageRef(storage, filePath));
+                await deleteObject(ref(storage, filePath));
                 // 3. Remove from list in UI
                 setSongs(songs => songs.filter(s => s.id !== song.id));
                 Alert.alert(i18n.t('music.songDeleted'));
@@ -226,6 +269,16 @@ const MusicScreen = () => {
     };
 
     const handleStop = async () => {
+        if (nowPlaying) {
+            logEvent('music_song_stopped', {
+                songId: nowPlaying.id,
+                userId,
+                city: nowPlaying.city,
+                genre: nowPlaying.genre,
+            });
+        } else {
+            logEvent('music_stop_pressed_no_song', { userId });
+        }
         await stop();
     };
 
@@ -279,24 +332,33 @@ const MusicScreen = () => {
 
         setUploading(true);
 
-        try {
+        logEvent('music_upload_attempt', {
+            userId,
+            city,
+            genre,
+            fileSize: file?.size || 0,
+            ext: file?.name?.split('.').pop(),
+          });
 
-            // 1. Rate limit: block if user has >= MAX_UPLOADS_PER_DAY in last 24h
-            const since = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
-            const uploadsQuery = query(
-            collection(firestore, 'songs'),
-            where('uploadedBy', '==', userId),
-            where('createdAt', '>=', Timestamp.fromDate(since))
-            );
-            const uploadsSnap = await getDocs(uploadsQuery);
-            if (uploadsSnap.size >= MAX_UPLOADS_PER_DAY) {
-                Alert.alert(
-                    i18n.t('music.tooManyUploadsTitle') || 'Upload limit reached',
-                    i18n.t('music.tooManyUploadsMessage', { n: MAX_UPLOADS_PER_DAY }) ||
-                    `You can only upload ${MAX_UPLOADS_PER_DAY} songs per day.`
+        try {
+            if (!isAdmin) {
+                // 1. Rate limit: block if user has >= MAX_UPLOADS_PER_DAY in last 24h
+                const since = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+                const uploadsQuery = query(
+                collection(firestore, 'songs'),
+                where('uploadedBy', '==', userId),
+                where('createdAt', '>=', Timestamp.fromDate(since))
                 );
-                setUploading(false);
-                return;
+                const uploadsSnap = await getDocs(uploadsQuery);
+                if (uploadsSnap.size >= MAX_UPLOADS_PER_DAY) {
+                    Alert.alert(
+                        i18n.t('music.tooManyUploadsTitle') || 'Upload limit reached',
+                        i18n.t('music.tooManyUploadsMessage', { n: MAX_UPLOADS_PER_DAY }) ||
+                        `You can only upload ${MAX_UPLOADS_PER_DAY} songs per day.`
+                    );
+                    setUploading(false);
+                    return;
+                }
             }
 
             // 2. Duplicate check: block if (title + artist) already exists (approved or pending)
@@ -365,13 +427,23 @@ const MusicScreen = () => {
                 createdAt: Timestamp.now(),
                 status: 'pending',
                 titleNormalized,     
-                artistNormalized     
+                artistNormalized,
+                playCount: 0     
             });
 
             Alert.alert(
                 i18n.t('music.uploadSuccess'),
                 i18n.t('music.uploadPendingReview')
             );
+
+            logEvent('music_upload_success', {
+                userId,
+                city,
+                genre,
+                fileSize: file?.size || 0,
+                ext: file?.name?.split('.').pop(),
+            });
+
             resetForm();
             setAgreed(false);
         } catch (err: any) {
@@ -379,7 +451,15 @@ const MusicScreen = () => {
             Alert.alert(
                 i18n.t('music.uploadFailed'),
                 err.message
-            );        
+            ); 
+            
+            logEvent('music_upload_failure', {
+                userId,
+                city,
+                genre,
+                error: err?.message || String(err),
+            });
+
         } finally {
         setUploading(false);
         }
@@ -387,6 +467,15 @@ const MusicScreen = () => {
 
     return (
         <View style={styles.container}>
+        <View style={{ alignItems: 'center', marginTop: 4 }}>
+        <Text style={{ fontSize: 15, color: '#4f46e5', fontWeight: 'bold' }}>
+            {city
+                ? i18n.t('music.showingMusicForCity', { city })
+                : i18n.t('music.chooseCity')
+            }
+        </Text>
+        </View>
+
         {/* Tabs */}
             <View style={styles.tabRow}>
                 <TouchableOpacity
@@ -420,12 +509,17 @@ const MusicScreen = () => {
                                 <Text style={styles.songTitle}>{item.title} - {item.artist}</Text>
                                 <Text style={styles.songMeta}>
 
-                                <Text>{i18n.t('music.genreLabel')}: {item.genre}</Text>
+                                <Text>{i18n.t('music.genre')}: {item.genre}</Text>
                                 {item.duration ? ` • ${item.duration}` : ''}
                                 </Text>
 
                                 <Text style={[styles.songMeta, { color: '#009688', fontWeight: 'bold' }]}>
                                     <Ionicons name="location-outline" size={14} color="#009688" /> {item.city}
+                                </Text>
+
+                                {/* <Text style={{ height: 4 }} /> */}
+                                <Text style={styles.songMeta}>
+                                <Ionicons name="play-circle-outline" size={14} color="#888" /> {(item.playCount || 0)} {i18n.t('music.playCount')}
                                 </Text>
 
                                 {item.description ? (
@@ -455,11 +549,13 @@ const MusicScreen = () => {
                                 ) : null}
 
                                 {item.userName ? (
+                                    
                                     <Text style={styles.songMeta}>{i18n.t('music.submittedBy')}: {item.userName}</Text>
                                 ) : null}
                                 {item.createdAt?.toDate && (
                                     <Text style={styles.songMeta}>
                                         {i18n.t('music.submittedAt')}: {item.createdAt.toDate().toLocaleString()}
+
                                     </Text>
                                 )}
 
@@ -473,7 +569,9 @@ const MusicScreen = () => {
                                     {nowPlaying?.id === item.id
                                     ? (isPlaying ? 'Playing' : isPaused ? 'Paused' : 'Play')
                                     : 'Play'}
+                                    
                                 </Text>
+
                             </TouchableOpacity>
                             {user?.uid === item.uploadedBy && (
                                 <TouchableOpacity
@@ -525,7 +623,7 @@ const MusicScreen = () => {
                             </Text>
                         </TouchableOpacity>
                         )}
-                        <TouchableOpacity onPress={stop}>
+                        <TouchableOpacity onPress={handleStop}>
                         <Text style={styles.stopButton}>{i18n.t('music.stop')}</Text>
                         </TouchableOpacity>
                     </View>
@@ -575,7 +673,14 @@ const MusicScreen = () => {
                                     reason: reportReason.trim(),
                                     createdAt: Timestamp.now(),
                                 });
+
                                 setReportingSong(null);
+                                // After successful report submission:
+                                logEvent('music_song_reported', {
+                                    songId: reportingSong?.id,
+                                    userId,
+                                    reason: reportReason.trim(),
+                                });
                                 Alert.alert(i18n.t('music.reportThanksTitle'), i18n.t('music.reportThanksMessage'));
                                 } catch (e: any) {
                                     console.log("Report failed:", e);
@@ -709,6 +814,12 @@ const MusicScreen = () => {
                                 </Text>
                                 )}
                             </View>
+                            )}
+
+                            {isAdmin && (
+                            <Text style={{ color: '#43a047', fontWeight: 'bold', marginTop: 6, marginBottom: 4 }}>
+                                {i18n.t('music.adminUnlimitedUploads') || 'You can upload unlimited songs as an admin.'}
+                            </Text>
                             )}
 
                             {/* Upload */}
