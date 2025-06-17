@@ -18,7 +18,7 @@ type MusicPlayerContextType = {
   nowPlaying: Song | null;
   isPlaying: boolean;
   isPaused: boolean;
-  play: (song: Song) => Promise<void>;
+  play: (song: Song, onFinish?: () => void) => Promise<void>;
   stop: () => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
@@ -42,7 +42,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isPaused, setIsPaused] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
 
-  const play = useCallback(async (song: Song) => {
+  const play = useCallback(
+    async (song: Song, onFinish?: () => void) => {
     try {
         // If already playing this song, do nothing (or restart, your call)
         if (nowPlaying?.id === song.id && isPlaying) {
@@ -50,8 +51,8 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
 
         if (soundRef.current) {
-            await soundRef.current.unloadAsync();
-            soundRef.current = null;
+          await soundRef.current.unloadAsync();
+          soundRef.current = null;
         }
         const { sound } = await Audio.Sound.createAsync({ uri: song.fileUrl });
         soundRef.current = sound;
@@ -62,10 +63,13 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         sound.setOnPlaybackStatusUpdate((status) => {
             if (status.isLoaded && status.didJustFinish) {
-            setNowPlaying(null);
-            setIsPlaying(false);
-            setIsPaused(false);
-            soundRef.current = null;
+              setNowPlaying(null);
+              setIsPlaying(false);
+              setIsPaused(false);
+              soundRef.current = null;
+              if (typeof onFinish === "function") {
+                onFinish();
+              }
             }
         });
         } catch (e) {

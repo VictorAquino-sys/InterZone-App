@@ -463,7 +463,8 @@
         "reviewBusiness": "Revisar Solicitudes de Negocios",
         "reviewProfessors": "Revisar Sugerencias de Profesores",
         "distributeQr": "Distribuir Códigos QR",
-        "reviewMusic": "Revisar música"
+        "reviewMusic": "Revisar música",
+        "notifyEvents": "Notificar Eventos"
     },
     "professorReview": {
         "title": "Revisión de Sugerencias de Profesores",
@@ -714,9 +715,30 @@
         "showingMusicForCity": "Mostrando música para {{city}}",
         "chooseCity": "Elige una ciudad en la pantalla de inicio para ver música local",
         "adminUnlimitedUploads": "Como administrador, tu puedes subir ilimitadas canciones por dia.",
-        "playCount": "reproducciones"
+        "playCount": "reproducciones",
+        "uploadingFromCity": "Subiendo desde: {{city}}",
+        "unknownCity": "Ciudad desconocida"
     },
     "play": "Escuchar",
     "approve": "Aprobar",
-    "reject": "Rechazar"
+    "reject": "Rechazar",
+
+    "adminNotification": {
+        "title": "Notificar a usuarios de Perú",
+        "notifTitle": "Título de la Notificación",
+        "notifTitlePlaceholder": "Ingresa el título...",
+        "message": "Mensaje",
+        "messagePlaceholder": "Ingresa el mensaje...",
+        "completeFieldsTitle": "Completa ambos campos",
+        "completeFieldsMsg": "Por favor ingresa un título y mensaje antes de notificar.",
+        "noAdminSessionTitle": "No Admin Session",
+        "noAdminSessionMsg": "Debes iniciar sesión como administrador.",
+        "successTitle": "Éxito",
+        "successMsg": "Notificación enviada a {count} usuarios en Perú.",
+        "failureTitle": "Fallo",
+        "failureMsg": "Algo salió mal al enviar la notificación.",
+        "errorTitle": "Error",
+        "sendBtn": "📣 Enviar Notificación"
+    }
+
 } 

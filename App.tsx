@@ -33,6 +33,7 @@ import { TabParamList } from '@/navigationTypes';
 import CategoryScreen from './screens/CategoryScreen';
 import { HistoryTriviaProvider } from '@/contexts/HistoryTriviaContext';
 import FriendsHomeScreen from './screens/FriendsHomeScreen';
+import AdminNotificationScreen from './screens/admin/AdminNotificationScreen';
 import PeopleScreen from './screens/PeopleScreen';
 import FriendRequestsScreen from './screens/FriendRequestsScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
@@ -554,9 +555,21 @@ function AuthenticatedApp() {
             options={{ title: 'Redeem Promo' }}
           />
 
-          <Stack.Screen name="MusicScreen" component={MusicScreen} options={{ title: i18n.t('music.Title') }} />
-
+          <Stack.Screen
+            name="MusicScreen"
+            component={MusicScreen}
+            options={{
+              title: i18n.t('music.Title'),
+              headerStyle: { backgroundColor: colors.backgroundprofile },
+              headerTintColor: colors.text,
+              headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
+              headerShadowVisible: resolvedTheme !== 'dark',
+            }}
+          />
+          
           <Stack.Screen name="MusicApproval" component={MusicApprovalScreen} />
+
+          <Stack.Screen name="AdminNotification" component={AdminNotificationScreen} options={{ title: 'Notificar Eventos' }} />
 
         </>
       )}

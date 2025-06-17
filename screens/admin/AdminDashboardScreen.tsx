@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons'; // ✅ Fix: import this
@@ -18,47 +18,56 @@ const AdminDashboardScreen = () => {
 
     return (
         <View style={styles.container}>
-        <Text style={styles.title}>{i18n.t('adminDashboard.title')}</Text>
+          <Text style={styles.title}>{i18n.t('adminDashboard.title')}</Text>
 
-        {(isAdmin || canReviewBusiness) && (
+          {(isAdmin || canReviewBusiness) && (
+              <TouchableOpacity
+              style={styles.card}
+              onPress={() => navigation.navigate('AdminApproval')}
+              >
+              <Ionicons name="briefcase-outline" size={30} color="#333" />
+              <Text style={styles.cardText}>{i18n.t('adminDashboard.reviewBusiness')}</Text>
+              </TouchableOpacity>
+          )}
+
+          {(isAdmin || canReviewProfessors) && (
+              <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate('ProfessorSuggestionsReview')}
+              >
+                  <Text style={styles.buttonText}>👨‍🏫 {i18n.t('adminDashboard.reviewProfessors')}</Text>
+              </TouchableOpacity>
+          )}
+
+          {(isAdmin || isQrDistributor) && (
+              <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate('DistributeQr')}
+              >
+                  <Text style={styles.buttonText}>🔗 {i18n.t('adminDashboard.distributeQr')}</Text>
+              </TouchableOpacity>
+          )}
+
+          {(isAdmin || user?.claims?.canReviewMusic) && (
             <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('AdminApproval')}
+              style={styles.card}
+              onPress={() => navigation.navigate('MusicApproval')}
             >
-            <Ionicons name="briefcase-outline" size={30} color="#333" />
-            <Text style={styles.cardText}>{i18n.t('adminDashboard.reviewBusiness')}</Text>
+              <Ionicons name="musical-notes-outline" size={30} color="#333" />
+              <Text style={styles.cardText}>{i18n.t('adminDashboard.reviewMusic')}</Text>
             </TouchableOpacity>
-        )}
+          )}
 
-        {(isAdmin || canReviewProfessors) && (
+          {isAdmin && (
             <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('ProfessorSuggestionsReview')}
+              style={styles.button}
+              onPress={() => navigation.navigate('AdminNotification')}
             >
-                <Text style={styles.buttonText}>👨‍🏫 {i18n.t('adminDashboard.reviewProfessors')}</Text>
+            <Text style={styles.buttonText}>🔔 {i18n.t('adminDashboard.notifyEvents')}</Text>
             </TouchableOpacity>
-        )}
+          )}
 
-        {(isAdmin || isQrDistributor) && (
-            <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('DistributeQr')}
-            >
-                <Text style={styles.buttonText}>🔗 {i18n.t('adminDashboard.distributeQr')}</Text>
-            </TouchableOpacity>
-        )}
-
-        {(isAdmin || user?.claims?.canReviewMusic) && (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('MusicApproval')}
-          >
-            <Ionicons name="musical-notes-outline" size={30} color="#333" />
-            <Text style={styles.cardText}>{i18n.t('adminDashboard.reviewMusic')}</Text>
-          </TouchableOpacity>
-        )}
-
-
+        
         </View>
     );
 
@@ -87,6 +96,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 12,
+  },
+  input: {
+    borderColor: '#b3b3b3',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 15,
+    marginBottom: 6,
+    backgroundColor: '#fff',
   },
   cardText: {
     fontSize: 16,

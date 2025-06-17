@@ -1214,11 +1214,9 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    // backgroundColor: '#ECEFF4', // or any other background color you want
   },
   container: {
     flex: 1,
-    // backgroundColor: '#ECEFF4',
   },
   topRightIcons: {
     flexDirection: 'row',

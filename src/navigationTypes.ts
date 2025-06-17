@@ -43,6 +43,7 @@ export type RootStackParamList = {
     RedeemPromoScreen: undefined;
     MusicScreen: undefined;
     MusicApproval: undefined;
+    AdminNotification: undefined;
 
   };
 

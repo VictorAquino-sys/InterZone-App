@@ -10,6 +10,8 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getAuth } = require('firebase-admin/auth');
 const { defineSecret } = require('firebase-functions/params');
 
+const { onRequest } = require("firebase-functions/v2/https");
+
 const { getStorage } = require('firebase-admin/storage'); // Add this line to import Firebase Storage
 
 const SENDGRID_API_KEY = defineSecret('SENDGRID_API_KEY');
@@ -718,5 +720,78 @@ exports.sendApprovalNotification = onCall(async (request) => {
   } catch (error) {
     console.error('❌ Error sending approval notification:', error);
     throw new HttpsError('internal', 'Failed to send push notification.');
+  }
+});
+
+// Notify all users in Peru (admins only)
+exports.notifyPeruEvent = onRequest(async (req, res) => {
+  try {
+    // 1. Check admin auth
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No auth token" });
+    }
+    const idToken = authHeader.replace("Bearer ", "");
+    const decoded = await auth.verifyIdToken(idToken);
+
+    if (!decoded.admin) {
+      return res.status(403).json({ error: "Only admins can send notifications." });
+    }
+
+    // 2. Get data from body
+    const { title, body, url } = req.body.data || {};
+    if (!title || !body) {
+      return res.status(400).json({ error: "Title and body are required." });
+    }
+
+    // 3. Query users in Peru
+    const usersSnap = await db.collection("users").get();
+
+    const peruUsers = usersSnap.docs.filter(doc => {
+      const raw = doc.data().country || "";
+      // Normalize (remove accents), trim, toLowerCase, remove punctuation/spaces
+      const normalized = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .trim().replace(/[\s.]/g, "").toLowerCase();
+      return ["pe", "peru"].includes(normalized);
+    });
+
+    console.log(`Matched ${peruUsers.length} users in Peru for notification event`);
+    
+    if (peruUsers.length === 0) {
+      return res.status(200).json({ data: { sent: 0 } });
+    }
+    
+    const messages = [];
+    peruUsers.forEach(doc => {
+      const user = doc.data();
+      if (
+        user.expoPushToken &&
+        Expo.isExpoPushToken(user.expoPushToken)
+      ) {
+        messages.push({
+          to: user.expoPushToken,
+          sound: "default",
+          title,
+          body,
+          data: {
+            type: "event",
+            url: url || ""
+          }
+        });
+      }
+    });
+
+    // 4. Send in batches
+    let sent = 0;
+    const chunks = expo.chunkPushNotifications(messages);
+    for (const chunk of chunks) {
+      await expo.sendPushNotificationsAsync(chunk);
+      sent += chunk.length;
+    }
+
+    return res.status(200).json({ data: { sent } });
+  } catch (error) {
+    console.error("notifyPeruEvent error:", error);
+    return res.status(500).json({ error: error.message });
   }
 });
