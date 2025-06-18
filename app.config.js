@@ -5,7 +5,7 @@ export default {
   expo: {
     name: IS_DEV ? "InterZone (Dev)" : "InterZone",
     slug: "InterZone",
-    version: "1.0.10",
+    version: "1.0.11",
     orientation: "default",
     icon: "./assets/images/icon.png",
     scheme: "interzone",
@@ -31,6 +31,7 @@ export default {
       jsEngine: "hermes",
       infoPlist: {
         LSApplicationQueriesSchemes: ['itms-apps'],
+        UIBackgroundModes: ["audio"],
         // NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events while you are using the app. For example, you might get alerts about a concert or food truck gathering near you.",        
         NSLocationWhenInUseUsageDescription: "InterZone uses your location to show nearby posts, events, and updates in your city. This helps you discover what's happening around you and connect with your community.",
         NSMicrophoneUsageDescription: "InterZone uses your microphone to record audio while capturing videos for your posts.",
@@ -157,7 +158,7 @@ export default {
       url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6",
       fallbackToCacheTimeout: 0,
       checkAutomatically: "ON_LOAD",
-      runtimeVersion: "1.0.10"
+      runtimeVersion: "1.0.11"
     }
   }
 };

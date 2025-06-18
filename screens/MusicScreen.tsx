@@ -8,12 +8,18 @@ import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'fire
 import { getFirestore, collection, addDoc, Timestamp, query, where, getDocs, orderBy, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { useUser } from '../src/contexts/UserContext';
 import { Audio as RNCompressorAudio } from 'react-native-compressor';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCity } from '@/contexts/cityContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { logScreen, logEvent } from '@/utils/analytics';
+import { useTheme } from '@/contexts/ThemeContext';
+import { themeColors } from '@/theme/themeColors';
+import type { ThemeColors } from '@/theme/themeColors';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import type { Song } from '@/contexts/MusicPlayerContext';
+import { useIsFocused } from '@react-navigation/native';
 import { Audio } from 'expo-av';
+import ThemedStatusBar from '@/components/ThemedStatusBar';
 import i18n from '@/i18n';
 
 const storage = getStorage();
@@ -43,6 +49,7 @@ const MusicScreen = () => {
     const titleNormalized = title.trim().toLowerCase();
     const artistNormalized = artistName.trim().toLowerCase();
     const { user } = useUser();
+    const currentCity = user?.lastKnownLocation?.label || '';
     const userId = user?.uid;
     const isAdmin = !!user?.claims?.admin; // This is the key line
     // const city = user?.lastKnownLocation?.label; 
@@ -58,6 +65,10 @@ const MusicScreen = () => {
     const [reportReason, setReportReason] = useState('');
     const [reportSubmitting, setReportSubmitting] = useState(false);    
     const { city } = useCity();
+
+    const { resolvedTheme } = useTheme();
+    const colors = themeColors[resolvedTheme];
+    const styles = useStyles(colors);
 
     const allowedExtensions = ['mp3', 'wav'];
 
@@ -208,8 +219,16 @@ const MusicScreen = () => {
         return (bytes / 1024 / 1024).toFixed(2) + ' MB';
     }
 
+    const playSongAtIndex = (index: number) => {
+        if (!songs.length) return;
+        if (index >= 0 && index < songs.length) {
+          handlePlay(songs[index]);
+        }
+    };
+      
+
     // Basic playback logic
-    const handlePlay = async (song: any) => {
+    const handlePlay = async (song: any, songIndex?: number) => {
         logEvent('music_song_played', {
             songId: song.id,
             title: song.title,
@@ -218,7 +237,14 @@ const MusicScreen = () => {
             genre: song.genre,
         });
 
-        await play(song);
+        await play(song, () => {
+            // Callback to auto-play next song
+            const currentIdx = songs.findIndex((s) => s.id === song.id);
+            if (currentIdx !== -1 && currentIdx + 1 < songs.length) {
+              playSongAtIndex(currentIdx + 1);
+            }
+        });
+
 
         try {
             await updateDoc(doc(firestore, 'songs', song.id), {
@@ -303,7 +329,7 @@ const MusicScreen = () => {
             return;
         }
 
-        if (!city) {
+        if (!currentCity) {
             Alert.alert(i18n.t('music.cityRequiredTitle'), i18n.t('music.cityRequiredMessage'));
             return;
         }
@@ -423,7 +449,7 @@ const MusicScreen = () => {
                 uploadedBy: userId,
                 userName: user.name ?? "",
                 userEmail: user.email ?? "",
-                city,
+                city: currentCity,
                 createdAt: Timestamp.now(),
                 status: 'pending',
                 titleNormalized,     
@@ -465,398 +491,418 @@ const MusicScreen = () => {
         }
     };
 
+    const isFocused = useIsFocused();
+
     return (
-        <View style={styles.container}>
-        <View style={{ alignItems: 'center', marginTop: 4 }}>
-        <Text style={{ fontSize: 15, color: '#4f46e5', fontWeight: 'bold' }}>
-            {city
-                ? i18n.t('music.showingMusicForCity', { city })
-                : i18n.t('music.chooseCity')
-            }
-        </Text>
-        </View>
-
-        {/* Tabs */}
-            <View style={styles.tabRow}>
-                <TouchableOpacity
-                style={[styles.tabButton, selectedTab === 'listen' && styles.tabButtonActive]}
-                onPress={() => setSelectedTab('listen')}
-                >
-                <Text style={[styles.tabLabel, selectedTab === 'listen' && styles.tabLabelActive]}>
-                    {i18n.t('music.listen')}
-                </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                style={[styles.tabButton, selectedTab === 'artist' && styles.tabButtonActive]}
-                onPress={() => setSelectedTab('artist')}
-                >
-                <Text style={[styles.tabLabel, selectedTab === 'artist' && styles.tabLabelActive]}>
-                    {i18n.t('music.forArtists')}
-                </Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Content */}
-            <View style={styles.tabContent}>
-                {selectedTab === 'listen' ? (
-                <View style={{ flex: 1 }}>
-                    <FlatList
-                        data={songs}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item }) => (
-                        <View style={styles.songRow}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.songTitle}>{item.title} - {item.artist}</Text>
-                                <Text style={styles.songMeta}>
-
-                                <Text>{i18n.t('music.genre')}: {item.genre}</Text>
-                                {item.duration ? ` • ${item.duration}` : ''}
-                                </Text>
-
-                                <Text style={[styles.songMeta, { color: '#009688', fontWeight: 'bold' }]}>
-                                    <Ionicons name="location-outline" size={14} color="#009688" /> {item.city}
-                                </Text>
-
-                                {/* <Text style={{ height: 4 }} /> */}
-                                <Text style={styles.songMeta}>
-                                <Ionicons name="play-circle-outline" size={14} color="#888" /> {(item.playCount || 0)} {i18n.t('music.playCount')}
-                                </Text>
-
-                                {item.description ? (
-                                <Text style={styles.songDesc} selectable>
-                                    {item.description}
-                                </Text>
-                                ) : null}
-
-                                {item.social ? (
-                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 2 }}>
-                                        <Text style={styles.songMeta}>{i18n.t('music.socialLink')}: </Text>
-                                        <Text
-                                        style={styles.songSocialLink}
-                                        onPress={() => {
-                                            let url = item.social?.trim();
-                                            if (!url) return;
-                                            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-                                            Linking.openURL(url).catch(() =>
-                                            Alert.alert('Cannot open link', url)
-                                            );
-                                        }}
-                                        selectable
-                                        >
-                                        {item.social}
-                                        </Text>
-                                    </View>
-                                ) : null}
-
-                                {item.userName ? (
-                                    
-                                    <Text style={styles.songMeta}>{i18n.t('music.submittedBy')}: {item.userName}</Text>
-                                ) : null}
-                                {item.createdAt?.toDate && (
-                                    <Text style={styles.songMeta}>
-                                        {i18n.t('music.submittedAt')}: {item.createdAt.toDate().toLocaleString()}
-
-                                    </Text>
-                                )}
-
-                            </View>
-                            <TouchableOpacity
-                                style={styles.playButton}
-                                onPress={() => handlePlay(item)}
-                                disabled={nowPlaying?.id === item.id && (isPlaying || isPaused)}
-                            >
-                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                                    {nowPlaying?.id === item.id
-                                    ? (isPlaying ? 'Playing' : isPaused ? 'Paused' : 'Play')
-                                    : 'Play'}
-                                    
-                                </Text>
-
-                            </TouchableOpacity>
-                            {user?.uid === item.uploadedBy && (
-                                <TouchableOpacity
-                                    style={styles.fabDeleteIcon}
-                                    onPress={() => handleDeleteSong(item)}
-                                    hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                                >
-                                    <Ionicons name="trash-bin" size={26} color="#ff1744" />
-                                </TouchableOpacity>
-                            )}
-
-                            {user?.uid !== item.uploadedBy && (
-                                <TouchableOpacity
-                                style={styles.fabReportIcon}
-                                onPress={() => handleReportSong(item)}
-                                hitSlop={{ top: 18, bottom: 18, left: 18, right: 18 }}
-                                >
-                                <Ionicons name="flag-outline" size={25} color="#FFC107" />
-                                </TouchableOpacity>
-                            )}
-
-                        </View>
-                        )}
-                        contentContainerStyle={{ paddingBottom: 24 }}
-                        ListEmptyComponent={
-                            loadingSongs
-                            ? <ActivityIndicator style={{ marginTop: 40 }} />
-                            : <Text style={{ textAlign: 'center', color: '#aaa', marginTop: 30 }}>
-                                {i18n.t('music.noMusic')}
-                                </Text>
-                        }
-                    />
-                    {nowPlaying && (
-                    <View style={styles.nowPlayingBar}>
-                        <Text numberOfLines={1} style={styles.nowPlayingText}>
-                        {i18n.t('music.nowPlaying', { title: nowPlaying.title, artist: nowPlaying.artist })}
-                        </Text>
-                        {isPlaying && (
-                        <TouchableOpacity onPress={pause}>
-                            <Text style={[styles.stopButton, { color: '#FFA000' }]}>
-                            {i18n.t('music.pause') || 'Pause'}
-                            </Text>
-                        </TouchableOpacity>
-                        )}
-                        {isPaused && (
-                        <TouchableOpacity onPress={resume}>
-                            <Text style={[styles.stopButton, { color: '#009688' }]}>
-                            {i18n.t('music.resume') || 'Resume'}
-                            </Text>
-                        </TouchableOpacity>
-                        )}
-                        <TouchableOpacity onPress={handleStop}>
-                        <Text style={styles.stopButton}>{i18n.t('music.stop')}</Text>
-                        </TouchableOpacity>
-                    </View>
-                    )}
-
-                    {reportingSong && (
-                    <View style={{
-                        position: 'absolute', left: 0, right: 0, bottom: 0, top: 0,
-                        backgroundColor: 'rgba(0,0,0,0.22)', justifyContent: 'center', alignItems: 'center', zIndex: 100,
-                    }}>
-                        <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 24, width: '90%', maxWidth: 340 }}>
-                        <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
-                            {i18n.t('music.reportSongTitle')}
-                        </Text>
-                        <Text style={{ fontSize: 14, color: '#444', marginBottom: 12 }}>
-                            {i18n.t('music.reportSongMessage')}
-                        </Text>
-                        <TextInput
-                            style={{
-                            borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-                            padding: 10, minHeight: 40, marginBottom: 16
-                            }}
-                            placeholder={i18n.t('music.enterReportReason')}
-                            value={reportReason}
-                            onChangeText={setReportReason}
-                            multiline
-                            autoFocus
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                            <TouchableOpacity
-                            onPress={() => setReportingSong(null)}
-                            style={{ marginRight: 20 }}
-                            >
-                            <Text style={{ color: '#888', fontWeight: 'bold' }}>{i18n.t('music.cancel')}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                            onPress={async () => {
-                                if (!reportReason.trim()) {
-                                Alert.alert(i18n.t('music.enterReportReason'));
-                                return;
-                                }
-                                setReportSubmitting(true);
-                                try {
-                                await addDoc(collection(firestore, 'songReports'), {
-                                    songId: reportingSong?.id,
-                                    reporterId: userId,
-                                    reason: reportReason.trim(),
-                                    createdAt: Timestamp.now(),
-                                });
-
-                                setReportingSong(null);
-                                // After successful report submission:
-                                logEvent('music_song_reported', {
-                                    songId: reportingSong?.id,
-                                    userId,
-                                    reason: reportReason.trim(),
-                                });
-                                Alert.alert(i18n.t('music.reportThanksTitle'), i18n.t('music.reportThanksMessage'));
-                                } catch (e: any) {
-                                    console.log("Report failed:", e);
-                                    Alert.alert(i18n.t('music.reportFailed'), e.message);
-                                } finally {
-                                setReportSubmitting(false);
-                                }
-                            }}
-                            disabled={reportSubmitting}
-                            >
-                            <Text style={{ color: '#4f46e5', fontWeight: 'bold' }}>
-                                {reportSubmitting ? i18n.t('music.submitting') : i18n.t('music.submit')}
-                            </Text>
-                            </TouchableOpacity>
-                        </View>
-                        </View>
-                    </View>
-                    )}
-
-                </View>
-                ) : (   
-                <View style={{ flex: 1 }}>
-                    <KeyboardAvoidingView
-                        style={{ flex: 1 }}
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                        keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
+        <>
+            {isFocused && (
+            <ThemedStatusBar/>
+            )}
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.backgroundprofile}}>
+            <View style={styles.container}>
+            {/* Tabs */}
+                <View style={styles.tabRow}>
+                    
+                    <TouchableOpacity
+                        style={[styles.tabButton, selectedTab === 'listen' && styles.tabButtonActive]}
+                        onPress={() => setSelectedTab('listen')}
                     >
-                        <ScrollView
-                            contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
-                            keyboardShouldPersistTaps="handled"
-                            showsVerticalScrollIndicator={false}
-                        >
+                    <Text style={[styles.tabLabel, selectedTab === 'listen' && styles.tabLabelActive]}>
+                        {i18n.t('music.listen')}
+                    </Text>
+                    </TouchableOpacity>
 
-                        {/* Policy/terms */}
-                        {!agreed ? (
-                        <View style={styles.artistBox}>
-                            <Text style={styles.title}>{i18n.t('music.showcaseTitle')}</Text>
-                            <Text style={styles.text}>{i18n.t('music.policy')}</Text>
-                            <View style={styles.agreeRow}>
-                            <Switch value={agreed} onValueChange={setAgreed} />
-                            <Text style={{ marginLeft: 10, fontSize: 16 }}>
-                                {i18n.t('music.agreeToPolicy')}
+                    <TouchableOpacity
+                        style={[styles.tabButton, selectedTab === 'artist' && styles.tabButtonActive]}
+                        onPress={() => setSelectedTab('artist')}
+                    >
+                    <Text style={[styles.tabLabel, selectedTab === 'artist' && styles.tabLabelActive]}>
+                        {i18n.t('music.forArtists')}
+                    </Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Content */}
+                <View style={styles.tabContent}>
+                    {selectedTab === 'listen' ? (
+                    <View style={{ flex: 1 }}>
+                        <View style={{ alignItems: 'center', marginTop: 4 }}>
+                            <Text style={{ fontSize: 15, color: colors.musicCity, fontWeight: 'bold' }}>
+                                {city
+                                    ? i18n.t('music.showingMusicForCity', { city })
+                                    : i18n.t('music.chooseCity')
+                                }
                             </Text>
-                            </View>
                         </View>
-                        ) : (
-                        <View style={styles.artistBox}>
-                            <Text style={styles.formLabel}>{i18n.t('music.songTitle')}</Text>
-                            <TextInput
-                                value={title}
-                                onChangeText={setTitle}
-                                style={styles.input}
-                                placeholder={i18n.t('music.songTitlePlaceholder')}
-                                maxLength={40}
-                            />
-                            <Text style={styles.formLabel}>{i18n.t('music.artistName')}</Text>
-                            <TextInput
-                                value={artistName}
-                                onChangeText={setArtistName}
-                                style={styles.input}
-                                placeholder={i18n.t('music.artistNamePlaceholder')}
-                                maxLength={40}
-                            />
-                            <Text style={styles.formLabel}>{i18n.t('music.genre')}</Text>
-                            <View style={styles.genreRow}>
-                                {genres.map(g => (
-                                    <TouchableOpacity
-                                    key={g}
-                                    style={[
-                                        styles.genreChip,
-                                        genre === g && styles.genreChipActive
-                                    ]}
-                                    onPress={() => setGenre(g)}
-                                    >
-                                    <Text style={{ color: genre === g ? '#fff' : '#444', fontWeight: genre === g ? 'bold' : 'normal' }}>
-                                        {g}
-                                    </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
+                        <FlatList
+                            data={songs}
+                            keyExtractor={item => item.id}
+                            renderItem={({ item }) => (
+                            <View style={styles.songRow}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.songTitle}>{item.title} - {item.artist}</Text>
+                                    <Text style={styles.songMeta}>
 
-                            <Text style={styles.formLabel}>{i18n.t('music.shortDesc')}</Text>
-                            <TextInput
-                                value={desc}
-                                onChangeText={setDesc}
-                                style={[styles.input, { minHeight: 60 }]}
-                                placeholder={i18n.t('music.shortDescPlaceholder')}
-                                maxLength={120}
-                                multiline
-                            />
-                            <Text style={styles.formLabel}>{i18n.t('music.socialLink')}</Text>
-                            <TextInput
-                                value={social}
-                                onChangeText={setSocial}
-                                style={styles.input}
-                                placeholder={i18n.t('music.socialLinkPlaceholder')}
-                                maxLength={80}
-                            />
-                            {/* Pick File */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16 }}>
-                                <TouchableOpacity style={styles.fileButton} onPress={handlePickFile} disabled={uploading}>
+                                    <Text>{i18n.t('music.genre')}: {item.genre}</Text>
+                                    {item.duration ? ` • ${item.duration}` : ''}
+                                    </Text>
+
+                                    <Text style={[styles.songMeta, { color: '#009688', fontWeight: 'bold' }]}>
+                                        <Ionicons name="location-outline" size={14} color="#009688" /> {item.city}
+                                    </Text>
+
+                                    {/* <Text style={{ height: 4 }} /> */}
+                                    <Text style={styles.songMeta}>
+                                    <Ionicons name="play-circle-outline" size={14} color="#888" /> {(item.playCount || 0)} {i18n.t('music.playCount')}
+                                    </Text>
+
+                                    {item.description ? (
+                                    <Text style={styles.songDesc} selectable>
+                                        {item.description}
+                                    </Text>
+                                    ) : null}
+
+                                    {item.social ? (
+                                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 2 }}>
+                                            <Text style={styles.songMeta}>{i18n.t('music.socialLink')}: </Text>
+                                            <Text
+                                            style={styles.songSocialLink}
+                                            onPress={() => {
+                                                let url = item.social?.trim();
+                                                if (!url) return;
+                                                if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+                                                Linking.openURL(url).catch(() =>
+                                                Alert.alert('Cannot open link', url)
+                                                );
+                                            }}
+                                            selectable
+                                            >
+                                            {item.social}
+                                            </Text>
+                                        </View>
+                                    ) : null}
+
+                                    {item.userName ? (
+                                        
+                                        <Text style={styles.songMeta}>{i18n.t('music.submittedBy')}: {item.userName}</Text>
+                                    ) : null}
+                                    {item.createdAt?.toDate && (
+                                        <Text style={styles.songMeta}>
+                                            {i18n.t('music.submittedAt')}: {item.createdAt.toDate().toLocaleString()}
+
+                                        </Text>
+                                    )}
+
+                                </View>
+                                <TouchableOpacity
+                                    style={styles.playButton}
+                                    onPress={() => handlePlay(item)}
+                                    disabled={nowPlaying?.id === item.id && (isPlaying || isPaused)}
+                                >
                                     <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-                                    {file ? i18n.t('music.fileSelected') : i18n.t('music.selectAudio')}
+                                        {nowPlaying?.id === item.id
+                                        ? (isPlaying ? 'Playing' : isPaused ? 'Paused' : 'Play')
+                                        : 'Play'}
+                                        
                                     </Text>
+
                                 </TouchableOpacity>
-                                    {file && <Text style={{ marginLeft: 12, color: '#333', maxWidth: 120 }} numberOfLines={1}>{file.name}</Text>}
-                            </View>
-                            <Text style={{ color: '#888', fontSize: 13, marginTop: 4 }}>
-                                {i18n.t('music.fileFormatNote')}
-                            </Text>
-
-                            <View style={{ marginTop: 12, backgroundColor: '#fffbe6', borderRadius: 8, padding: 12 }}>
-                                <Text style={{ color: '#ad6800', fontSize: 13 }}>
-                                    {i18n.t('music.note')}
-                                </Text>
-                            </View>
-
-                            {file && (
-                            <View style={{ marginTop: 10 }}>
-                                <Text style={{ fontSize: 13, color: '#555' }}>
-                                    {i18n.t('music.originalSize')}: {formatSize(fileSize)}
-                                </Text>
-                                {compressedSize !== null && (
-                                <Text style={{ fontSize: 13, color: '#555' }}>
-                                    {i18n.t('music.compressedSize')}: {formatSize(compressedSize)}
-                                </Text>
+                                {user?.uid === item.uploadedBy && (
+                                    <TouchableOpacity
+                                        style={styles.fabDeleteIcon}
+                                        onPress={() => handleDeleteSong(item)}
+                                        hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                                    >
+                                        <Ionicons name="trash-bin" size={26} color="#ff1744" />
+                                    </TouchableOpacity>
                                 )}
-                                {audioDuration !== null && (
-                                <Text style={{ fontSize: 13, color: '#555' }}>
-                                    {i18n.t('music.duration')}: {Math.round(audioDuration / 60)} {i18n.t('music.minutes')} {Math.round(audioDuration % 60)} {i18n.t('music.seconds')}
-                                </Text>
+
+                                {user?.uid !== item.uploadedBy && (
+                                    <TouchableOpacity
+                                    style={styles.fabReportIcon}
+                                    onPress={() => handleReportSong(item)}
+                                    hitSlop={{ top: 18, bottom: 18, left: 18, right: 18 }}
+                                    >
+                                    <Ionicons name="flag-outline" size={25} color="#FFC107" />
+                                    </TouchableOpacity>
                                 )}
+
                             </View>
                             )}
-
-                            {isAdmin && (
-                            <Text style={{ color: '#43a047', fontWeight: 'bold', marginTop: 6, marginBottom: 4 }}>
-                                {i18n.t('music.adminUnlimitedUploads') || 'You can upload unlimited songs as an admin.'}
+                            contentContainerStyle={{ paddingBottom: 24 }}
+                            ListEmptyComponent={
+                                loadingSongs
+                                ? <ActivityIndicator style={{ marginTop: 40 }} />
+                                : <Text style={{ textAlign: 'center', color: '#aaa', marginTop: 30 }}>
+                                    {i18n.t('music.noMusic')}
+                                    </Text>
+                            }
+                        />
+                        {nowPlaying && (
+                        <View style={styles.nowPlayingBar}>
+                            <Text numberOfLines={1} style={styles.nowPlayingText}>
+                            {i18n.t('music.nowPlaying', { title: nowPlaying.title, artist: nowPlaying.artist })}
                             </Text>
-                            )}
-
-                            {/* Upload */}
-                            <TouchableOpacity
-                                style={[styles.uploadButton, uploading && { opacity: 0.7 }]}
-                                onPress={handleUpload}
-                                disabled={uploading}
-                            >
-                            {uploading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>
-                                    {uploading ? i18n.t('music.uploading') : i18n.t('music.uploadSong')}
+                            {isPlaying && (
+                            <TouchableOpacity onPress={pause}>
+                                <Text style={[styles.stopButton, { color: '#FFA000' }]}>
+                                {i18n.t('music.pause') || 'Pause'}
                                 </Text>
-                            )}
                             </TouchableOpacity>
-
-                            <TouchableOpacity onPress={() => setAgreed(false)}>
-                            <Text style={{ color: '#ff1744', marginTop: 16, textAlign: 'center', fontSize: 15 }}>
-                                {i18n.t('music.cancelReturn')}
-                            </Text>
+                            )}
+                            {isPaused && (
+                            <TouchableOpacity onPress={resume}>
+                                <Text style={[styles.stopButton, { color: '#009688' }]}>
+                                {i18n.t('music.resume') || 'Resume'}
+                                </Text>
+                            </TouchableOpacity>
+                            )}
+                            <TouchableOpacity onPress={handleStop}>
+                            <Text style={styles.stopButton}>{i18n.t('music.stop')}</Text>
                             </TouchableOpacity>
                         </View>
                         )}
-                        </ScrollView>
-                    </KeyboardAvoidingView>
+
+                        {reportingSong && (
+                        <View style={{
+                            position: 'absolute', left: 0, right: 0, bottom: 0, top: 0,
+                            backgroundColor: 'rgba(0,0,0,0.22)', justifyContent: 'center', alignItems: 'center', zIndex: 100,
+                        }}>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 24, width: '90%', maxWidth: 340 }}>
+                            <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
+                                {i18n.t('music.reportSongTitle')}
+                            </Text>
+                            <Text style={{ fontSize: 14, color: '#444', marginBottom: 12 }}>
+                                {i18n.t('music.reportSongMessage')}
+                            </Text>
+                            <TextInput
+                                style={{
+                                borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
+                                padding: 10, minHeight: 40, marginBottom: 16
+                                }}
+                                placeholder={i18n.t('music.enterReportReason')}
+                                value={reportReason}
+                                onChangeText={setReportReason}
+                                multiline
+                                autoFocus
+                            />
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                                <TouchableOpacity
+                                onPress={() => setReportingSong(null)}
+                                style={{ marginRight: 20 }}
+                                >
+                                <Text style={{ color: '#888', fontWeight: 'bold' }}>{i18n.t('music.cancel')}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                onPress={async () => {
+                                    if (!reportReason.trim()) {
+                                    Alert.alert(i18n.t('music.enterReportReason'));
+                                    return;
+                                    }
+                                    setReportSubmitting(true);
+                                    try {
+                                    await addDoc(collection(firestore, 'songReports'), {
+                                        songId: reportingSong?.id,
+                                        reporterId: userId,
+                                        reason: reportReason.trim(),
+                                        createdAt: Timestamp.now(),
+                                    });
+
+                                    setReportingSong(null);
+                                    // After successful report submission:
+                                    logEvent('music_song_reported', {
+                                        songId: reportingSong?.id,
+                                        userId,
+                                        reason: reportReason.trim(),
+                                    });
+                                    Alert.alert(i18n.t('music.reportThanksTitle'), i18n.t('music.reportThanksMessage'));
+                                    } catch (e: any) {
+                                        console.log("Report failed:", e);
+                                        Alert.alert(i18n.t('music.reportFailed'), e.message);
+                                    } finally {
+                                    setReportSubmitting(false);
+                                    }
+                                }}
+                                disabled={reportSubmitting}
+                                >
+                                <Text style={{ color: '#4f46e5', fontWeight: 'bold' }}>
+                                    {reportSubmitting ? i18n.t('music.submitting') : i18n.t('music.submit')}
+                                </Text>
+                                </TouchableOpacity>
+                            </View>
+                            </View>
+                        </View>
+                        )}
+
+                    </View>
+                    ) : (   
+                    <View style={{ flex: 1 }}>
+                        <View style={{ alignItems: 'center', marginTop: 4 }}>
+                            <Text style={{ fontSize: 15, fontWeight: 'bold', color: colors.musicCity }}>
+                                {i18n.t('music.uploadingFromCity', {city: currentCity || i18n.t('music.unknownCity')})}
+                            </Text>
+                        </View>
+
+                        <KeyboardAvoidingView
+                            style={{ flex: 1 }}
+                            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                            keyboardVerticalOffset={Platform.OS === 'ios' ? 95 : 0}
+                        >
+                            <ScrollView
+                                contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
+                                keyboardShouldPersistTaps="handled"
+                                showsVerticalScrollIndicator={false}
+                            >
+
+                            {/* Policy/terms */}
+                            {!agreed ? (
+                            <View style={styles.artistBox}>
+                                <Text style={styles.title}>{i18n.t('music.showcaseTitle')}</Text>
+                                <Text style={styles.text}>{i18n.t('music.policy')}</Text>
+                                <View style={styles.agreeRow}>
+                                    <Switch value={agreed} onValueChange={setAgreed} />
+                                    <Text style={{ marginLeft: 10, fontSize: 16, color: colors.text }}>
+                                        {i18n.t('music.agreeToPolicy')}
+                                    </Text>
+                                </View>
+                            </View>
+                            ) : (
+                            <View style={styles.artistBox}>
+                                <Text style={styles.formLabel}>{i18n.t('music.songTitle')}</Text>
+                                <TextInput
+                                    value={title}
+                                    onChangeText={setTitle}
+                                    style={styles.input}
+                                    placeholder={i18n.t('music.songTitlePlaceholder')}
+                                    placeholderTextColor={colors.placeholder}
+                                    maxLength={40}
+                                />
+                                <Text style={styles.formLabel}>{i18n.t('music.artistName')}</Text>
+                                <TextInput
+                                    value={artistName}
+                                    onChangeText={setArtistName}
+                                    style={styles.input}
+                                    placeholderTextColor={colors.placeholder}
+                                    placeholder={i18n.t('music.artistNamePlaceholder')}
+                                    maxLength={40}
+                                />
+                                <Text style={styles.formLabel}>{i18n.t('music.genre')}</Text>
+                                <View style={styles.genreRow}>
+                                    {genres.map(g => (
+                                        <TouchableOpacity
+                                        key={g}
+                                        style={[
+                                            styles.genreChip,
+                                            genre === g && styles.genreChipActive
+                                        ]}
+                                        onPress={() => setGenre(g)}
+                                        >
+                                        <Text style={{ color: colors.text ? '#fff' : '#444', fontWeight: genre === g ? 'bold' : 'normal' }}>
+                                            {g}
+                                        </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+
+                                <Text style={styles.formLabel}>{i18n.t('music.shortDesc')}</Text>
+                                <TextInput
+                                    value={desc}
+                                    onChangeText={setDesc}
+                                    style={[styles.input, { minHeight: 60 }]}
+                                    placeholderTextColor={colors.placeholder}
+                                    placeholder={i18n.t('music.shortDescPlaceholder')}
+                                    maxLength={120}
+                                    multiline
+                                />
+                                <Text style={styles.formLabel}>{i18n.t('music.socialLink')}</Text>
+                                <TextInput
+                                    value={social}
+                                    onChangeText={setSocial}
+                                    style={styles.input}
+                                    placeholderTextColor={colors.placeholder}
+                                    placeholder={i18n.t('music.socialLinkPlaceholder')}
+                                    maxLength={80}
+                                />
+                                {/* Pick File */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16 }}>
+                                    <TouchableOpacity style={styles.fileButton} onPress={handlePickFile} disabled={uploading}>
+                                        <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                                        {file ? i18n.t('music.fileSelected') : i18n.t('music.selectAudio')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                        {file && <Text style={{ marginLeft: 12, color: '#333', maxWidth: 120 }} numberOfLines={1}>{file.name}</Text>}
+                                </View>
+                                <Text style={{ color: '#888', fontSize: 13, marginTop: 4 }}>
+                                    {i18n.t('music.fileFormatNote')}
+                                </Text>
+
+                                <View style={{ marginTop: 12, backgroundColor: '#fffbe6', borderRadius: 8, padding: 12 }}>
+                                    <Text style={{ color: '#ad6800', fontSize: 13 }}>
+                                        {i18n.t('music.note')}
+                                    </Text>
+                                </View>
+
+                                {file && (
+                                <View style={{ marginTop: 10 }}>
+                                    <Text style={{ fontSize: 13, color: '#555' }}>
+                                        {i18n.t('music.originalSize')}: {formatSize(fileSize)}
+                                    </Text>
+                                    {compressedSize !== null && (
+                                    <Text style={{ fontSize: 13, color: '#555' }}>
+                                        {i18n.t('music.compressedSize')}: {formatSize(compressedSize)}
+                                    </Text>
+                                    )}
+                                    {audioDuration !== null && (
+                                    <Text style={{ fontSize: 13, color: '#555' }}>
+                                        {i18n.t('music.duration')}: {Math.round(audioDuration / 60)} {i18n.t('music.minutes')} {Math.round(audioDuration % 60)} {i18n.t('music.seconds')}
+                                    </Text>
+                                    )}
+                                </View>
+                                )}
+
+                                {isAdmin && (
+                                <Text style={{ color: '#43a047', fontWeight: 'bold', marginTop: 6, marginBottom: 4 }}>
+                                    {i18n.t('music.adminUnlimitedUploads') || 'You can upload unlimited songs as an admin.'}
+                                </Text>
+                                )}
+
+                                {/* Upload */}
+                                <TouchableOpacity
+                                    style={[styles.uploadButton, uploading && { opacity: 0.7 }]}
+                                    onPress={handleUpload}
+                                    disabled={uploading}
+                                >
+                                {uploading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>
+                                        {uploading ? i18n.t('music.uploading') : i18n.t('music.uploadSong')}
+                                    </Text>
+                                )}
+                                </TouchableOpacity>
+
+                                <TouchableOpacity onPress={() => setAgreed(false)}>
+                                <Text style={{ color: '#ff1744', marginTop: 16, textAlign: 'center', fontSize: 15 }}>
+                                    {i18n.t('music.cancelReturn')}
+                                </Text>
+                                </TouchableOpacity>
+                            </View>
+                            )}
+                            </ScrollView>
+                        </KeyboardAvoidingView>
+                    </View>
+                    )}
                 </View>
-                )}
             </View>
-        </View>
+        </SafeAreaView>
+        </>
     );
 };
 
-const styles = StyleSheet.create({
-  container: { 
+const useStyles = (colors: ThemeColors) => StyleSheet.create({
+    container: { 
     flex: 1, 
-    backgroundColor: '#f9fafb', 
+    backgroundColor: colors.background, 
     paddingTop: Platform.OS === 'android' ? 0 : 0, 
     paddingHorizontal: 14 
 },
@@ -867,8 +913,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center', 
     borderBottomWidth: 1, 
-    borderColor: '#eee', 
-    backgroundColor: '#fff' 
+    borderColor: colors.border, 
+    backgroundColor: colors.card, 
 },
   tabButton: { 
     flex: 1, 
@@ -878,21 +924,44 @@ const styles = StyleSheet.create({
     borderColor: 'transparent' 
 },
 deleteButton: {
-    backgroundColor: '#ff1744',
+    backgroundColor: colors.trashcan,
     borderRadius: 8,
     paddingVertical: 7,
     paddingHorizontal: 18,
     marginLeft: 10,
   },
-  tabButtonActive: { borderColor: '#4f46e5', backgroundColor: '#f3f6ff' },
-  tabLabel: { fontSize: 18, color: '#555', fontWeight: '500' },
-  tabLabelActive: { color: '#4f46e5', fontWeight: '700' },
-  tabContent: { flex: 1, padding: 18 },
-  tabContentInner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: '700', color: '#333', marginBottom: 10, textAlign: 'center' },
+  tabButtonActive: { 
+    borderColor: colors.primary, 
+    backgroundColor: colors.categoryBg,
+  },
+  tabLabel: { 
+    fontSize: 18, 
+    color: colors.textSecondary, 
+    fontWeight: '500' 
+},
+  tabLabelActive: { 
+    color: colors.text, 
+    fontWeight: '700' 
+},
+  tabContent: { 
+    flex: 1, 
+    padding: 18 
+},
+  tabContentInner: { 
+    flex: 1, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+},
+  title: { 
+    fontSize: 22, 
+    fontWeight: '700', 
+    color: colors.text, 
+    marginBottom: 10, 
+    textAlign: 'center' 
+},
   text: { 
     fontSize: 15, 
-    color: '#666', 
+    color: colors.textSecondary, 
     textAlign: 'center',
     flexShrink: 1,    // allows text to shrink inside flex
     flexWrap: 'wrap'
@@ -901,11 +970,11 @@ fabDeleteIcon: {
     position: 'absolute',
     bottom: 10,
     right: 10,
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 4,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.12,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 1 },
@@ -915,11 +984,11 @@ fabDeleteIcon: {
     position: 'absolute',
     bottom: 10,
     right: 50, // Don't overlap delete
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 4,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.12,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 1 },
@@ -928,29 +997,74 @@ fabDeleteIcon: {
   songRow: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: '#fff', 
+    backgroundColor: colors.card, 
     borderRadius: 14, 
     marginBottom: 12, 
     padding: 16, 
-    shadowColor: '#000', 
+    shadowColor: colors.shadow, 
     shadowOpacity: 0.06, 
     shadowRadius: 3, 
     shadowOffset: { width: 0, height: 1 }, 
     elevation: 1,
     position: 'relative',
 },
-  songTitle: { fontSize: 16, fontWeight: '600', color: '#212121' },
-  songMeta: { fontSize: 13, color: '#888', marginTop: 2 },
-  playButton: { backgroundColor: '#4f46e5', borderRadius: 8, paddingVertical: 7, paddingHorizontal: 18, marginLeft: 15 },
-  nowPlayingBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 13, borderRadius: 12, position: 'absolute', bottom: 20, left: 16, right: 16, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
-  nowPlayingText: { flex: 1, fontWeight: '600', color: '#333', marginRight: 15 },
-  stopButton: { color: '#ff1744', fontWeight: '700', marginLeft: 16, fontSize: 16 },
+  songTitle: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: colors.text, 
+},
+  songMeta: { 
+    fontSize: 13, 
+    color: colors.iconColor, 
+    marginTop: 2 
+},
+  playButton: { 
+    backgroundColor: colors.primary, 
+    borderRadius: 8, 
+    paddingVertical: 7, 
+    paddingHorizontal: 18, 
+    marginLeft: 15 
+},
+  nowPlayingBar: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    backgroundColor: colors.card, 
+    paddingHorizontal: 20, 
+    paddingVertical: 13, 
+    borderRadius: 12, 
+    position: 'absolute', 
+    bottom: 20, 
+    left: 16, 
+    right: 16, 
+    shadowColor: colors.shadow, 
+    shadowOpacity: 0.12, 
+    shadowRadius: 5, 
+    shadowOffset: { 
+        width: 0, 
+        height: 3 
+    }, 
+    elevation: 2 
+},
+  nowPlayingText: { 
+    flex: 1, 
+    fontWeight: '600', 
+    color: colors.text, 
+    marginRight: 15 
+},
+  stopButton: { 
+    color: colors.trashcan, 
+    fontWeight: '700', 
+    marginLeft: 16, 
+    fontSize: 16 
+},
   artistBox: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 14,
+    borderColor: '#ccc',
     padding: 18,
     marginVertical: 8,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOpacity: 0.07,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 1 },
@@ -961,29 +1075,79 @@ fabDeleteIcon: {
 },
 songDesc: {
     fontSize: 14,
-    color: '#444',
+    color: colors.textSecondary,
     marginTop: 4,
     marginBottom: 2,
   },
   songSocial: {
     fontSize: 13,
-    color: '#2962ff', // Or pick any accent color you like
+    color: colors.primary, // Use primary for accent links
     textDecorationLine: 'underline',
     marginBottom: 2,
   },
   songSocialLink: {
     fontSize: 13,
-    color: '#2962ff',
+    color: colors.primary,
     textDecorationLine: 'underline',
   },
-  agreeRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18, marginBottom: 6 },
-  formLabel: { fontWeight: '700', fontSize: 15, color: '#333', marginTop: 0, marginBottom: 3 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 11, marginBottom: 8, fontSize: 15, color: '#222', backgroundColor: '#f6f7fb' },
-  genreRow: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 5, marginBottom: 5 },
-  genreChip: { borderWidth: 1, borderColor: '#bbb', borderRadius: 14, paddingVertical: 5, paddingHorizontal: 13, marginRight: 8, marginBottom: 8, backgroundColor: '#eee' },
-  genreChipActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
-  fileButton: { backgroundColor: '#4f46e5', borderRadius: 10, paddingVertical: 9, paddingHorizontal: 22 },
-  uploadButton: { backgroundColor: '#43a047', borderRadius: 10, marginTop: 22, paddingVertical: 13, alignItems: 'center' },
+  agreeRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    color: colors.text, 
+    marginTop: 18, 
+    marginBottom: 6 
+},
+  formLabel: { 
+    fontWeight: '700', 
+    fontSize: 15, 
+    color: colors.text, 
+    marginTop: 0, 
+    marginBottom: 3 
+},
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#ccc',
+    borderRadius: 8, 
+    padding: 11, 
+    marginBottom: 8, 
+    fontSize: 15, 
+    color: colors.text, 
+    backgroundColor: colors.background
+},
+  genreRow: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    marginVertical: 5, 
+    marginBottom: 5 
+},
+  genreChip: { 
+    borderWidth: 1, 
+    borderColor: colors.muted, 
+    borderRadius: 14, 
+    paddingVertical: 5, 
+    paddingHorizontal: 13, 
+    marginRight: 8, 
+    marginBottom: 8, 
+    backgroundColor: colors.categoryBg 
+},
+  genreChipActive: { 
+    backgroundColor: colors.primary, 
+    borderColor: colors.primary 
+},
+  fileButton: { 
+    backgroundColor: colors.primary, 
+    borderRadius: 10, 
+    paddingVertical: 9, 
+    paddingHorizontal: 22 
+},
+  uploadButton: { 
+    backgroundColor: '#4A90E2',
+    color: 'white', // Text color
+    borderRadius: 10, 
+    marginTop: 22, 
+    paddingVertical: 13, 
+    alignItems: 'center' 
+},
 });
 
 export default MusicScreen;

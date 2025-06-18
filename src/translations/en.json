@@ -456,7 +456,8 @@
   "reviewBusiness": "Review Business Applications",
   "reviewProfessors": "Review Professor Suggestions",
   "distributeQr": "Distribute QR Codes",
-  "reviewMusic": "Review Music"
+  "reviewMusic": "Review Music",
+  "notifyEvents": "Notify Events"
 
 },
 "professorReview": {
@@ -703,10 +704,29 @@
   "showingMusicForCity": "Showing music for {{city}}",
   "chooseCity": "Choose a city in Home Screen to see local music",
   "adminUnlimitedUploads": "You can upload unlimited songs as an admin.",
-  "playCount": "plays"
+  "playCount": "plays",
+  "uploadingFromCity": "Uploading from: {{city}}",
+  "unknownCity": "Unknown city"
 },
 "play": "Play",
 "approve": "Approve",
 "reject": "Reject",
-"backToMyCity": "<< Back to my current city"
+"backToMyCity": "<< Back to my current city",
+"adminNotification": {
+  "title": "Notify users in Peru",
+  "notifTitle": "Notification Title",
+  "notifTitlePlaceholder": "Enter the title...",
+  "message": "Message",
+  "messagePlaceholder": "Enter the message...",
+  "completeFieldsTitle": "Complete all fields",
+  "completeFieldsMsg": "Please enter both a title and message before sending.",
+  "noAdminSessionTitle": "No Admin Session",
+  "noAdminSessionMsg": "You must be logged in as admin.",
+  "successTitle": "Success",
+  "successMsg": "Notification sent to {count} users in Peru.",
+  "failureTitle": "Failure",
+  "failureMsg": "Something went wrong while sending the notification.",
+  "errorTitle": "Error",
+  "sendBtn": "📣 Send Notification"
+}
 }  
