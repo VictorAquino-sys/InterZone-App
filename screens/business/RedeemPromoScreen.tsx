@@ -63,6 +63,12 @@ export default function RedeemPromoScreen() {
     return () => { isActive = false; };
 
   }, []);
+
+  useEffect(() => {
+    if (!device && mode === 'scan') {
+      appendDebug('No camera device found');
+    }
+  }, [device, mode]);
   
   useEffect(() => {
     if (showSuccessModal) {
@@ -143,8 +149,11 @@ export default function RedeemPromoScreen() {
 
 
   if (!device && mode === 'scan') {
-    appendDebug('No camera device found');
-    return <Text style={styles.centered}>{i18n.t('promo.noCamera')}</Text>;
+    return (
+      <View style={styles.centered}>
+        <Text>{i18n.t('promo.noCamera')}</Text>
+      </View>
+    );
   }
 
   return (
