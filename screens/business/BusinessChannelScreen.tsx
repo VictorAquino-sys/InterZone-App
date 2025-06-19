@@ -17,6 +17,7 @@ import { deleteDoc, doc } from 'firebase/firestore';
 import BusinessReviewListModal from '@/components/BusinessReviewListModal';
 import BusinessRatingModal from '@/components/BusinessRatingModal';
 import { useNavigation } from '@react-navigation/native';
+import { deleteImageFromStorage } from '@/utils/storageUtils';
 import { Alert } from 'react-native';
 
 interface BusinessChannelRouteParams {
@@ -105,30 +106,42 @@ const BusinessChannelScreen = () => {
     }
   };
 
-  const handleDeletePost = async (postId: string, imageUrl?: string | null) => {
-      Alert.alert(
-          i18n.t('businessChannel.deleteTitle'),
-          i18n.t('businessChannel.deleteMessage'),
+  const handleDeletePost = async (postId: string, imageUrls?: string | string[]) => {
+    Alert.alert(
+      i18n.t('businessChannel.deleteTitle'),
+      i18n.t('businessChannel.deleteMessage'),
       [
-          { text: "Cancel", style: "cancel" },
-          {
-              text: i18n.t('delete'),
-              style: "destructive",
+        { text: "Cancel", style: "cancel" },
+        {
+          text: i18n.t('delete'),
+          style: "destructive",
           onPress: async () => {
-              try {
+            try {
               setDeletingPostId(postId); // 🔄 start loading
   
+              // 🔥 Delete images from storage if present
+              if (imageUrls) {
+                if (Array.isArray(imageUrls)) {
+                  for (const url of imageUrls) {
+                    await deleteImageFromStorage(url);
+                  }
+                } else if (typeof imageUrls === "string") {
+                  await deleteImageFromStorage(imageUrls);
+                }
+              }
+  
+              // Delete post from Firestore
               await deleteDoc(doc(db, 'posts', postId));
               setPosts(prev => prev.filter(post => post.id !== postId));
-              } catch (error) {
+            } catch (error) {
               console.error('❌ Error deleting post:', error);
-              } finally {
+            } finally {
               setDeletingPostId(null); // ✅ stop loading
-              }
+            }
           },
-          },
+        },
       ]
-      );
+    );
   };
 
   if (loading) {
