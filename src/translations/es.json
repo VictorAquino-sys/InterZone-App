@@ -493,6 +493,7 @@
         "tooShortSaveMessage": "Escribe un comentario más largo antes de guardar.",
         "header": "Discusión - {{name}}",
         "post": "Publicar",
+        "uploading": "Cargando...",
         "loading": "Cargando comentarios...",
         "edit": "Editar",
         "delete": "Eliminar",
@@ -503,7 +504,13 @@
         "tooShortPost": "Escribe una publicación más larga.",
         "tooShortEdit": "Por favor, escribe algo significativo antes de guardar.",
         "limitTitle": "Límite Alcanzado",
-        "limitMsg": "Solo puedes publicar una vez por día."
+        "limitMsg": "Solo puedes publicar una vez por día.",
+        "uploadFailedTitle": "Error al subir",
+        "uploadFailedMessage": "No se pudo subir la imagen.\n{{error}}",
+        "deleteFailedTitle": "Error al borrar",
+        "deleteFailedMessage": "No se pudo borrar el mensaje.\n{{error}}",
+        "noPermissionTitle": "Permiso necesario",
+        "noPermissionMessage": "Necesitamos acceso a tu galería para subir imágenes."
     },
     "rateProfessors": {
         "header": "Busca o Agrega a Profesores",

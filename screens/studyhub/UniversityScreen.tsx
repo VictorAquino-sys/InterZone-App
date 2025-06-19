@@ -46,17 +46,6 @@ const UniversityScreen = () => {
           }}
         >
           <Tab.Screen
-            name="RateMyProfessors"
-            options={{ title: i18n.t('university.rateTab') }}
-          >
-            {() => (
-              <RateMyProfessorsScreen
-                universityId={universityId}
-                universityName={universityName}
-              />
-            )}
-          </Tab.Screen>
-          <Tab.Screen
             name="Discussion"
             options={{ title: i18n.t('university.discussionTab') }}
           >
@@ -67,6 +56,18 @@ const UniversityScreen = () => {
               />
             )}
           </Tab.Screen>
+          <Tab.Screen
+            name="RateMyProfessors"
+            options={{ title: i18n.t('university.rateTab') }}
+          >
+            {() => (
+              <RateMyProfessorsScreen
+                universityId={universityId}
+                universityName={universityName}
+              />
+            )}
+          </Tab.Screen>
+
         </Tab.Navigator>
       );
     };

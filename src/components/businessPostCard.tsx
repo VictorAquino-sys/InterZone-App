@@ -22,7 +22,7 @@ import LikeButton from './LikeButton'; // ✅ Make sure this is the correct path
 interface Props {
   post: Post;
   onOpenImage: (url: string) => void;
-  onDelete: (postId: string, imageUrl?: string) => void;
+  onDelete: (postId: string, imageUrls?: string[] | string) => void;
   userId: string;
 }
 
@@ -35,6 +35,14 @@ const BusinessPostCard = ({ post, onOpenImage, onDelete, userId }: Props) => {
     const { user } = useUser();
     const [loadingComments, setLoadingComments] = useState(false);
     const [videoLoaded, setVideoLoaded] = useState(false);
+    const [zoomIndex, setZoomIndex] = useState(0); // Track which image to open in the modal
+
+    // Array support for images
+    const imageUrls = Array.isArray(post.imageUrl)
+    ? post.imageUrl
+    : post.imageUrl
+    ? [post.imageUrl]
+    : [];
 
   return (
     <View style={styles.container}>
@@ -45,11 +53,31 @@ const BusinessPostCard = ({ post, onOpenImage, onDelete, userId }: Props) => {
             </Text>
         )}
 
-        {/* Image */}
-        {post.imageUrl && (
-            <TouchableOpacity onPress={() => setZoomModalVisible(true)}>
-            <Image source={{ uri: post.imageUrl ?? '' }} style={styles.image} />
+        {/* Images - show first image, tap to zoom through all */}
+        {imageUrls.length > 0 && (
+          <View style={{ marginTop: 4 }}>
+            <TouchableOpacity
+              onPress={() => {
+                setZoomIndex(0);
+                setZoomModalVisible(true);
+              }}
+              style={{ position: 'relative' }}
+              activeOpacity={0.93}
+            >
+              <Image
+                source={{ uri: imageUrls[0] }}
+                style={styles.image}
+              />
+              {/* Multi-image indicator */}
+              {imageUrls.length > 1 && (
+                <View style={styles.imageCountIndicator}>
+                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>
+                    1/{imageUrls.length}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
+          </View>
         )}
 
         {/* Video Preview */}
@@ -93,7 +121,7 @@ const BusinessPostCard = ({ post, onOpenImage, onDelete, userId }: Props) => {
             {userId === post.user?.uid && (
                 <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => onDelete(post.id, post.imageUrl)}
+                onPress={() => onDelete(post.id, imageUrls)}
                 >
                 <Ionicons name="trash-outline" size={22} color="red" />
                 </TouchableOpacity>
@@ -131,16 +159,41 @@ const BusinessPostCard = ({ post, onOpenImage, onDelete, userId }: Props) => {
             />
 
         {/* Image Zoom Modal */}
-        <Modal
-            visible={zoomModalVisible}
-            transparent
-            onRequestClose={() => setZoomModalVisible(false)}
+          <Modal
+          visible={zoomModalVisible}
+          transparent
+          onRequestClose={() => setZoomModalVisible(false)}
         >
-            <ImageViewer
-            imageUrls={[{ url: post.imageUrl ?? '' }]}
+          <ImageViewer
+            imageUrls={imageUrls.map(url => ({ url }))}
+            index={zoomIndex}
             onSwipeDown={() => setZoomModalVisible(false)}
             enableSwipeDown
-            />
+            renderIndicator={(currentIndex?: number, allSize?: number) => (
+              typeof currentIndex === 'number' && typeof allSize === 'number' ? (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 70,
+                    left: 0,
+                    right: 0,
+                    alignItems: 'center',
+                    zIndex: 1000,
+                  }}
+                >
+                  <Text style={{
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    fontSize: 18,
+                    textShadowColor: '#000',
+                    textShadowRadius: 8,
+                  }}>
+                    {`${currentIndex}/${allSize}`}
+                  </Text>
+                </View>
+              ) : <></> // Return empty fragment instead of null!
+            )}
+          />
         </Modal>
 
       {/* Fullscreen Video Modal */}
@@ -204,6 +257,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#000',
     marginBottom: 8,
+  },
+  imageCountIndicator: {
+    position: 'absolute',
+    bottom: 8,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 14,
   },
   video: {
     width: '100%',

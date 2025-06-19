@@ -30,7 +30,7 @@ interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
     userId: string;
     user: User;
-    onDelete: (postId: string, imageUrl: string | null) => void;
+    onDelete: (postId: string, imageUrls: string[] | null) => void;
     onReport: (postId: string, userId: string) => void;
     onOpenImage: (imageUrl: string) => void;
     onUserProfile: (userId: string) => void;
@@ -91,7 +91,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const [businessRating, setBusinessRating] = useState<{ average: number; count: number } | null>(null);
 
-  const [status, setStatus] = useState<any>({}); // Update state with appropriate type for Video status
+  // const [status, setStatus] = useState<any>({}); // Update state with appropriate type for Video status
   const [showControls, setShowControls] = useState(false); // To control visibility of the play/pause button
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false); // Modal visibility state
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null); // State for selected video URL
@@ -102,6 +102,17 @@ const PostCard: React.FC<PostCardProps> = ({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const { resolvedTheme, toggleTheme } = useTheme();
   const colors = themeColors[resolvedTheme];
+  // const [zoomKey, setZoomKey] = useState(0);
+
+
+  const [zoomIndex, setZoomIndex] = useState<number>(0);
+  
+  const imageUrls = Array.isArray(item.imageUrl)
+  ? item.imageUrl
+  : item.imageUrl
+    ? [item.imageUrl]
+    : [];
+
 
   const fetchRecentComments = async () => {
     const q = query(
@@ -345,18 +356,18 @@ const PostCard: React.FC<PostCardProps> = ({
     handleToggleComments(); // Re-fetch latest
   };
 
-  const handleOpenImage = (imageUrl: string) => {
-    setZoomModalVisible(true); // Open zoom modal
-  };
+  // const handleOpenImage = (imageUrl: string) => {
+  //   setZoomModalVisible(true); // Open zoom modal
+  // };
 
   const handleCloseImage = () => {
     setZoomModalVisible(false); // Close zoom modal
   };
 
   // Handle video play/pause
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying); // Toggle play/pause state
-  };
+  // const togglePlayPause = () => {
+  //   setIsPlaying(!isPlaying); // Toggle play/pause state
+  // };
 
   const handleVideoClick = (videoUrl: string) => {
     console.log('Received video URL:', videoUrl);  // Log the video URL passed to the function
@@ -370,16 +381,33 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   // Handle touch start (show controls)
-  const handleTouchStart = () => {
-    setShowControls(true);
-  };
+  // const handleTouchStart = () => {
+  //   setShowControls(true);
+  // };
+
+  // const renderCustomIndicator = (currentIndex: number, allSize: number) => (
+  //   <View style={{
+  //     position: 'absolute',
+  //     bottom: 24,
+  //     right: 24,
+  //     backgroundColor: 'rgba(0,0,0,0.6)',
+  //     borderRadius: 14,
+  //     paddingHorizontal: 14,
+  //     paddingVertical: 6,
+  //     zIndex: 99,
+  //   }}>
+  //     <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+  //       {currentIndex} / {allSize}
+  //     </Text>
+  //   </View>
+  // );
 
   // Handle touch end (hide controls)
-  const handleTouchEnd = () => {
-    setTimeout(() => {
-      setShowControls(false); // Hide controls after 1 second
-    }, 1000);
-  };
+  // const handleTouchEnd = () => {
+  //   setTimeout(() => {
+  //     setShowControls(false); // Hide controls after 1 second
+  //   }, 1000);
+  // };
 
   const handleCopyText = async () => {
     try {
@@ -577,19 +605,77 @@ const PostCard: React.FC<PostCardProps> = ({
         </Text>
       )}
 
-      {item.imageUrl && (
-        <TouchableOpacity onPress={() => handleOpenImage(item.imageUrl)}>
-          <View style={styles.postImageWrapper}>
-            <Image source={{ uri: item.imageUrl }} style={styles.postImage} resizeMode='cover' />
-          </View>
-        </TouchableOpacity>
+      {/* Render multiple images if present */}
+      {imageUrls.length > 0 && (
+        <View style={{ marginTop: 8 }}>
+          <TouchableOpacity
+            onPress={() => {
+              console.log('imageUrls:', imageUrls); // This is SAFE!
+              setZoomIndex(0);
+              setZoomModalVisible(true);
+            }}
+            style={{ position: 'relative' }}
+            activeOpacity={0.95}
+          >
+            <Image
+              source={{ uri: imageUrls[0] }}
+              style={{ width: '100%', height: 250, borderRadius: 16 }}
+              resizeMode='cover'
+            />
+            {/* Multi-image count indicator */}
+            {imageUrls.length > 1 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  // top: Platform.OS === 'ios' ? 30 : 14,
+                  bottom: 8,
+                  right: 12,
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  paddingVertical: 3,
+                  paddingHorizontal: 10,
+                  borderRadius: 14,
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>
+                  1/{imageUrls.length}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       )}
 
       <Modal visible={zoomModalVisible} transparent={true} onRequestClose={handleCloseImage}>
         <ImageViewer
-        imageUrls={[{ url: item.imageUrl }]}  // Pass the image URL to the zoom viewer
-        onSwipeDown={handleCloseImage} // Close on swipe down
-        enableSwipeDown={true} // Allow swipe down to close
+          imageUrls={imageUrls.map(url => ({ url }))}
+          index={zoomIndex}
+          onSwipeDown={handleCloseImage}
+          enableSwipeDown={true}
+          renderIndicator={(currentIndex?: number, allSize?: number) => {
+            if (typeof currentIndex !== "number" || typeof allSize !== "number") return <View />;
+            return (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 70,
+                  left: 0,
+                  right: 0,
+                  alignItems: 'center',
+                  zIndex: 1000,
+                }}
+              >
+                <Text style={{
+                  color: '#fff',
+                  fontWeight: 'bold',
+                  fontSize: 18,
+                  textShadowColor: '#000',
+                  textShadowRadius: 8,
+                }}>
+                  {`${currentIndex}/${allSize}`}
+                </Text>
+              </View>
+            );
+          }}
         />
       </Modal>
 
@@ -739,7 +825,7 @@ const PostCard: React.FC<PostCardProps> = ({
                 if (isDeleting) return;
                 setIsDeleting(true);
                 try {
-                  await onDelete(item.id, item.imageUrl);
+                  await onDelete(item.id, Array.isArray(item.imageUrl) ? item.imageUrl : item.imageUrl ? [item.imageUrl] : []);
                 } finally {
                   setIsDeleting(false);
                 }

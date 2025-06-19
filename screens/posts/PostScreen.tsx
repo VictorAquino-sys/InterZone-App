@@ -57,7 +57,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [videoPath, setVideoPath] = useState<string | null>(null); // Video path state
   const [videoUri, setVideoUri] = useState<string | null>(null); // Store video URI
-  const [imageUri, setImageUri] = useState<string | null>(null); // Store post image URI
+  const [imageUri, setImageUri] = useState<string[]>([]); // Store post image URI
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null); // New state to track media type
   const [uploading, setUploading] = useState<boolean>(false);  // Track image upload status
   const [isShowcase, setIsShowcase] = useState(false); // 🔹 Showcase toggle state
@@ -235,7 +235,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                       setVideoUri(savedPath);
                       setVideoPath(savedPath);
                       setMediaType('video');
-                      setImageUri(null);
+                      setImageUri([]);
                       console.log("✅ Trimmed video manually selected and saved.");
                     } else {
                       Alert.alert("Error", "Failed to save the trimmed video.");
@@ -311,7 +311,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       setVideoUri(savedPath);
       setVideoPath(savedPath);
       setMediaType('video');
-      setImageUri(null);
+      setImageUri([]);
         // console.log('✅ Video successfully uploaded:', downloadUrl);
     } catch (err: any) {
       console.error('Error during video selection/upload:', err);
@@ -354,6 +354,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
 
   // Pick an image for the post
   const pickImage = async () => {
+    if (imageUri.length >= 3) {
+      Alert.alert('Limit reached', 'You can only add up to 3 photos.');
+      return;
+    }
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Sorry, we need camera roll permissions to make this work!');
@@ -384,7 +389,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   
       console.log("📁 Image copied to safe local storage:", newUri);
   
-      setImageUri(newUri);       // Set local URI for preview and upload
+      setImageUri(prev => [...prev, newUri]);       // Set local URI for preview and upload
       setMediaType('image');
       setVideoUri(null);         // Clear video if set
     } catch (err) {
@@ -579,13 +584,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       const latestUserData = userSnap.exists() ? userSnap.data() : { name: 'Anonymous', avatar: '' };
 
       // Upload image if provided
-      let imageUrl = "";
+      let imageUrls: string[] = [];
       let videoUrl = "";
       let videoStoragePath = "";
 
-      if (mediaType === 'image' && imageUri) {
-        console.log("Resizing and uploading image...");
-        imageUrl = await handleImageUpload(imageUri) || '';
+      if (mediaType === 'image' && imageUri.length > 0) {
+        imageUrls = [];
+        for (const uri of imageUri) {
+          const url = await handleImageUpload(uri);
+          if (url) imageUrls.push(url);
+        }
       } else if (mediaType === 'video' && videoUri) {
         if (!user) {
           Alert.alert(i18n.t('userContextErrorTitle'), i18n.t('userContextErrorMessage'))
@@ -613,7 +621,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         city: location,
         content: postText,
         timestamp: Timestamp.fromDate(new Date()),
-        imageUrl: imageUrl || "", // Attach uploaded image URL
+        imageUrl: imageUrls.length > 0 ? imageUrls : [],
         imagePath: imagePath || "",
         videoUrl: videoUrl || "", // Attach uploaded video URL
         videoPath: videoStoragePath || "", // Store video path for later use
@@ -655,7 +663,16 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       console.log("Post added successfully with ID:", docRef.id);
 
       // Update local state
-      setPosts(prevPosts => [{ id: docRef.id, ...postData }, ...prevPosts]);
+      setPosts(prevPosts => [
+        {
+          id: docRef.id,
+          ...postData,
+          // Remove any legacy 'imageUrls', always provide 'imageUrl' as array
+          imageUrl: imageUrls,
+          // If you want, ensure always present: imagePath: imagePath || ""
+        },
+        ...prevPosts
+      ]);
 
       // ✅ Delete actual file from internal storage
       if (videoUri?.startsWith("file://") || videoUri?.startsWith("/data/")) {
@@ -687,7 +704,7 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       navigation.goBack();
       setPostText(''); // Clear the input field
       setLocation(null);
-      setImageUri(null);
+      setImageUri([]);
       setImagePath(null);      // ✅ Clear stored image path
       setVideoPath(null); // Clear video path
       setSelectedCategory(''); // ✅ Reset selected category
@@ -830,10 +847,29 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                 </View>
 
                 {/* Image Preview */}
-                {imageUri && (
-                  <View style={styles.imagePreviewContainer}>
-                    <Text style={styles.previewText}>{i18n.t('imagePreview')}</Text>
-                    <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                {imageUri.length > 0 && (
+                  <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                    {imageUri.map((uri, idx) => (
+                      <View key={idx} style={{ marginRight: 8, position: 'relative' }}>
+                        <Image source={{ uri }} style={{ width: 90, height: 90, borderRadius: 8 }} />
+                        <TouchableOpacity
+                          style={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            backgroundColor: '#fff',
+                            borderRadius: 12,
+                            borderWidth: 1,
+                            borderColor: '#ccc',
+                            zIndex: 2,
+                            padding: 2
+                          }}
+                          onPress={() => setImageUri(prev => prev.filter((_, i) => i !== idx))}
+                        >
+                          <Ionicons name="close-circle" size={22} color="#E57373" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
                   </View>
                 )}
 
@@ -857,11 +893,11 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
                   {/* Image picker button */}
                   <TouchableOpacity 
                     onPress={pickImage} 
-                    disabled={locationLoading || !isLocationReady || !isCategorySelected || mediaType === 'video'}>
+                    disabled={locationLoading || !isLocationReady || !isCategorySelected || mediaType === 'video' || imageUri.length >= 3}>
                       <Ionicons 
                         name="image-outline" 
                         size={30} 
-                        color={(!isCategorySelected || !isLocationReady || mediaType === 'video') ? "gray" : "#FF9966"} /> 
+                        color={(!isCategorySelected || !isLocationReady || mediaType === 'video' || imageUri.length >= 3) ? "gray" : "#FF9966"} /> 
                   </TouchableOpacity>
 
                   {/* Video picker button */}

@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { collection, addDoc, getDocs, serverTimestamp, orderBy, query, updateDoc, doc, where, Timestamp, limit, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, serverTimestamp, orderBy, query, updateDoc, doc, where, Timestamp, limit, deleteDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { ActivityIndicator } from 'react-native';
 import { db } from '@/config/firebase';
 import { useUser } from '@/contexts/UserContext';
 import i18n from '@/i18n';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useVerifiedSchool } from '@/contexts/verifiedSchoolContext';
 
 type Props = {
@@ -18,6 +22,24 @@ type DiscussionPost = {
   createdAt: any;
   createdBy: string;
   createdByName?: string;
+  imageUrl?: string;
+};
+
+export const deleteImageByUrl = async (imageUrl: string) => {
+  try {
+    const storage = getStorage();
+    const matches = imageUrl.match(/\/o\/(.+)\?/);
+    if (!matches || matches.length < 2) {
+      console.warn('❗ No storage path found in imageUrl:', imageUrl);
+      return;
+    }
+    const filePath = decodeURIComponent(matches[1]);
+    const imageRef = ref(storage, filePath);
+    await deleteObject(imageRef);
+    console.log('🗑️ Deleted image from Storage:', filePath);
+  } catch (e) {
+    console.warn('⚠️ Could not delete image from Storage:', e);
+  }
 };
 
 const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
@@ -27,6 +49,9 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
   const flatListRef = useRef<FlatList>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
   const [firstLoad, setFirstLoad] = useState(true);
   // const [loading, setLoading] = useState(true);
   const { school, loading: schoolLoading } = useVerifiedSchool();
@@ -66,9 +91,36 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
     }
   }, [editingPostId]);
 
+  const resizeImage = async (uri: string): Promise<string> => {
+    const resizedPhoto = await manipulateAsync(
+      uri,
+      [{ resize: { width: 1080 } }],
+      { compress: 0.7, format: SaveFormat.JPEG }
+    );
+    return resizedPhoto.uri;
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(i18n.t('discussion.noPermissionTitle'), i18n.t('discussion.noPermissionMessage'));
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const removeImage = () => setSelectedImage(null);
 
   const handlePost = async () => {
-    if (!user?.uid || newPost.trim().length < 2) {
+    if (!user?.uid || (newPost.trim().length < 2 && !selectedImage)) {
       Alert.alert(i18n.t('discussion.tooShortTitle'), i18n.t('discussion.tooShortPost'));
       return;
     }
@@ -82,22 +134,69 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
     // If 30 or more, delete the oldest
     if (snap.size >= 30) {
       const oldestDoc = snap.docs[0];
+      const oldestData = oldestDoc.data();
+      if (oldestData?.imageUrl) {
+        await deleteImageByUrl(oldestData.imageUrl);
+      }
       await deleteDoc(oldestDoc.ref);
     }
   
+    let imageUrl: string | null = null;
+
+    if (selectedImage) {
+      setUploading(true);
+      let resizedUri: string | undefined = undefined; // Define here so it's visible in catch!
+
+      try {
+        // Compress and resize image
+        resizedUri = await resizeImage(selectedImage);
+
+        const storage = getStorage();
+        const imageId = `${user.uid}_${Date.now()}`;
+        const imageRef = ref(storage, `discussion_images/${resolvedUniversityId}/${imageId}.jpg`);
+
+        // fetch the file as a blob
+        const img = await fetch(resizedUri);
+        const blob = await img.blob();
+
+        await uploadBytes(imageRef, blob);
+        imageUrl = await getDownloadURL(imageRef);
+      } catch (err:any) {
+        console.log("❌ Image upload failed:", err, resizedUri);
+        Alert.alert(i18n.t('discussion.uploadFailedTitle'), i18n.t('discussion.uploadFailedMessage', { error: err?.message || err }));
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
     const newDoc = {
       content: newPost.trim(),
       createdBy: user.uid,
       createdByName: user.name ?? 'Anonymous',
       createdAt: serverTimestamp(),
+      ...(imageUrl ? { imageUrl } : {}),
     };
   
     await addDoc(collectionRef, newDoc);
     setNewPost('');
+    setSelectedImage(null);
+
   };
 
   const handleDeletePost = async (postId: string) => {
-    await deleteDoc(doc(db, 'universities', resolvedUniversityId! , 'discussions', postId));
+    try {
+      const postRef = doc(db, 'universities', resolvedUniversityId!, 'discussions', postId);
+      const postDoc = await getDoc(postRef);
+      const postData = postDoc.data();
+  
+      if (postData?.imageUrl) {
+        await deleteImageByUrl(postData.imageUrl);
+      }
+      await deleteDoc(postRef);
+    } catch (err: any) {
+      Alert.alert(i18n.t('discussion.deleteFailedTitle'), i18n.t('discussion.deleteFailedMessage', { error: err?.message || String(err) }));
+    }
   };
 
   const renderItem = ({ item }: { item: DiscussionPost }) => {
@@ -120,6 +219,14 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
                 minute: '2-digit',
               })}
           </Text>
+
+          {item.imageUrl && (
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={{ width: 180, height: 180, borderRadius: 12, marginVertical: 6 }}
+              resizeMode="cover"
+            />
+          )}
 
           {isCurrentUser && (
             <View style={styles.messageActions}>
@@ -157,31 +264,6 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
               {i18n.t('discussion.editing')} ({user?.name || i18n.t('discussion.you')})
             </Text>
             
-            <View style={{ position: 'relative', marginBottom: 16 }}>
-              <TextInput
-                editable={!schoolLoading}
-                autoFocus={!!editingPostId}
-                placeholder={i18n.t('discussion.editPlaceholder')}
-                style={styles.input}
-                value={editingText}
-                onChangeText={setEditingText}
-                multiline
-                maxLength={200}
-              />
-              <Text
-                style={{
-                  position: 'absolute',
-                  right: 14, // Adjust for your border/padding
-                  bottom: 10, // Adjust for your font size/input height
-                  color: editingText.length > 190 ? '#d32f2f' : '#888',
-                  fontSize: 12,
-                  backgroundColor: 'white', // Or match your input bg
-                  paddingHorizontal: 2,
-                }}>
-                {editingText.length}/200
-              </Text>
-            </View>
-
             <TouchableOpacity
               style={styles.postButton}
               onPress={async () => {
@@ -210,36 +292,62 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
           </>
         ) : (
           <>
-          <View style={{ position: 'relative', marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <TouchableOpacity onPress={pickImage} style={{ marginRight: 10 }}>
+              <Text style={{ fontSize: 22 }}>📎</Text>
+            </TouchableOpacity>
             <TextInput
               value={newPost}
               onChangeText={setNewPost}
               placeholder={i18n.t('discussion.placeholder')}
               multiline
               maxLength={200}
-              style={[styles.input, { paddingRight: 48 }]} // Add extra right padding for the counter!
+              style={[styles.input, { paddingRight: 48, flex: 1 }]}
             />
+
             <Text
               style={{
                 position: 'absolute',
-                right: 14, // Adjust for your border/padding
-                bottom: 10, // Adjust for your font size/input height
+                right: 14,
+                bottom: 10,
                 color: newPost.length > 190 ? '#d32f2f' : '#888',
                 fontSize: 12,
-                backgroundColor: 'white', // Or match your input bg
+                backgroundColor: 'white',
                 paddingHorizontal: 2,
-              }}>
+              }}
+            >
               {newPost.length}/200
             </Text>
+
+            {selectedImage && (
+              <TouchableOpacity onPress={removeImage}>
+                <Text style={{ fontSize: 22, color: 'red', marginLeft: 8 }}>✖️</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-            <TouchableOpacity
-              style={[styles.postButton, newPost.trim().length < 2 && { backgroundColor: '#ccc' }]}
-              onPress={handlePost}
-              disabled={newPost.trim().length < 2}
-            >
-              <Text style={styles.postButtonText}>{i18n.t('discussion.send')}</Text>
-            </TouchableOpacity>
+
+
+          {selectedImage && (
+            <Image
+              source={{ uri: selectedImage }}
+              style={{ width: 100, height: 100, borderRadius: 8, marginBottom: 8 }}
+            />
+          )}
+          {uploading && <ActivityIndicator size="small" color="#007AFF" style={{ marginBottom: 8 }} />}
+
+          <TouchableOpacity
+            style={[
+              styles.postButton,
+              (newPost.trim().length < 2 && !selectedImage) || uploading ? { backgroundColor: '#ccc' } : {}
+            ]}
+            onPress={handlePost}
+            disabled={newPost.trim().length < 2 && !selectedImage || uploading}
+          >
+            <Text style={styles.postButtonText}>
+              {uploading ? i18n.t('discussion.uploading') : i18n.t('discussion.send')}
+            </Text>
+          </TouchableOpacity>
 
           </>
         )}

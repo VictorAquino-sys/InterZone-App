@@ -4,6 +4,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import type { DocumentPickerAsset } from 'expo-document-picker';
 // import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 // import { deleteObject, ref as storageRef } from 'firebase/storage';
+import { onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { getFirestore, collection, addDoc, Timestamp, query, where, getDocs, orderBy, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { useUser } from '../src/contexts/UserContext';
@@ -89,48 +90,46 @@ const MusicScreen = () => {
     // Fetch songs from Firestore on mount and when uploads change
     useEffect(() => {
         if (selectedTab !== 'listen') return;
-        setLoadingSongs(true);
-        const fetchSongs = async () => {
-        try {
-            let q;
-            if (city) {
-              q = query(
-                collection(firestore, 'songs'),
-                where('city', '==', city), // You can remove filter to show all for now
-                where('status', '==', 'approved'), // or 'approved' if you add moderation
-                orderBy('createdAt', 'desc')
-                );
-            } else {
-                // Optional: fetch no songs or all songs; here we fetch none
-                setSongs([]);
-                setLoadingSongs(false);
-                return;
-            }
 
-            const snap = await getDocs(q);
+        setLoadingSongs(true);
+
+        let q;
+        if (city) {
+            q = query(
+            collection(firestore, 'songs'),
+            where('city', '==', city),
+            where('status', '==', 'approved'),
+            orderBy('createdAt', 'desc')
+            );
+        } else {
+            setSongs([]);
+            setLoadingSongs(false);
+            return;
+        }
+
+        // Real-time listener
+        const unsubscribe = onSnapshot(q, (snap) => {
             const docs = snap.docs
             .map(doc => {
-              // Explicitly cast doc.data() as Partial<Song>
-              const data = doc.data() as Partial<Song>;
-              return { id: doc.id, ...data };
+                const data = doc.data() as Partial<Song>;
+                return { id: doc.id, ...data };
             })
             .filter(
-              (d): d is Song =>
+                (d): d is Song =>
                 typeof d.title === 'string' &&
                 typeof d.artist === 'string' &&
                 typeof d.genre === 'string' &&
                 typeof d.fileUrl === 'string'
             );
             setSongs(docs);
-            console.log("Current city for music filter:", city);
-        } catch (e: any) {
-            console.error('Error loading songs:', e);
-            Alert.alert('Error loading songs', e.message);
-        } finally {
             setLoadingSongs(false);
-        }
-        };
-        fetchSongs();
+        }, (error:any) => {
+            console.error('Error loading songs:', error);
+            setLoadingSongs(false);
+        });
+
+        return () => unsubscribe();
+
     }, [selectedTab, city]);
 
     async function handlePickFile() {
@@ -251,10 +250,6 @@ const MusicScreen = () => {
                 playCount: increment(1),
             });
     
-            // Update the local state immediately for a responsive UI
-            setSongs(songs => songs.map(s => 
-                s.id === song.id ? { ...s, playCount: (s.playCount || 0) + 1 } : s
-            ));
         } catch (err) {
             console.log('Failed to increment playCount:', err);
         }
