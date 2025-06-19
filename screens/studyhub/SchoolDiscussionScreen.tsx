@@ -103,7 +103,7 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      Alert.alert(i18n.t('discussion.noPermissionTitle'), i18n.t('discussion.noPermissionMessage'));
       return;
     }
 
@@ -163,7 +163,7 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
         imageUrl = await getDownloadURL(imageRef);
       } catch (err:any) {
         console.log("❌ Image upload failed:", err, resizedUri);
-        Alert.alert('Upload failed', `Could not upload image.\n${err?.message || err}`);
+        Alert.alert(i18n.t('discussion.uploadFailedTitle'), i18n.t('discussion.uploadFailedMessage', { error: err?.message || err }));
         setUploading(false);
         return;
       }
@@ -195,7 +195,7 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
       }
       await deleteDoc(postRef);
     } catch (err: any) {
-      Alert.alert('Delete failed', err?.message || String(err));
+      Alert.alert(i18n.t('discussion.deleteFailedTitle'), i18n.t('discussion.deleteFailedMessage', { error: err?.message || String(err) }));
     }
   };
 

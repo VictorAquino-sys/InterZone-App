@@ -498,7 +498,13 @@
     "tooShortPost": "Write a longer post.",
     "tooShortEdit": "Please write something meaningful before saving.",
     "limitTitle": "Limit Reached",
-    "limitMsg": "You can only post once per day."
+    "limitMsg": "You can only post once per day.",
+    "uploadFailedTitle": "Upload failed",
+    "uploadFailedMessage": "Could not upload image.\n{{error}}",
+    "deleteFailedTitle": "Delete failed",
+    "deleteFailedMessage": "Could not delete post.\n{{error}}",
+    "noPermissionTitle": "Permission Needed",
+    "noPermissionMessage": "We need access to your photo library to upload images."
   },
   "rateProfessors": {
     "header": "Search or Add Professors",
