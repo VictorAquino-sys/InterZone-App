@@ -493,6 +493,7 @@
         "tooShortSaveMessage": "Escribe un comentario más largo antes de guardar.",
         "header": "Discusión - {{name}}",
         "post": "Publicar",
+        "uploading": "Cargando...",
         "loading": "Cargando comentarios...",
         "edit": "Editar",
         "delete": "Eliminar",

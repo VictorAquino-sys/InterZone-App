@@ -31,6 +31,7 @@ export default {
       jsEngine: "hermes",
       infoPlist: {
         LSApplicationQueriesSchemes: ['itms-apps'],
+        UIBackgroundModes: ["audio"],
         NSLocationAlwaysAndWhenInUseUsageDescription: "InterZone uses your location to recommend nearby activities and notify you about local events while you are using the app. For example, you might get alerts about a concert or food truck gathering near you.",
         NSLocationWhenInUseUsageDescription: "InterZone uses your location to show community posts, events, and activities near you. For example, you will see local meetups and concerts happening in your city.",
         NSMicrophoneUsageDescription: "We need access to your microphone to record videos.",

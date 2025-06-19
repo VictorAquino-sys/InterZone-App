@@ -596,7 +596,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     );
   };
 
-  const handleDeletePost = (postId: string, imageUrl: string | null) => {
+  const handleDeletePost = (postId: string, imageUrl: string[] | null) => {
     Alert.alert(
       i18n.t('confirmDeleteTitle'), // "Confirm Delete"
       i18n.t('confirmDeleteMessage'), // "Are you sure you want to delete this post?"
@@ -615,28 +615,26 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     );
   };
 
-  const deletePost = async (postId: string, imageUrl:string | null) => {
-    if (imageUrl) {
-      const storage = getStorage(); // Make sure storage is initialized
-      // Create a reference to the file to delete
-
-      console.log("Attempting to delete post:", postId);
-      // Check if there is an image URL to delete
-      // if (imageUrl) {
-      const imageRef = storageRef(storage, imageUrl);
-
-      // Delete the file
-      deleteObject(imageRef)
-          .then(() => {
-              console.log('Image successfully deleted!');
-          })
-          .catch((error) => {
-            if (error.code === 'storage/object-not-found') {
-                console.log('No image found, nothing to delete.');
-            } else {
-                console.error('Error removing image: ', error);
-            }
-          });
+  const deletePost = async (postId: string, imageUrl:string[] | null) => {
+    const storage = getStorage();
+    // Delete all images if imageUrls is an array
+    if (Array.isArray(imageUrl)) {
+      for (const url of imageUrl) {
+        if (!url) continue;
+        try {
+          // Firebase Storage path logic
+          const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
+          const imageRef = storageRef(storage, path);
+          await deleteObject(imageRef);
+          console.log('✅ Image deleted:', url);
+        } catch (error:any) {
+          if (error.code === 'storage/object-not-found') {
+            console.log('No image found for:', url);
+          } else {
+            console.error('Error removing image:', url, error);
+          }
+        }
+      }
     }
     // Proceed to delete the post document from Firestore regardless of the image deletion
     try {
@@ -1152,8 +1150,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                         </TouchableOpacity>
                       ))
                     }
-
-
 
                   </ScrollView>
 

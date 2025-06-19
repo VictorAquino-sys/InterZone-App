@@ -61,6 +61,9 @@ const userClaims = {
   'fys6JZLNW6TVgFFiaA0y3JGlZ792': { // Gregory italia
     premium: true,
   },
+  'JnEnWIbseURXv9LBXL7YvOZ4mEh1': { // Jan Anacata
+    premium: true,
+  },
 };
 
 (async () => {

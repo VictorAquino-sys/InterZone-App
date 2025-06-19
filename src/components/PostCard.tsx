@@ -30,7 +30,7 @@ interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
     userId: string;
     user: User;
-    onDelete: (postId: string, imageUrl: string | null) => void;
+    onDelete: (postId: string, imageUrls: string[] | null) => void;
     onReport: (postId: string, userId: string) => void;
     onOpenImage: (imageUrl: string) => void;
     onUserProfile: (userId: string) => void;
@@ -102,6 +102,15 @@ const PostCard: React.FC<PostCardProps> = ({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const { resolvedTheme, toggleTheme } = useTheme();
   const colors = themeColors[resolvedTheme];
+
+  const [zoomIndex, setZoomIndex] = useState<number>(0);
+  
+  const imageUrls = Array.isArray(item.imageUrl)
+  ? item.imageUrl
+  : item.imageUrl
+    ? [item.imageUrl]
+    : [];
+
 
   const fetchRecentComments = async () => {
     const q = query(
@@ -577,19 +586,50 @@ const PostCard: React.FC<PostCardProps> = ({
         </Text>
       )}
 
-      {item.imageUrl && (
-        <TouchableOpacity onPress={() => handleOpenImage(item.imageUrl)}>
-          <View style={styles.postImageWrapper}>
-            <Image source={{ uri: item.imageUrl }} style={styles.postImage} resizeMode='cover' />
-          </View>
-        </TouchableOpacity>
+      {/* Render multiple images if present */}
+      {imageUrls.length > 0 && (
+        <View style={{ marginTop: 8 }}>
+          <TouchableOpacity
+            onPress={() => {
+              setZoomIndex(0);
+              setZoomModalVisible(true);
+            }}
+            style={{ position: 'relative' }}
+            activeOpacity={0.95}
+          >
+            <Image
+              source={{ uri: imageUrls[0] }}
+              style={{ width: '100%', height: 250, borderRadius: 16 }}
+              resizeMode='cover'
+            />
+            {/* Multi-image count indicator */}
+            {imageUrls.length > 1 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 8,
+                  right: 12,
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                  paddingVertical: 3,
+                  paddingHorizontal: 10,
+                  borderRadius: 14,
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 13 }}>
+                  1/{imageUrls.length}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       )}
 
       <Modal visible={zoomModalVisible} transparent={true} onRequestClose={handleCloseImage}>
         <ImageViewer
-        imageUrls={[{ url: item.imageUrl }]}  // Pass the image URL to the zoom viewer
-        onSwipeDown={handleCloseImage} // Close on swipe down
-        enableSwipeDown={true} // Allow swipe down to close
+          imageUrls={imageUrls.map(url => ({ url }))}
+          index={zoomIndex}
+          onSwipeDown={handleCloseImage}
+          enableSwipeDown={true}
         />
       </Modal>
 
@@ -739,7 +779,7 @@ const PostCard: React.FC<PostCardProps> = ({
                 if (isDeleting) return;
                 setIsDeleting(true);
                 try {
-                  await onDelete(item.id, item.imageUrl);
+                  await onDelete(item.id, Array.isArray(item.imageUrl) ? item.imageUrl : item.imageUrl ? [item.imageUrl] : []);
                 } finally {
                   setIsDeleting(false);
                 }

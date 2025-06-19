@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Linking } from 'react-native';
 import {
   StyleSheet,
   View,
@@ -31,6 +32,8 @@ export default function RedeemPromoScreen() {
   const [mode, setMode] = useState<'scan' | 'manual'>('scan');
   const [successInfo, setSuccessInfo] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  // const [requested, setRequested] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [debug, setDebug] = useState<string[]>([]);
 
@@ -40,10 +43,27 @@ export default function RedeemPromoScreen() {
   }
 
   useEffect(() => {
-    appendDebug(`Component mounted. hasPermission: ${hasPermission}, device: ${!!device}`);
-    if (!hasPermission) requestPermission();
-  }, [hasPermission, device]);
+    let isActive = true;
 
+
+    async function askPermission() {
+      appendDebug(`Checking camera permission. hasPermission: ${hasPermission}`);
+      if (!hasPermission) {
+        appendDebug('About to request camera permission from OS');
+        const result = await requestPermission();
+        appendDebug(`requestPermission returned: ${result}`);
+        if (isActive && result === false) {
+          setShowSettings(true);
+        }
+      }
+    }
+  
+    askPermission();
+  
+    return () => { isActive = false; };
+
+  }, []);
+  
   useEffect(() => {
     if (showSuccessModal) {
       const timer = setTimeout(() => {
@@ -99,9 +119,29 @@ export default function RedeemPromoScreen() {
   });
 
   if (!hasPermission) {
-    appendDebug('No camera permission');
-    return <Text style={styles.centered}>{i18n.t('promo.requestingCameraPermission')}</Text>;
+    // appendDebug('No camera permission');
+    return (
+      <View style={styles.centered}>
+        <Text>{i18n.t('promo.requestingCameraPermission')}</Text>
+        {showSettings && (
+          <TouchableOpacity
+            style={{ marginTop: 20, padding: 12, backgroundColor: '#f44336', borderRadius: 8 }}
+            onPress={() => {
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+              } else {
+                Linking.openSettings();
+              }
+            }}
+          >
+            <Text style={{ color: 'white' }}>{i18n.t('promo.openSettings')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
   }
+
+
   if (!device && mode === 'scan') {
     appendDebug('No camera device found');
     return <Text style={styles.centered}>{i18n.t('promo.noCamera')}</Text>;
