@@ -541,6 +541,7 @@
     "send": "Send Code",
     "verify": "Verify",
     "pleaseWait": "Please wait 5 minutes ->",
+    "sendLink": "Send link",
     "verifiedTitle": "You're verified! 🎓",
     "verifiedMessage": "Your school email has been confirmed.",
     "cancel": "Cancel",

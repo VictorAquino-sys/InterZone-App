@@ -104,12 +104,12 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const [yearlyPrice, setYearlyPrice] = useState<string | undefined>(undefined);
   const [offeringsLoading, setOfferingsLoading] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [selectedCities, setSelectedCities] = useState<string[]>([]);
-  const [citySelectionTimestamp, setCitySelectionTimestamp] = useState<number | null>(null);
-  const maxDurationMs = 48 * 60 * 60 * 1000; // 48 hours
-  const timeLeftMs = citySelectionTimestamp ? maxDurationMs - (Date.now() - citySelectionTimestamp) : 0;
-  const hoursLeft = Math.ceil(timeLeftMs / (60 * 60 * 1000));
-  const [cityLimitDismissed, setCityLimitDismissed] = useState(false);
+  // const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  // const [citySelectionTimestamp, setCitySelectionTimestamp] = useState<number | null>(null);
+  // const maxDurationMs = 48 * 60 * 60 * 1000; // 48 hours
+  // const timeLeftMs = citySelectionTimestamp ? maxDurationMs - (Date.now() - citySelectionTimestamp) : 0;
+  // const hoursLeft = Math.ceil(timeLeftMs / (60 * 60 * 1000));
+  // const [cityLimitDismissed, setCityLimitDismissed] = useState(false);
 
   const {
     reportModalVisible,
@@ -134,7 +134,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     onOpenImageModal: setSelectedImageUrl,
   });
 
-  const { city, setCity, country, setCountry } = useCity();
+  const { city, setCity} = useCity();
 
   console.log("HomeScreen");
 
@@ -194,39 +194,11 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     handleCityOrUserChange();
   }, [user?.uid, city]);
 
-  
-  useEffect(() => {
-    // Load from AsyncStorage
-    const loadData = async () => {
-      const cities = await AsyncStorage.getItem('selectedCities');
-      const ts = await AsyncStorage.getItem('citySelectionTimestamp');
-      if (cities) setSelectedCities(JSON.parse(cities));
-      if (ts) setCitySelectionTimestamp(Number(ts));
-    };
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    AsyncStorage.setItem('selectedCities', JSON.stringify(selectedCities));
-    if (citySelectionTimestamp !== null)
-      AsyncStorage.setItem('citySelectionTimestamp', citySelectionTimestamp.toString());
-  }, [selectedCities, citySelectionTimestamp]);
-
   useEffect(() => {
     if (user?.premium && showMembershipModal) {
       setShowMembershipModal(false);
     }
   }, [user?.premium, showMembershipModal]);
-
-  useEffect(() => {
-    const now = Date.now();
-    if (citySelectionTimestamp && now - citySelectionTimestamp > 48 * 60 * 60 * 1000) {
-      setSelectedCities([]);
-      setCitySelectionTimestamp(null);
-      AsyncStorage.removeItem('selectedCities');
-      AsyncStorage.removeItem('citySelectionTimestamp');
-    }
-  }, [citySelectionTimestamp, citySelectorVisible]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -289,12 +261,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     useCallback(() => {
       setQrVisible(true); // Set this in a shared context
       return () => setQrVisible(false); // Hide when screen loses focus
-    }, [])
-  );
-
-  useFocusEffect(
-    React.useCallback(() => {
-      setCityLimitDismissed(false);
     }, [])
   );
 
@@ -710,7 +676,11 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                   }
 
                   // Everyone else (non-premium, not Peru) must upgrade
-                  handleShowMembershipModal();
+                  // handleShowMembershipModal();
+                  setSelectedCountry('usa');
+                  setCountrySelectorVisible(true);
+                  setCityModalType('us');
+
                 }}
 
                 activeOpacity={0.7}
@@ -790,17 +760,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 scrollEventThrottle={16}
                 ListHeaderComponent={
                   <View>
-
-                    {!user?.premium && selectedCities.length >= 3 && citySelectionTimestamp && !cityLimitDismissed && (
-                      <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFE6E6', paddingVertical: 4, paddingHorizontal: 10, marginBottom: 5}}>
-                        <Text style={{color: '#D32F2F', fontSize: 13, flex: 1, textAlign: 'center'}}>
-                          {i18n.t('cityLimitReachedWithTime', { time: hoursLeft })}
-                        </Text>
-                        <TouchableOpacity onPress={() => setCityLimitDismissed(true)} style={{marginLeft: 8}}>
-                          <Ionicons name="close" size={18} color="#D32F2F" />
-                        </TouchableOpacity>
-                      </View>
-                    )}
 
                     <View style={[styles.categoriesContainer, { backgroundColor: colors.background }]}>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -904,36 +863,40 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                       style={[styles.modalOption, { flex: 1, marginRight: 10, alignItems: 'center', borderWidth: 1, borderColor: '#1976D2', borderRadius: 8 }]}
                       onPress={() => {
                         setSelectedCountry('usa');
-                        // Show city modal for USA (future), but for now show membership modal if not premium
-                        if (user?.premium || user?.claims?.admin) {
-                          setCountrySelectorVisible(false);
+                        setCountrySelectorVisible(false);
+
+                        // For Peruvians, premium/admin unlocks USA, otherwise show membership modal
+                        if (isPeru(user?.country)) {
+                          if (user?.premium || user?.claims?.admin) {
+                            setCityModalType('us');
+                            setCitySelectorVisible(true);
+                          } else {
+                            handleShowMembershipModal();
+                          }
+                        } else {
+                          // For non-Peruvians: show US city picker directly (always free)
                           setCityModalType('us');
                           setCitySelectorVisible(true);
-                        } else if (isPeru(user?.country)) {
-                          // Non-premium Peruvians tapping USA get membership modal
-                          setCountrySelectorVisible(false);
-                          handleShowMembershipModal();
-                        } else {
-                          // fallback, should not hit due to first guard
-                          setCountrySelectorVisible(false);
-                          handleShowMembershipModal();
                         }
                       }}
                     >
                       <Text style={{ fontWeight: 'bold', fontSize: 16 }}>USA</Text>
                     </TouchableOpacity>
-                    {/* PERU Button */}
-                    <TouchableOpacity
-                      style={[styles.modalOption, { flex: 1, marginLeft: 10, alignItems: 'center', borderWidth: 1, borderColor: '#43A047', borderRadius: 8 }]}
-                      onPress={() => {
-                        setSelectedCountry('peru');
-                        setCountrySelectorVisible(false);
-                        setCityModalType('peru');
-                        setCitySelectorVisible(true);
-                      }}
-                    >
-                      <Text style={{ fontWeight: 'bold', fontSize: 16 }}>PERU</Text>
-                    </TouchableOpacity>
+
+                    {/* Only show PERU button for Peruvians */}
+                    {isPeru(user?.country) && (
+                      <TouchableOpacity
+                        style={[styles.modalOption, { flex: 1, marginLeft: 10, alignItems: 'center', borderWidth: 1, borderColor: '#43A047', borderRadius: 8 }]}
+                        onPress={() => {
+                          setSelectedCountry('peru');
+                          setCountrySelectorVisible(false);
+                          setCityModalType('peru');
+                          setCitySelectorVisible(true);
+                        }}
+                      >
+                        <Text style={{ fontWeight: 'bold', fontSize: 16 }}>PERU</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                   <TouchableOpacity onPress={() => setCountrySelectorVisible(false)} style={{ marginTop: 18 }}>
                     <Text style={{ color: 'red', textAlign: 'center' }}>Cancel</Text>
@@ -963,43 +926,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                         key={c.city}
                         onPress={() => {
                           const cityLabel = c.city + ", " + c.region;
-                        
-                          if (user?.premium || user?.claims?.admin) {
-                            setSelectedBrowseCity(cityLabel);
-                            setCity(cityLabel);
-                            setCitySelectorVisible(false);
-                            return;
-                          }
-                        
-                          // Check if 48 hours have passed, reset if needed
-                          const now = Date.now();
-                          if (
-                            citySelectionTimestamp &&
-                            now - citySelectionTimestamp > 48 * 60 * 60 * 1000
-                          ) {
-                            setSelectedCities([]);
-                            setCitySelectionTimestamp(null);
-                          }
-                        
-                          if (!selectedCities.includes(cityLabel)) {
-                            if (selectedCities.length >= 3) {
-                              Toast.show({
-                                type: 'info',
-                                text1: i18n.t('cityLimitReachedTitle', 'City Limit Reached'),
-                                text2: i18n.t('cityLimitReachedMsg', 'You’ve reached your city selection limit. Become a member to browse more cities!'),
-                              });
-                              setCitySelectorVisible(false);
-                              setTimeout(() => {
-                                handleShowMembershipModal();
-                              }, 900);                              
-                              return;
-                            }
-                            // First city of this period: set timestamp
-                            if (selectedCities.length === 0) {
-                              setCitySelectionTimestamp(Date.now());
-                            }
-                            setSelectedCities([...selectedCities, cityLabel]);
-                          }
                           setSelectedBrowseCity(cityLabel);
                           setCity(cityLabel);
                           setCitySelectorVisible(false);
@@ -1024,39 +950,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                           key={c.city}
                           onPress={() => {
                             const cityLabel = c.city + ", " + c.region;
-                            // Same selection logic as above, or custom for US if you want
-                            if (user?.premium || user?.claims?.admin) {
-                              setSelectedBrowseCity(cityLabel);
-                              setCity(cityLabel);
-                              setCitySelectorVisible(false);
-                              return;
-                            }
-                            const now = Date.now();
-                            if (
-                              citySelectionTimestamp &&
-                              now - citySelectionTimestamp > 48 * 60 * 60 * 1000
-                            ) {
-                              setSelectedCities([]);
-                              setCitySelectionTimestamp(null);
-                            }
-                            if (!selectedCities.includes(cityLabel)) {
-                              if (selectedCities.length >= 3) {
-                                Toast.show({
-                                  type: 'info',
-                                  text1: i18n.t('cityLimitReachedTitle', 'City Limit Reached'),
-                                  text2: i18n.t('cityLimitReachedMsg', 'You’ve reached your city selection limit. Become a member to browse more cities!'),
-                                });
-                                setCitySelectorVisible(false);
-                                setTimeout(() => {
-                                  handleShowMembershipModal();
-                                }, 900);
-                                return;
-                              }
-                              if (selectedCities.length === 0) {
-                                setCitySelectionTimestamp(Date.now());
-                              }
-                              setSelectedCities([...selectedCities, cityLabel]);
-                            }
                             setSelectedBrowseCity(cityLabel);
                             setCity(cityLabel);
                             setCitySelectorVisible(false);
@@ -1136,14 +1029,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  topRightIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  moreIconInline: {
-    padding: 2,
-    marginBottom: 35,
-  },
   modalOverlay: { 
     flex: 1, 
     justifyContent: 'center', 
@@ -1154,7 +1039,6 @@ const styles = StyleSheet.create({
   modalBox: { backgroundColor: '#fff', borderRadius: 10, padding: 20 },
   modalTitle: { fontWeight: 'bold', fontSize: 18, marginBottom: 10 },
   modalOption: { paddingVertical: 10 },
-
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1165,19 +1049,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
     color: "gray",
-  },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  likeButtonWrapper: {
-    marginTop: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   fullScreenModal: {
     flex: 1,
@@ -1217,7 +1088,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    // backgroundColor: '#ECEFF4',
     borderBottomColor: '#ddd',
   },
   searchWithIcon: {
@@ -1226,7 +1096,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconWrapper: {
-    // marginLeft: 2,
     padding: 4,
     marginRight: 10,
   },
@@ -1281,25 +1150,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginBottom: 2,
     alignItems: 'center',
-    // backgroundColor: '#ECEFF4',
     shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    // elevation: 2,
     paddingVertical: 1,
   },
   categoryItem: {
-    // backgroundColor: 'white',
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 20,
     marginRight: 10,
-    // borderColor: '#007aff',
     borderWidth: 1,
   },
   categoryText: {
-    // color: '#0097a7',
     fontWeight: '600',
   },
   avatar: {
@@ -1371,19 +1234,14 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     zIndex: 999,
   },
-  videoWrapper: {
-    position: 'relative',
-    width: '100%',
-    height: 200,
-  },
-  fullScreen: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 999,
-    backgroundColor: 'black', // Optionally, add a background color for full-screen
-  },
+  // fullScreen: {
+  //   position: 'absolute',
+  //   top: 0,
+  //   left: 0,
+  //   right: 0,
+  //   bottom: 0,
+  //   zIndex: 999,
+  //   backgroundColor: 'black', // Optionally, add a background color for full-screen
+  // },
   
 });

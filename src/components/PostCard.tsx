@@ -56,8 +56,8 @@ const PostCard: React.FC<PostCardProps> = ({
   formatDate,
   isShowcase,
   onEdit,
-  cardColor = '#FFFFFF',
-  textColor = '#2C2C2C',
+  cardColor,
+  textColor,
 
 }) => {
   const category = getCategoryByKey(item.categoryKey);

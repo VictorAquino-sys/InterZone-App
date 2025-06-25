@@ -36,7 +36,7 @@ const cities = [
     { city: "Fremont", region: "CA", country: "US" },
     { city: "Los Altos", region: "CA", country: "US" },
     { city: "San Jose", region: "CA", country: "US" },
-    // { city: "Corvallis", region: "OR", country: "US" },
+    { city: "Corvallis", region: "OR", country: "US" },
     // { city: "Philomath", region: "OR", country: "US" }
 
 
