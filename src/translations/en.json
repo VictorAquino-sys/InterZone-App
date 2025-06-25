@@ -540,6 +540,7 @@
   "title": "Verify Your Student Email",
   "send": "Send Code",
   "verify": "Verify",
+  "sendLink": "Send link",
   "pleaseWait": "Please wait 5 minutes ->",
   "verifiedTitle": "You're verified! 🎓",
   "verifiedMessage": "Your school email has been confirmed.",

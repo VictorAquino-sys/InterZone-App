@@ -53,7 +53,6 @@ const MusicScreen = () => {
     const currentCity = user?.lastKnownLocation?.label || '';
     const userId = user?.uid;
     const isAdmin = !!user?.claims?.admin; // This is the key line
-    // const city = user?.lastKnownLocation?.label; 
 
     const [songs, setSongs] = useState<Song[]>([]);
     const [loadingSongs, setLoadingSongs] = useState(false);
@@ -244,6 +243,12 @@ const MusicScreen = () => {
             }
         });
 
+        // Optimistically update UI
+        setSongs(prevSongs => prevSongs.map(s =>
+            s.id === song.id
+            ? { ...s, playCount: (s.playCount || 0) + 1 }
+            : s
+        ));
 
         try {
             await updateDoc(doc(firestore, 'songs', song.id), {
@@ -252,6 +257,12 @@ const MusicScreen = () => {
     
         } catch (err) {
             console.log('Failed to increment playCount:', err);
+            // Optionally roll back UI if failed
+            setSongs(prevSongs => prevSongs.map(s =>
+                s.id === song.id
+                ? { ...s, playCount: (s.playCount || 1) - 1 }
+                : s
+            ));
         }
 
     };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useUser } from '@/contexts/UserContext';
@@ -19,7 +19,7 @@ const SuggestProfessorScreen = () => {
     const [course, setCourse] = useState('');
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const isFormValid = Boolean(name.trim() && department.trim() && course.trim());
-
+    const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!user?.uid || name.trim().length < 2 || department.trim().length < 2 || course.trim().length < 2) {
@@ -30,26 +30,31 @@ const SuggestProfessorScreen = () => {
         return;
       }
 
-    const suggestion = {
-      name: name.trim(),
-      nameSearch: normalizeString(name.trim()),
-      department: department.trim(),
-      course: course.trim(),
-      universityId,
-      createdBy: user.uid,
-      createdAt: serverTimestamp(),
-    };
+    setSubmitting(true);
+    try{
+      const suggestion = {
+        name: name.trim(),
+        nameSearch: normalizeString(name.trim()),
+        department: department.trim(),
+        course: course.trim(),
+        universityId,
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
+      };
 
-    await addDoc(
-      collection(db, 'universities', universityId, 'professorSuggestions'),
-      suggestion
-    );
-    Alert.alert(i18n.t('suggest.successTitle'), i18n.t('suggest.successMsg'), [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
-    setName('');
-    setDepartment('');
-    setCourse('');
+      await addDoc(
+        collection(db, 'universities', universityId, 'professorSuggestions'),
+        suggestion
+      );
+      Alert.alert(i18n.t('suggest.successTitle'), i18n.t('suggest.successMsg'), [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      setName('');
+      setDepartment('');
+      setCourse('');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -77,14 +82,17 @@ const SuggestProfessorScreen = () => {
         onChangeText={setCourse}
       />
 
-        <TouchableOpacity 
-            style={[styles.button, !isFormValid && { opacity: 0.5 }]}
-            onPress={handleSubmit}
-            disabled={!isFormValid}
-        >
-            <Text style={styles.buttonText}>{i18n.t('suggest.submit')}</Text>
-        </TouchableOpacity>
-
+      <TouchableOpacity 
+          style={[styles.button, (!isFormValid || submitting) && { opacity: 0.5 }]}
+          onPress={handleSubmit}
+          disabled={!isFormValid || submitting}
+      >
+        { submitting ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>{i18n.t('suggest.submit')}</Text>
+        )}
+      </TouchableOpacity>
       
     </View>
   );
