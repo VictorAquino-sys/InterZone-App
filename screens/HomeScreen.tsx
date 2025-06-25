@@ -669,7 +669,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                   }
 
                   // Non-premium Peruvian users get the country picker (but only PERU is available for them)
-                  if (isPeru(user?.country)) {
+                  if (isPeru(user?.country) || user?.claims?.admin) {
                     setCountrySelectorVisible(true);
                     setSelectedCountry(null);
                     return;
@@ -884,7 +884,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                     </TouchableOpacity>
 
                     {/* Only show PERU button for Peruvians */}
-                    {isPeru(user?.country) && (
+                    {(isPeru(user?.country) || user?.claims?.admin) && (
                       <TouchableOpacity
                         style={[styles.modalOption, { flex: 1, marginLeft: 10, alignItems: 'center', borderWidth: 1, borderColor: '#43A047', borderRadius: 8 }]}
                         onPress={() => {
