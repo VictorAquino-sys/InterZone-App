@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import { Modal, View, Text, StyleSheet, Alert, FlatList, Image, TouchableOpacity, ActivityIndicator, Pressable, Platform, ScrollView } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+// import { useRoute, RouteProp } from '@react-navigation/native';
 import { usePosts } from '@/contexts/PostsContext';
 import i18n from '@/i18n';
-import { Timestamp } from 'firebase/firestore';
+// import { Timestamp } from 'firebase/firestore';
 import { db } from '../src/config/firebase';
 import { useUser } from '../src/contexts/UserContext';
-import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
+// import {ref as storageRef, getDownloadURL ,deleteObject, getStorage } from 'firebase/storage';
 import { deleteDoc, doc, getDoc} from "firebase/firestore";
 import DefaultCategoryContent from '@/components/category/DefaultCategoryContent';
 import MusicHubContent from '@/components/category/musichubContent';
@@ -23,7 +23,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { themeColors } from '@/theme/themeColors';
 
 const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'CategoryScreen'>> = ({ route }) => {
-    const { posts, setPosts } = usePosts();
+    // const { posts, setPosts } = usePosts();
     const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const { categoryKey } = route.params;
@@ -77,16 +77,6 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
               }, [user?.uid, categoryKey])
     );
 
-    // Assuming each post has a 'timestamp' field that's a Date or a number
-    const filteredPosts = posts
-        .filter(post => post.categoryKey === route.params.categoryKey)
-        .sort((a, b) => {
-                // Handle potentially null timestamps
-                const dateA = a.timestamp ? a.timestamp.toDate() : new Date(0);
-                const dateB = b.timestamp ? b.timestamp.toDate() : new Date(0);
-                return dateB.getTime() - dateA.getTime(); // Sort in descending order
-    });
-
     // Function to handle opening the modal
     const openImageModal = (imageUrl: string | null) => {
         setSelectedImageUrl(imageUrl);
@@ -109,70 +99,10 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
         }
     };
 
-    const formatDate = (timestamp: Timestamp | undefined) => {
-        if (!timestamp) return 'Unknown date'; // Handle undefined or null timestamps
-        const date = new Date(timestamp.seconds * 1000); // Convert timestamp to Date object
-        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    };
-
     useEffect(() => {
         console.log("Current user language:", user?.language);  // Check what language is being set
       }, [user?.language]);
 
-    const handleDeletePost = (postId: string, imageUrl: string | null) => {
-        Alert.alert(
-        i18n.t('confirmDeleteTitle'), // "Confirm Delete"
-        i18n.t('confirmDeleteMessage'), // "Are you sure you want to delete this post?"
-        [
-            {
-            text: i18n.t('cancel'),
-            onPress: () => console.log("Cancel Pressed"),
-            style: "cancel"
-            },
-            {
-            text: i18n.t('ok'),
-            onPress: () => deletePost(postId, imageUrl)
-            }
-        ],
-        { cancelable: false }
-        );
-    };
-
-    const deletePost = async (postId: string, imageUrl:string | null) => {
-        // Check if there is an image URL to delete
-        if (imageUrl) {
-            const storage = getStorage(); // Make sure storage is initialized
-            // Create a reference to the file to delete
-
-            console.log("Attempting to delete post:", postId);
-
-            const imageRef = storageRef(storage, imageUrl);
-
-            // Delete the file
-            deleteObject(imageRef)
-                .then(() => {
-                    console.log('Image successfully deleted!');
-                })
-                .catch((error) => {
-                    if (error.code === 'storage/object-not-found') {
-                        console.log('No image found, nothing to delete.');
-                    } else {
-                        console.error('Error removing image: ', error);
-                    }
-                });
-        }
-        // Proceed to delete the post document from Firestore regardless of the image deletion
-        try {
-            await deleteDoc(doc(db, "posts", postId));
-            console.log('Post successfully deleted!');
-            Alert.alert(i18n.t('deleteSuccessTitle'), i18n.t('deleteSuccessMessage'));
-            // Remove the post from the local state to update UI instantly
-            setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-        } catch (error) {
-            console.error('Error deleting post: ', error);
-            Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage'));
-        }
-    };
 
     if (!checkedPermissions) {
         // Only show spinner while checking permissions
@@ -211,9 +141,6 @@ const CategoryScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Categ
                 <NewsFeedContent /> // ✅ This renders RSS-based news!
             ) : (
                 <DefaultCategoryContent
-                    posts={filteredPosts}
-                    currentUserId={user?.uid || ''}
-                    onDeletePost={handleDeletePost}
                     onOpenImageModal={openImageModal}
                     categoryKey={categoryKey}
                 />

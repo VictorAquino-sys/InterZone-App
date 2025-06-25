@@ -91,8 +91,6 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const [businessRating, setBusinessRating] = useState<{ average: number; count: number } | null>(null);
 
-  // const [status, setStatus] = useState<any>({}); // Update state with appropriate type for Video status
-  const [showControls, setShowControls] = useState(false); // To control visibility of the play/pause button
   const [isVideoModalVisible, setIsVideoModalVisible] = useState(false); // Modal visibility state
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null); // State for selected video URL
   const ref = useRef(null);
@@ -102,8 +100,6 @@ const PostCard: React.FC<PostCardProps> = ({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const { resolvedTheme, toggleTheme } = useTheme();
   const colors = themeColors[resolvedTheme];
-  // const [zoomKey, setZoomKey] = useState(0);
-
 
   const [zoomIndex, setZoomIndex] = useState<number>(0);
   
@@ -182,7 +178,6 @@ const PostCard: React.FC<PostCardProps> = ({
       setQrCodeValue(res.data.qrCodeData);
       setShortCode(res.data.shortCode);
       setShowQrModal(true); // Only open modal
-      // DO NOT setHasUserClaimed(true) yet!
       // DO NOT show Toast here
     } catch (err: any) {
       if (err.code === "already-exists") {
@@ -356,23 +351,8 @@ const PostCard: React.FC<PostCardProps> = ({
     handleToggleComments(); // Re-fetch latest
   };
 
-  // const handleOpenImage = (imageUrl: string) => {
-  //   setZoomModalVisible(true); // Open zoom modal
-  // };
-
   const handleCloseImage = () => {
     setZoomModalVisible(false); // Close zoom modal
-  };
-
-  // Handle video play/pause
-  // const togglePlayPause = () => {
-  //   setIsPlaying(!isPlaying); // Toggle play/pause state
-  // };
-
-  const handleVideoClick = (videoUrl: string) => {
-    console.log('Received video URL:', videoUrl);  // Log the video URL passed to the function
-    setSelectedVideoUrl(videoUrl);
-    setIsVideoModalVisible(true); // Show the video modal
   };
 
   const closeVideoModal = () => {
@@ -380,34 +360,6 @@ const PostCard: React.FC<PostCardProps> = ({
     setSelectedVideoUrl(null); // Clear the video URL
   };
 
-  // Handle touch start (show controls)
-  // const handleTouchStart = () => {
-  //   setShowControls(true);
-  // };
-
-  // const renderCustomIndicator = (currentIndex: number, allSize: number) => (
-  //   <View style={{
-  //     position: 'absolute',
-  //     bottom: 24,
-  //     right: 24,
-  //     backgroundColor: 'rgba(0,0,0,0.6)',
-  //     borderRadius: 14,
-  //     paddingHorizontal: 14,
-  //     paddingVertical: 6,
-  //     zIndex: 99,
-  //   }}>
-  //     <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
-  //       {currentIndex} / {allSize}
-  //     </Text>
-  //   </View>
-  // );
-
-  // Handle touch end (hide controls)
-  // const handleTouchEnd = () => {
-  //   setTimeout(() => {
-  //     setShowControls(false); // Hide controls after 1 second
-  //   }, 1000);
-  // };
 
   const handleCopyText = async () => {
     try {

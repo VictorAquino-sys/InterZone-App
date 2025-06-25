@@ -10,6 +10,9 @@ import { Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useVerifiedSchool } from '@/contexts/verifiedSchoolContext';
+import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '@/navigationTypes';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type Props = {
   universityId: string;
@@ -51,30 +54,28 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
   const flatListRef = useRef<FlatList>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [firstLoad, setFirstLoad] = useState(true);
-  // const [loading, setLoading] = useState(true);
   const { school, loading: schoolLoading } = useVerifiedSchool();
 
   const resolvedUniversityId = universityId || school?.universityId;
-  const resolvedUniversityName = universityName || school?.universityName;
 
   useEffect(() => {
     if (!resolvedUniversityId ) return;
 
-    // setLoading(true);
     const ref = collection(db, 'universities', resolvedUniversityId , 'discussions');
-    const q = query(ref, orderBy('createdAt', 'asc'));
+    const q = query(ref, orderBy('createdAt', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snap) => {
       const result: DiscussionPost[] = [];
       snap.forEach(docSnap => {
         result.push({ id: docSnap.id, ...(docSnap.data() as Omit<DiscussionPost, 'id'>) });
       });
-      setPosts(result);
-      // setLoading(false);
+      setPosts(result.reverse());
     });
     return unsubscribe;
-  }, [resolvedUniversityId ]);
+  }, [resolvedUniversityId]);
 
   useEffect(() => {
     if (flatListRef.current && posts.length > 0) {
@@ -124,64 +125,54 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
       Alert.alert(i18n.t('discussion.tooShortTitle'), i18n.t('discussion.tooShortPost'));
       return;
     }
-  
-    const collectionRef = collection(db, 'universities', resolvedUniversityId! , 'discussions');
-  
-    // Check current count
-    const q = query(collectionRef, orderBy('createdAt', 'asc'));
-    const snap = await getDocs(q);
-  
-    // If 30 or more, delete the oldest
-    if (snap.size >= 30) {
-      const oldestDoc = snap.docs[0];
-      const oldestData = oldestDoc.data();
-      if (oldestData?.imageUrl) {
-        await deleteImageByUrl(oldestData.imageUrl);
-      }
-      await deleteDoc(oldestDoc.ref);
-    }
-  
-    let imageUrl: string | null = null;
+    
+    setSending(true);
+    try {
+      const collectionRef = collection(db, 'universities', resolvedUniversityId! , 'discussions');
 
-    if (selectedImage) {
-      setUploading(true);
-      let resizedUri: string | undefined = undefined; // Define here so it's visible in catch!
+      let imageUrl: string | null = null;
+      if (selectedImage) {
+        setUploading(true);
+        let resizedUri: string | undefined = undefined; // Define here so it's visible in catch!
+        try {
+          // Compress and resize image
+          resizedUri = await resizeImage(selectedImage);
 
-      try {
-        // Compress and resize image
-        resizedUri = await resizeImage(selectedImage);
+          const storage = getStorage();
+          const imageId = `${user.uid}_${Date.now()}`;
+          const imageRef = ref(storage, `discussion_images/${resolvedUniversityId}/${imageId}.jpg`);
 
-        const storage = getStorage();
-        const imageId = `${user.uid}_${Date.now()}`;
-        const imageRef = ref(storage, `discussion_images/${resolvedUniversityId}/${imageId}.jpg`);
+          // fetch the file as a blob
+          const img = await fetch(resizedUri);
+          const blob = await img.blob();
 
-        // fetch the file as a blob
-        const img = await fetch(resizedUri);
-        const blob = await img.blob();
-
-        await uploadBytes(imageRef, blob);
-        imageUrl = await getDownloadURL(imageRef);
-      } catch (err:any) {
-        console.log("❌ Image upload failed:", err, resizedUri);
-        Alert.alert(i18n.t('discussion.uploadFailedTitle'), i18n.t('discussion.uploadFailedMessage', { error: err?.message || err }));
+          await uploadBytes(imageRef, blob);
+          imageUrl = await getDownloadURL(imageRef);
+        } catch (err:any) {
+          console.log("❌ Image upload failed:", err, resizedUri);
+          Alert.alert(i18n.t('discussion.uploadFailedTitle'), i18n.t('discussion.uploadFailedMessage', { error: err?.message || err }));
+          setUploading(false);
+          setSending(false);
+          return;
+        }
         setUploading(false);
-        return;
       }
-      setUploading(false);
+
+      const newDoc = {
+        content: newPost.trim(),
+        createdBy: user.uid,
+        createdByName: user.name ?? 'Anonymous',
+        createdAt: serverTimestamp(),
+        ...(imageUrl ? { imageUrl } : {}),
+      };
+    
+      await addDoc(collectionRef, newDoc);
+      setNewPost('');
+      setSelectedImage(null);
+    
+    } finally {
+      setSending(false);
     }
-
-    const newDoc = {
-      content: newPost.trim(),
-      createdBy: user.uid,
-      createdByName: user.name ?? 'Anonymous',
-      createdAt: serverTimestamp(),
-      ...(imageUrl ? { imageUrl } : {}),
-    };
-  
-    await addDoc(collectionRef, newDoc);
-    setNewPost('');
-    setSelectedImage(null);
-
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -201,45 +192,106 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
 
   const renderItem = ({ item }: { item: DiscussionPost }) => {
     const isCurrentUser = user?.uid === item.createdBy;
+    const isEditing = editingPostId === item.id;
+
     return (
       <View style={[styles.messageContainer, isCurrentUser ? styles.myMessageContainer : styles.otherMessageContainer]}>
         <View style={[styles.chatBubble, isCurrentUser ? styles.myMessage : styles.otherMessage]}>
           <Text style={styles.username}>
             {isCurrentUser
-              ? i18n.t('discussion.you')
-              : item.createdByName && item.createdByName.trim()
-                ? item.createdByName
-                : item.createdBy}
+              ? (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('UserProfile', { userId: user.uid })}
+                >
+                  <Text style={styles.usernameLink}>
+                    {i18n.t('discussion.you')}
+                  </Text>
+                </TouchableOpacity>
+              )
+            : (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('UserProfile', { userId: item.createdBy })}
+                >
+                  <Text style={styles.usernameLink}>
+                    {item.createdByName && item.createdByName.trim()
+                    ? item.createdByName
+                    : item.createdBy}
+                  </Text>
+                </TouchableOpacity>
+              )
+            }
           </Text>
-          <Text style={styles.messageText}>{item.content}</Text>
-          <Text style={styles.timestampText}>
-            {item.createdAt?.toDate &&
-              new Date(item.createdAt.toDate()).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-          </Text>
-
-          {item.imageUrl && (
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={{ width: 180, height: 180, borderRadius: 12, marginVertical: 6 }}
-              resizeMode="cover"
-            />
-          )}
-
-          {isCurrentUser && (
-            <View style={styles.messageActions}>
-              <TouchableOpacity onPress={() => {
-                setEditingPostId(item.id);
-                setEditingText(item.content);
-              }}>
-                <Text style={styles.action}>✏️</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeletePost(item.id)}>
-                <Text style={[styles.action, { color: 'red' }]}>🗑️</Text>
-              </TouchableOpacity>
-            </View>
+          
+          {isEditing ? (
+            <>
+              <TextInput
+                value={editingText}
+                onChangeText={setEditingText}
+                autoFocus
+                multiline
+                maxLength={200}
+                style={[styles.input, { marginBottom: 8, minHeight: 40, backgroundColor: '#fff' }]}
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+                <TouchableOpacity
+                  style={[styles.postButton, { minWidth: 60, marginBottom: 0 }]}
+                  onPress={async () => {
+                    if (editingText.trim().length < 2) {
+                      Alert.alert(i18n.t('discussion.tooShortTitle'), i18n.t('discussion.tooShortEdit'));
+                      return;
+                    }
+                    await updateDoc(doc(db, 'universities', resolvedUniversityId!, 'discussions', item.id), {
+                      content: editingText.trim(),
+                    });
+                    setEditingPostId(null);
+                    setEditingText('');
+                  }}
+                >
+                  <Text style={styles.postButtonText}>{i18n.t('discussion.save')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.postButton, { backgroundColor: '#ccc', minWidth: 60, marginBottom: 0 }]}
+                  onPress={() => {
+                    setEditingPostId(null);
+                    setEditingText('');
+                  }}
+                >
+                  <Text style={[styles.postButtonText, { color: '#333' }]}>{i18n.t('discussion.cancel')}</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.messageText}>{item.content}</Text>
+              <Text style={styles.timestampText}>
+                {item.createdAt?.toDate &&
+                  new Date(item.createdAt.toDate()).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+              </Text>
+              {item.imageUrl && (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={{ width: 180, height: 180, borderRadius: 12, marginVertical: 6 }}
+                  resizeMode="cover"
+                />
+              )}
+              {isCurrentUser && (
+                <View style={styles.messageActions}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setEditingPostId(item.id);
+                      setEditingText(item.content);
+                    }}>
+                    <Text style={styles.action}>✏️</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDeletePost(item.id)}>
+                    <Text style={[styles.action, { color: 'red' }]}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
           )}
         </View>
       </View>
@@ -257,41 +309,6 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
           renderItem={renderItem}
           contentContainerStyle={{ paddingBottom: 80 }}
         />
-
-        {editingPostId ? (
-          <>
-            <Text style={{ color: '#888', fontStyle: 'italic', marginBottom: 4 }}>
-              {i18n.t('discussion.editing')} ({user?.name || i18n.t('discussion.you')})
-            </Text>
-            
-            <TouchableOpacity
-              style={styles.postButton}
-              onPress={async () => {
-                if (editingText.trim().length < 2) {
-                  Alert.alert(i18n.t('discussion.tooShortTitle'), i18n.t('discussion.tooShortEdit'));
-                  return;
-                }
-                await updateDoc(doc(db, 'universities', resolvedUniversityId! , 'discussions', editingPostId!), {
-                  content: editingText.trim(),
-                });
-                setEditingPostId(null);
-                setEditingText('');
-              }}
-            >
-              <Text style={styles.postButtonText}>{i18n.t('discussion.save')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.postButton, { backgroundColor: '#ccc' }]}
-              onPress={() => {
-                setEditingPostId(null);
-                setEditingText('');
-              }}
-            >
-              <Text style={[styles.postButtonText, { color: '#333' }]}>{i18n.t('discussion.cancel')}</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
             <TouchableOpacity onPress={pickImage} style={{ marginRight: 10 }}>
               <Text style={{ fontSize: 22 }}>📎</Text>
@@ -326,8 +343,6 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
             )}
           </View>
 
-
-
           {selectedImage && (
             <Image
               source={{ uri: selectedImage }}
@@ -339,18 +354,22 @@ const SchoolDiscussionScreen = ({ universityId, universityName }: Props) => {
           <TouchableOpacity
             style={[
               styles.postButton,
-              (newPost.trim().length < 2 && !selectedImage) || uploading ? { backgroundColor: '#ccc' } : {}
+              (newPost.trim().length < 2 && !selectedImage) || sending ? { backgroundColor: '#ccc' } : {}
             ]}
             onPress={handlePost}
-            disabled={newPost.trim().length < 2 && !selectedImage || uploading}
+            disabled={newPost.trim().length < 2 && !selectedImage || sending}
           >
-            <Text style={styles.postButtonText}>
-              {uploading ? i18n.t('discussion.uploading') : i18n.t('discussion.send')}
-            </Text>
+            {uploading ? (
+              <>
+                <ActivityIndicator size="small" color="#fff"/>
+                <Text style={styles.postButtonText}>{i18n.t('discussion.uploading')}</Text>
+              </>
+            ): sending ? (
+              <ActivityIndicator size="small" color="#fff"/>
+            ) : (
+              <Text style={styles.postButtonText}>{i18n.t('discussion.send')}</Text>
+            )}
           </TouchableOpacity>
-
-          </>
-        )}
     </View>
   );
 };
@@ -389,6 +408,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  usernameLink: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
   myMessage: {
     alignSelf: 'flex-end',

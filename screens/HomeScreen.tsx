@@ -33,6 +33,7 @@ import PostCard from '@/components/PostCard';
 import cities from '@/config/citiesData';
 import Purchases from 'react-native-purchases';
 import Toast from 'react-native-toast-message';
+import { usePostActions } from '@/hooks/usePostActions';
 import MembershipInfoModal from '@/components/MembershipInfoModal';
 
 import Animated, {
@@ -62,10 +63,6 @@ function isPeru(country: any) {
 }
 
 const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, ref) => {
-  const [reportModalVisible, setReportModalVisible] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-
   const { posts, setPosts } = usePosts();
   const { user, setUser } = useUser();
   const AnimatedFlatList = Animated.createAnimatedComponent(FlashList<Post>);
@@ -76,13 +73,11 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-  // const defaultUri = Asset.fromModule(defaultProfileImg).uri;
 
   // Search Bar State
   const [searchText, setSearchText] = useState<string>('');
 
   // variables for user's location
-  // const [city, setCity] = useState<string | null>(null); // To store the city name
   const [loading, setLoading] = useState<boolean>(true); // Loading state for better UX
   const prevCityRef = useRef<string | null>(null);
 
@@ -95,8 +90,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const { setQrVisible } = useQrVisibility();
   const { resolvedTheme, toggleTheme } = useTheme();
   const colors = themeColors[resolvedTheme];
-
-  const [isFullScreen, setIsFullScreen] = useState(false); // State to control full-screen mode
 
   const [citySelectorVisible, setCitySelectorVisible] = useState(false);
   const [selectedBrowseCity, setSelectedBrowseCity] = useState<string | null>(null);
@@ -118,12 +111,30 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const hoursLeft = Math.ceil(timeLeftMs / (60 * 60 * 1000));
   const [cityLimitDismissed, setCityLimitDismissed] = useState(false);
 
-  const { city, setCity, country, setCountry } = useCity();
+  const {
+    reportModalVisible,
+    setReportModalVisible,
+    selectedPostId,
+    setSelectedPostId,
+    selectedUserId,
+    setSelectedUserId,
+    formatDate,
+    handleDeletePost,
+    handleEditPost,
+    handleReportPress,
+    openImageModal,
+    isFullScreen,
+    closeImageModal,
+    toggleFullScreen,
+  } = usePostActions({
+    user,
+    setPosts,
+    navigation,
+    colors,
+    onOpenImageModal: setSelectedImageUrl,
+  });
 
-  const toggleFullScreen = () => {
-    console.log('Toggling full-screen state');
-    setIsFullScreen(prev => !prev);
-  };
+  const { city, setCity, country, setCountry } = useCity();
 
   console.log("HomeScreen");
 
@@ -149,9 +160,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
         return;
       }
 
-      try {
-        // if (!user?.uid || !city) return;
-  
+      try {  
         console.log("User UID or City changed, handling updates...");
   
         // Check user name
@@ -390,12 +399,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     }
   };
 
-  const handleReportPress = (postId: string, postUserId: string) => {
-    setSelectedPostId(postId);
-    setSelectedUserId(postUserId);
-    setReportModalVisible(true);
-  };
-  
   const handleSelectReason = async (reason: string) => {
     if (!selectedPostId || !selectedUserId || !user?.uid) return;
   
@@ -459,7 +462,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
     }
   };
   
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -581,85 +583,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   
     initializeScreen();
   }, [user?.uid]); // Depend explicitly on user.uid
-
-  const formatDate = (timestamp: Timestamp | null | undefined): string => {
-    if (!timestamp) return 'Unknown date';
-    const date = new Date(timestamp.seconds * 1000);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-  };
-
-  const handleEditPost = (postId: string, newContent: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId ? { ...p, content: newContent } : p
-      )
-    );
-  };
-
-  const handleDeletePost = (postId: string, imageUrl: string[] | null) => {
-    Alert.alert(
-      i18n.t('confirmDeleteTitle'), // "Confirm Delete"
-      i18n.t('confirmDeleteMessage'), // "Are you sure you want to delete this post?"
-      [
-        {
-          text: i18n.t('cancel'),
-          onPress: () => console.log("Cancel Pressed"),
-          style: "cancel"
-        },
-        {
-          text: i18n.t('ok'),
-          onPress: () => deletePost(postId, imageUrl)
-        }
-      ],
-      { cancelable: false }
-    );
-  };
-
-  const deletePost = async (postId: string, imageUrl:string[] | null) => {
-    const storage = getStorage();
-    // Delete all images if imageUrls is an array
-    if (Array.isArray(imageUrl)) {
-      for (const url of imageUrl) {
-        if (!url) continue;
-        try {
-          // Firebase Storage path logic
-          const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
-          const imageRef = storageRef(storage, path);
-          await deleteObject(imageRef);
-          console.log('✅ Image deleted:', url);
-        } catch (error:any) {
-          if (error.code === 'storage/object-not-found') {
-            console.log('No image found for:', url);
-          } else {
-            console.error('Error removing image:', url, error);
-          }
-        }
-      }
-    }
-    // Proceed to delete the post document from Firestore regardless of the image deletion
-    try {
-        await deleteDoc(doc(db, "posts", postId));
-        console.log('Post successfully deleted!');
-        Alert.alert(i18n.t('deleteSuccessTitle'), i18n.t('deleteSuccessMessage'));
-        // Remove the post from the local state to update UI instantly
-        setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
-    } catch (error) {
-        console.error('Error deleting post: ', error);
-        Alert.alert(i18n.t('deleteErrorTitle'), i18n.t('deleteErrorMessage'));
-    }
-  };
-
-
-  // Function to handle opening the modal
-  const openImageModal = (imageUrl: string | null) => {
-    setSelectedImageUrl(imageUrl);
-    setModalVisible(true);
-  };
-
-  // Function to handle closing the modal
-  const closeImageModal = () => {
-    setModalVisible(false);
-  };
 
   const bounceStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: bounceValue.value }],
@@ -1189,7 +1112,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
               </TouchableOpacity>
             </Animated.View>
 
-
             <Animated.View style={[styles.chatButton, fadeStyle, bounceStyle]}>
 
               <TouchableOpacity onPress={() => navigation.navigate('MessagesScreen')}>
@@ -1380,66 +1302,21 @@ const styles = StyleSheet.create({
     // color: '#0097a7',
     fontWeight: '600',
   },
-  postText: {
-    fontSize: 14,
-    marginTop: 4,
-    marginBottom: 8,
-    lineHeight: 20,  
-  },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
   },
-  postDetails: {
-    marginLeft: 10,
-    flexShrink: 1,  // Prevent overflow
-  },
   userName: {
     fontWeight: 'bold',
   },
-  postCity: {
-    fontSize: 12,
-    color: 'gray',
-  },
-  postTimestamp: {
-    fontSize: 11,
-    color: 'gray',
-  },
   listContent: {
-    // width: '100%'
     paddingBottom: 10,
     paddingTop: 6,
-    // backgroundColor: '#ECEFF4',
-  },
-  deleteButton: {
-    paddingVertical: 5,  // Small vertical padding for easier tapping
-    paddingHorizontal: 30, // Horizontal padding to ensure the touch area is just enough
-    alignItems: 'flex-end' // Align to the start of the flex container
-  },
-  deleteText: {
-    color: 'red',
-    fontSize: 12, // Ensure the font size is appropriate
-  },
-  postImageWrapper: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
-    borderRadius: 12,
-    backgroundColor: '#fff', // Necessary for iOS to calculate shadow properly
-    marginTop: 8,
-  },
-  postImage: {
-    width: '100%',
-    height: 220,
-    borderRadius: 12,
   },
   fullScreenImage: {
     width: '90%',
     height: '90%',
-    // resizeMode: 'contain'
   },
   chatButton: {
     position: 'absolute',

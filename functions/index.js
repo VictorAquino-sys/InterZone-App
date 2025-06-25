@@ -795,3 +795,30 @@ exports.notifyPeruEvent = onRequest(async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+// Run this function once every 15 dias (ONLY if traffic is constant).
+// Also MAKE SURE COMMENTS WITH IMAGES ARE ALSO DELETED!
+// export const pruneDiscussionPosts = functions.pubsub
+//   .schedule("every 24 hours")
+//   .onRun(async () => {
+//     const db = admin.firestore();
+//     const universitiesSnap = await db.collection("universities").get();
+
+//     for (const universityDoc of universitiesSnap.docs) {
+//       const discussionCol = universityDoc.ref.collection("discussions");
+//       const allPostsSnap = await discussionCol
+//         .orderBy("createdAt", "desc")
+//         .offset(50)
+//         .get();
+
+//       for (const doc of allPostsSnap.docs) {
+//         const data = doc.data();
+//         // Optional: delete images from storage if needed!
+//         if (data.imageUrl) {
+//           // Do your storage cleanup here (reuse your deleteImageByUrl logic if you like)
+//         }
+//         await doc.ref.delete();
+//       }
+//     }
+//     return null;
+// });

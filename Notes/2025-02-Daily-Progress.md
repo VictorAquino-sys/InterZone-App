@@ -1,5 +1,12 @@
 (Daily logs of what have been worked on)
 
+### 06-25
+    Refactored categories to show postcards instead of custom cards.
+    Fixed categories screen logic when navigating other cities.
+    Scheduled Firestore Cloud Function to delete all discussions except the newest 50.
+    Loading indicator for suggest professors and school discussions.
+    Allow users to tap usernames under School Discussions screen and let them navigate to user profile.
+
 ### 05-28
     npm install moti
 
