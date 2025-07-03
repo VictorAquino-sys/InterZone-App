@@ -1,5 +1,9 @@
 (Daily logs of what have been worked on)
 
+### 06-26
+    For the report feature, we'll use react-native-maps:
+    npx expo install react-native-maps
+
 ### 06-25
     Refactored categories to show postcards instead of custom cards.
     Fixed categories screen logic when navigating other cities.

@@ -28,6 +28,8 @@ const i18n = {
   en: {
     notification: {
       newMessageTitle: "💬 New Message",
+      newReportTitle: "🚨 New Report in Your City",
+      newReportBody: (reporter, city) => `${reporter} just reported an incident in ${city}.`,
       newMessageBody: "New message from",
       newPostTitle: "🆕 New Post in Your City",
       newPostBody: "just posted in",
@@ -55,6 +57,8 @@ const i18n = {
   es: {
     notification: {
       newMessageTitle: "💬 Nuevo mensaje",
+      newReportTitle: "🚨 Nuevo reporte en tu ciudad",
+      newReportBody: (reporter, city) => `${reporter} acaba de reportar un incidente en ${city}.`,
       newMessageBody: "Nuevo mensaje de",
       newPostTitle: "🆕 Nueva publicación en tu ciudad",
       newPostBody: "acaba de publicar en",
@@ -234,6 +238,72 @@ exports.notifyNewPost = onDocumentCreated("posts/{postId}", async (event) => {
     }
   }
 });
+
+exports.notifyNewReport = onDocumentCreated("publicReports/{reportId}", async (event) => {
+  const report = event.data.data();
+  // Use whatever your label field is—could be report.city, report.location, etc.
+  const cityLabel = report.location || report.city || null;
+  const reporterUid = report.user?.uid || report.createdBy || "";
+  const reporterName = report.user?.name || "Someone";
+  const reportId = event.params.reportId;
+
+  if (!cityLabel) {
+    console.warn(`❗ No city/location label found for report: ${reportId}`);
+    return;
+  }
+
+  console.log(`📢 New public report created in city: ${cityLabel} by ${reporterName}`);
+
+  // Fetch all users to find those in the same city
+  const usersSnap = await db.collection("users").get();
+  const messages = [];
+
+  usersSnap.forEach(doc => {
+    const user = doc.data();
+    const { uid, expoPushToken, language = 'en' } = user;
+    const userLocationLabel = user.lastKnownLocation?.label;
+    const tokenValid = expoPushToken && Expo.isExpoPushToken(expoPushToken);
+    const lang = language && i18n[language] ? language : 'en';
+
+    if (
+      uid !== reporterUid &&
+      userLocationLabel &&
+      tokenValid &&
+      userLocationLabel.toLowerCase() === cityLabel.toLowerCase()
+    ) {
+      messages.push({
+        to: expoPushToken,
+        sound: "default",
+        title: i18n[lang].notification?.newReportTitle || "🚨 New Report in Your City",
+        body: i18n[lang].notification?.newReportBody
+        ? i18n[lang].notification.newReportBody(reporterName, cityLabel)
+        : `${reporterName} just reported an incident in ${cityLabel}.`,
+        data: {
+          type: "report",
+          reportId,
+          url: `interzone://report/${reportId}`,
+          city: cityLabel,
+        }
+      });
+    }
+  });
+
+  if (messages.length === 0) {
+    console.log("❗ No users to notify for new report.");
+    return;
+  }
+
+  const chunks = expo.chunkPushNotifications(messages);
+  for (const chunk of chunks) {
+    try {
+      await expo.sendPushNotificationsAsync(chunk);
+      console.log(`✅ Sent report notification to ${chunk.length} users in ${cityLabel}`);
+    } catch (error) {
+      console.error("❌ Error sending report notifications:", error);
+    }
+  }
+});
+
 
 exports.notifyNewSongInCity = onDocumentUpdated("songs/{songId}", async (event) => {
   const before = event.data.before.data();

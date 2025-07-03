@@ -29,12 +29,16 @@ import { themeColors } from '@/theme/themeColors';
 import { logScreen } from '@/utils/analytics';
 import { updateUserLocation } from '@/utils/locationService';
 import { useQrVisibility } from '@/contexts/QrVisibilityContext';
+import { RouteProp } from '@react-navigation/native';
 import PostCard from '@/components/PostCard';
 import cities from '@/config/citiesData';
 import Purchases from 'react-native-purchases';
 import Toast from 'react-native-toast-message';
 import { usePostActions } from '@/hooks/usePostActions';
 import MembershipInfoModal from '@/components/MembershipInfoModal';
+import { differenceInDays } from 'date-fns';
+import ReportBanner from '@/components/ReportBanner';
+import type { Report } from '@/types/report';
 
 import Animated, {
   useAnimatedStyle,
@@ -49,6 +53,27 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import ThemedStatusBar from '@/components/ThemedStatusBar';
+
+async function fetchFeaturedBusinesses(city: string) {
+  const usersRef = collection(db, 'users');
+  const q = query(
+    usersRef,
+    where('businessProfile.postStreak.isFeatured', '==', true),
+    where('businessProfile.postStreak.city', '==', city)
+  );
+  const snapshot = await getDocs(q);
+
+  const now = new Date();
+  return snapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() }))
+    .filter((user: any) => {
+      const streak = user.businessProfile?.postStreak;
+      if (!streak?.featuredSince) return false;
+      // Parse Firestore Timestamp
+      const since = streak.featuredSince?.toDate ? streak.featuredSince.toDate() : new Date(streak.featuredSince);
+      return differenceInDays(now, since) < 7;
+    });
+}
 
 export type HomeScreenRef = {
   scrollToTop: () => void;
@@ -65,6 +90,7 @@ function isPeru(country: any) {
 const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, ref) => {
   const { posts, setPosts } = usePosts();
   const { user, setUser } = useUser();
+  const route = useRoute<RouteProp<RootStackParamList, 'HomeScreen'>>();
   const AnimatedFlatList = Animated.createAnimatedComponent(FlashList<Post>);
 
   const flatListRef = useRef<any>(null);
@@ -104,12 +130,10 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   const [yearlyPrice, setYearlyPrice] = useState<string | undefined>(undefined);
   const [offeringsLoading, setOfferingsLoading] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
-  // const [selectedCities, setSelectedCities] = useState<string[]>([]);
-  // const [citySelectionTimestamp, setCitySelectionTimestamp] = useState<number | null>(null);
-  // const maxDurationMs = 48 * 60 * 60 * 1000; // 48 hours
-  // const timeLeftMs = citySelectionTimestamp ? maxDurationMs - (Date.now() - citySelectionTimestamp) : 0;
-  // const hoursLeft = Math.ceil(timeLeftMs / (60 * 60 * 1000));
-  // const [cityLimitDismissed, setCityLimitDismissed] = useState(false);
+  const [featuredBusinesses, setFeaturedBusinesses] = useState<any[]>([]);
+  const [activeReports, setActiveReports] = useState<Report[]>([]);
+  const [refreshFlag, setRefreshFlag] = useState(0);
+
 
   const {
     reportModalVisible,
@@ -152,6 +176,43 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   
     runUpdateCheck();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!city) return;
+      fetchFeaturedBusinesses(city).then(setFeaturedBusinesses);
+    }, [city, refreshFlag])
+  );
+
+  useEffect(() => {
+    if (!city) return;
+  
+    // Setup a real-time listener for publicReports for this city
+    const reportsRef = collection(db, 'publicReports');
+    const q = query(
+      reportsRef,
+      where('location', '==', city),
+      where('status', '==', 'active')
+    );
+  
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const reports = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Report));
+      setActiveReports(reports);
+    });
+  
+    // Clean up the listener on unmount or city change
+    return () => unsubscribe();
+  }, [city]);
+
+  useEffect(() => {
+    if (route.params?.refreshFeatured && city) {
+      fetchFeaturedBusinesses(city).then(setFeaturedBusinesses);
+      navigation.setParams({ refreshFeatured: undefined });
+    }
+  }, [route.params?.refreshFeatured, city]);
 
   useEffect(() => {
     async function handleCityOrUserChange() {
@@ -589,7 +650,9 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
   
 
   const memoizedRenderItem = React.useCallback(
-    ({ item }: { item: Post }) => (
+    ({ item }: { item: Post }) => {
+      const isBusinessFeatured = featuredBusinesses.some(biz => biz.id === item.user.uid);
+      return (
       <PostCard
         item={item}
         userId={user?.uid ?? ''}
@@ -598,6 +661,8 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
           name: user?.name ?? '',
           avatar: user?.avatar ?? '',
         }}
+        featuredBusinesses={featuredBusinesses}
+        isBusinessFeatured={isBusinessFeatured}
         onDelete={handleDeletePost}
         onReport={handleReportPress}
         onOpenImage={openImageModal}
@@ -615,7 +680,8 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
         cardColor={colors.card}
         textColor={colors.text}
       />
-    ),
+    );
+      },
     [
       user?.uid,
       user?.name,
@@ -627,11 +693,15 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
       isFullScreen,
       toggleFullScreen,
       navigation,
+      featuredBusinesses,
     ]
   );
   
   const isFocused = useIsFocused();
   const onlineCount = useOnlineUserCount();
+
+  console.log("city:", city);
+  console.log("activeReports:", activeReports);
 
   return (
     <>
@@ -738,6 +808,7 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
               </View>
             </View>
 
+
             {/* 🔔 Version update checker */}
             {fallbackUpdate && <UpdateChecker />}
 
@@ -761,6 +832,125 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                 ListHeaderComponent={
                   <View>
 
+                    {activeReports.length > 0 && (
+                      <ReportBanner
+                        reports={activeReports}
+                        onPress={report => {
+                          if (activeReports.length === 1 && report) {
+                            navigation.navigate('ReportDetailScreen', { reportId: report.id });
+                          } else if (activeReports.length > 1) {
+                            // Pass string[] of IDs for better typing and future-proofing
+                            navigation.navigate('AllPublicReportsScreen', { reports: activeReports.map(r => r.id) });
+                          }
+                        }}
+                        onDismiss={() => setActiveReports([])}
+                      />
+                    )}
+
+                    {featuredBusinesses.length > 0 && (
+                      <View style={{ marginVertical: 4 }}>
+                        <Text style={{
+                          fontWeight: '700',
+                          fontSize: 15,
+                          marginLeft: 16,
+                          marginBottom: 2,
+                          color: colors.text,
+                          letterSpacing: 0.2
+                        }}>
+                          🌟 {i18n.t('featuredBusinesses') || "Featured Businesses"}
+                        </Text>
+                        {featuredBusinesses.length === 1 ? (
+                          <View style={{
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingVertical: 2,
+                          }}>
+                            <TouchableOpacity
+                              style={{
+                                backgroundColor: colors.card,
+                                borderRadius: 25,
+                                paddingVertical: 1, // Smaller!
+                                paddingHorizontal: 6,
+                                // padding: 20,
+                                minWidth: 85,
+                                // minHeight: undefined,
+                                alignItems: 'center',
+                                shadowColor: '#000',
+                                shadowOpacity: 0.07,
+                                shadowRadius: 8,
+                                elevation: 2,
+                                borderWidth: 2,
+                                borderColor: '#ffe066',
+                              }}
+                              onPress={() => navigation.navigate('BusinessChannel', { businessUid: featuredBusinesses[0].id })}
+                              activeOpacity={0.88}
+                            >
+                              <Avatar
+                                name={featuredBusinesses[0].businessProfile?.name || 'Business'}
+                                imageUri={featuredBusinesses[0].businessProfile?.avatar || ''}
+                                size={82}
+                              />
+                              <Text
+                                numberOfLines={1}
+                                style={{
+                                  marginTop: 1,
+                                  fontWeight: '700',
+                                  fontSize: 13,
+                                  color: colors.text,
+                                  maxWidth: 100,
+                                  textAlign: 'center',
+                                }}
+                              >
+                                {featuredBusinesses[0].businessProfile?.name || "Business"}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingLeft: 5 }}>
+                            {featuredBusinesses.map(biz => (
+                              <TouchableOpacity
+                                key={biz.id}
+                                style={{
+                                  backgroundColor: colors.card,
+                                  borderRadius: 15,
+                                  paddingVertical: 8,
+                                  paddingHorizontal: 16,
+                                  marginRight: 12,
+                                  minWidth: 130,
+                                  alignItems: 'center',
+                                  borderWidth: 1,
+                                  borderColor: '#ffe066',
+                                  elevation: 1,
+                                }}
+                                onPress={() => navigation.navigate('BusinessChannel', { businessUid: biz.id })}
+                                activeOpacity={0.8}
+                              >
+                                <Avatar
+                                  name={biz.businessProfile?.name || 'Business'}
+                                  imageUri={biz.businessProfile?.avatar || ''}
+                                  size={48}
+                                />
+                                <Text
+                                  numberOfLines={1}
+                                  style={{
+                                    marginTop: 7,
+                                    fontWeight: '600',
+                                    fontSize: 14,
+                                    color: colors.text,
+                                    textAlign: 'center',
+                                    maxWidth: 90
+                                  }}
+                                >
+                                  {biz.businessProfile?.name || "Business"}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        )}
+            
+                      </View>
+                    )}
+
                     <View style={[styles.categoriesContainer, { backgroundColor: colors.background }]}>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         {filteredCategories.map((item) => (
@@ -782,7 +972,6 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
                         ))}
                       </ScrollView>
                     </View>
-
                   </View>
                 }
                 data={posts}
@@ -997,6 +1186,16 @@ const HomeScreen = forwardRef<HomeScreenRef, HomeScreenProps>(({ navigation }, r
               loading={offeringsLoading || isSubscribing}
             />
 
+            <Animated.View style={[styles.reportButton, fadeStyle, bounceStyle]}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ReportScreen')}
+                activeOpacity={0.85}
+                accessibilityLabel={i18n.t('reportLostOrIncident')}
+              >
+                <Ionicons name="megaphone-outline" size={28} color="#f57c00" />
+              </TouchableOpacity>
+            </Animated.View>
+
             <Animated.View style={[styles.musicButton, fadeStyle, bounceStyle]}>
               <TouchableOpacity
                 onPress={() => navigation.navigate('MusicScreen')}
@@ -1180,6 +1379,24 @@ const styles = StyleSheet.create({
   fullScreenImage: {
     width: '90%',
     height: '90%',
+  },
+  reportButton: {
+    position: 'absolute',
+    bottom: 185, // Higher than musicButton (115), adjust as needed for stacking order
+    right: 15,
+    backgroundColor: '#fffbe8',
+    borderRadius: 30,
+    width: 50,
+    height: 50,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 7,
+    shadowColor: '#FFA500',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 4,
+    zIndex: 999,
   },
   chatButton: {
     position: 'absolute',

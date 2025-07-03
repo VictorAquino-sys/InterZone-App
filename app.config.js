@@ -41,7 +41,10 @@ export default {
         EXUpdatesRuntimeVersion: "1.0.0",
         EXUpdatesURL: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6"
       },
-      googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist"
+      googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist",
+      config: {
+        googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY,
+      },
     },
     android: {
       package: IS_DEV ? "com.zhd.interzone" : "com.zhd.interzone",
@@ -65,7 +68,12 @@ export default {
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       runtimeVersion: {
         policy: "appVersion"
-      }
+      },
+      config: {
+        googleMaps: {
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_API_KEY,
+        },
+      },
     },
     web: {
       bundler: "metro",

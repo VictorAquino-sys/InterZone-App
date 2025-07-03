@@ -18,6 +18,12 @@ export interface Post {
         mode?: 'business' | 'individual'; // ✅ Add this to distinguish who posted
         businessVerified?: boolean;
       };
+
+    // NEW BUSINESS/FEATURED/STREAK FIELDS - all are optional for backward compatibility
+    isBusinessFeatured?: boolean;        // true if this post is featured
+    businessFeaturedSince?: string;      // ISO date string or timestamp
+    businessStreakCount?: number;        // 7 if on a 7-day streak, etc.
+
     likedBy?: string[];
     categoryKey: string;
     commentCount?: number;
@@ -33,6 +39,7 @@ export interface Post {
         discountPercent?: number;
         expirationDate?: Timestamp; // optional if not implemented yet
     } | null;
+    // isBusinessFeatured?: boolean;
 }
 
 // Define the type for the posts and the context structure

@@ -4,6 +4,7 @@ import { deleteDoc, doc } from 'firebase/firestore';
 import { ref as storageRef, deleteObject, getStorage } from 'firebase/storage';
 import { Timestamp } from 'firebase/firestore';
 import { User } from '@/contexts/UserContext';
+import { deleteImageFromStorage, deleteVideoFromStorage } from '@/utils/storageUtils';
 import { Post } from '@/contexts/PostsContext';
 import { db } from '@/config/firebase';
 import i18n from '@/i18n';
@@ -48,22 +49,19 @@ export function usePostActions({
   }, []);
 
   // Actual delete logic
-  const deletePost = async (postId: string, imageUrls: string[] | null) => {
-    const storage = getStorage();
+  const deletePost = async (postId: string, imageUrls: string[] | null, videoUrl?: string) => {
+    // Delete images
     if (Array.isArray(imageUrls)) {
       for (const url of imageUrls) {
-        if (!url) continue;
-        try {
-          const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
-          const imageRef = storageRef(storage, path);
-          await deleteObject(imageRef);
-        } catch (error: any) {
-          if (error.code !== 'storage/object-not-found') {
-            console.error('Error removing image:', url, error);
-          }
-        }
+        await deleteImageFromStorage(url);
       }
     }
+  
+    // Delete video if present
+    if (videoUrl) {
+      await deleteVideoFromStorage(videoUrl);
+    }
+  
     try {
       await deleteDoc(doc(db, "posts", postId));
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));

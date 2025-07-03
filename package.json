@@ -48,6 +48,7 @@
     "expo-crypto": "~13.0.2",
     "expo-dev-client": "~4.0.29",
     "expo-device": "~6.0.2",
+    "expo-document-picker": "~12.0.2",
     "expo-file-system": "~17.0.1",
     "expo-image": "~1.13.0",
     "expo-image-manipulator": "~12.0.5",
@@ -105,7 +106,7 @@
     "sp-react-native-in-app-updates": "^1.4.1",
     "undici": "^5.29.0",
     "uuid": "^7.0.3",
-    "expo-document-picker": "~12.0.2"
+    "react-native-maps": "1.14.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

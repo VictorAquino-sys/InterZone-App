@@ -20,6 +20,7 @@ import { MusicHubProvider } from '@/components/category/musichubContext';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen, { HomeScreenRef } from './screens/HomeScreen';
 import type { HomeScreenProps } from './screens/HomeScreen';
+import ReportScreen from 'screens/ReportScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import PostScreen from './screens/posts/PostScreen';
 import TermsScreen from 'screens/TermsScreen';
@@ -72,9 +73,11 @@ import EmptyScreen from '@/utils/EmptyScreen';
 import { QrVisibilityProvider, useQrVisibility } from '@/contexts/QrVisibilityContext';
 import ProfessorSuggestionsReviewScreen from 'screens/studyhub/professorSuggestionsReviewScreen';
 import AdminDashboardScreen from 'screens/admin/AdminDashboardScreen';
+import ReportDetailScreen from 'screens/ReportDetailScreen';
 import { useTheme } from './src/contexts/ThemeContext';
 import MusicApprovalScreen from 'screens/admin/MusicApprovalScreen';
 import { themeColors } from '@/theme/themeColors';
+import AllPublicReportsScreen from 'screens/AllPublicReportsScreen';
 export const homeScreenRef = React.createRef<HomeScreenRef>();
 
 Notifications.setNotificationHandler({
@@ -480,6 +483,7 @@ function AuthenticatedApp() {
             title: (route.params as any)?.friendName || i18n.t('chat.title'),
             headerShown: true,
           })} />
+
           <Stack.Screen
             name="MessagesScreen"
             component={MessagesScreen}
@@ -563,13 +567,32 @@ function AuthenticatedApp() {
               headerStyle: { backgroundColor: colors.backgroundprofile },
               headerTintColor: colors.text,
               headerTitleStyle: { color: colors.text, fontWeight: 'bold' },
+              headerBackTitleVisible: false,
               headerShadowVisible: resolvedTheme !== 'dark',
             }}
           />
           
           <Stack.Screen name="MusicApproval" component={MusicApprovalScreen} />
+          
+          <Stack.Screen 
+            name="ReportScreen" 
+            component={ReportScreen} 
+            options={{ headerShown: false }}
+          />
 
           <Stack.Screen name="AdminNotification" component={AdminNotificationScreen} options={{ title: 'Notificar Eventos' }} />
+
+          <Stack.Screen 
+            name="ReportDetailScreen" 
+            component={ReportDetailScreen} 
+            options={{ headerShown: false }}  
+          />
+
+          <Stack.Screen 
+            name="AllPublicReportsScreen" 
+            component={AllPublicReportsScreen}
+            options={{ headerShown: false }}
+          />
 
         </>
       )}

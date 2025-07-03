@@ -30,6 +30,8 @@ interface PostCardProps {
     item: Post; // ✅ Strong type from your Post model
     userId: string;
     user: User;
+    featuredBusinesses?: { id: string }[];
+    isBusinessFeatured? : boolean;
     onDelete: (postId: string, imageUrls: string[] | null) => void;
     onReport: (postId: string, userId: string) => void;
     onOpenImage: (imageUrl: string) => void;
@@ -49,6 +51,8 @@ const PostCard: React.FC<PostCardProps> = ({
   item,
   userId,
   user,
+  featuredBusinesses,
+  isBusinessFeatured,
   onDelete,
   onReport,
   onOpenImage,
@@ -421,6 +425,8 @@ const PostCard: React.FC<PostCardProps> = ({
     handleUserProfileNavigation(userId);
   }, [handleUserProfileNavigation]);
 
+  console.log("DEBUG - PostCard: id:", item.id, "usename:", item.user.name, "usenameUId:", item.user.uid, "isBusinessFeatured (prop):", isBusinessFeatured);
+
 
   return (
     <View style={[
@@ -428,6 +434,7 @@ const PostCard: React.FC<PostCardProps> = ({
       isShowcase && styles.showcaseBorder,
       { backgroundColor: cardColor }
     ]}>
+      
       <View style={styles.postHeader}>
         <View style={styles.userContainer}>
           <TouchableOpacity onPress={() => {
@@ -793,6 +800,12 @@ const PostCard: React.FC<PostCardProps> = ({
             </TouchableOpacity>
           )}
 
+          {isBusinessFeatured && (
+            <View style={styles.featuredBadgeActionRow}>
+              <Text style={styles.featuredBadgeTextSmall}>🌟 {i18n.t('featured') || "Featured"}</Text>
+            </View>
+          )}
+
           <TouchableOpacity onPress={() => onReport(item.id, item.user.uid)} style={styles.ellipsisWrapper}>
             <Ionicons name="ellipsis-vertical" size={20} color={ colors.iconColor } />
           </TouchableOpacity>
@@ -1090,6 +1103,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+  },
+  featuredBadgeActionRow: {
+    backgroundColor: '#ffe066',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginHorizontal: 6,
+    alignSelf: 'center',
+  },
+  featuredBadgeTextSmall: {
+    fontWeight: 'bold',
+    color: '#a48400',
+    fontSize: 11,
+    lineHeight: 15,
   },
   
   deleteWrapper: {

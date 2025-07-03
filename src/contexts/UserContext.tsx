@@ -45,6 +45,13 @@ export interface User {
     category?: string;   // ✅ Add this line
     location?: string; // ✅ Add this
     email?: string;      // ✅ added
+    postStreak?: {
+      count: number,
+      lastPostDate: string;
+      city: string;
+      isFeatured: boolean;
+      featuredSince?: string;
+    }
   };
   verifications?: {
     business?: boolean;
@@ -81,6 +88,13 @@ export interface UserData {
     description?: string;
     location?: string; // ✅ Add this
     email?: string;      // ✅ added
+    postStreak?: {
+      count: number,
+      lastPostDate: string;
+      city: string;
+      isFeatured: boolean;
+      featuredSince?: string;
+    }
   };
   verifications?: {
     business?: boolean;

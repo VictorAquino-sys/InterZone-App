@@ -1,7 +1,7 @@
 // Define the parameter list for all routes in the stack navigator
 export type RootStackParamList = {
-    HomeScreen: undefined;  // No parameters expected, just showing the home.
-    ProfileScreen: undefined;     // Assuming the profile doesn't need parameters initially.
+  HomeScreen: { refreshFeatured?: number } | undefined;
+  ProfileScreen: undefined;     // Assuming the profile doesn't need parameters initially.
     LoginScreen: undefined;       // Login screen typically doesn't need parameters.
     NameInputScreen: {userId: string};  // Simple input screen, no parameters needed unless specified.
     BottomTabs: undefined;  // Tab navigator itself doesn't receive parameters directly.
@@ -44,6 +44,9 @@ export type RootStackParamList = {
     MusicScreen: undefined;
     MusicApproval: undefined;
     AdminNotification: undefined;
+    ReportScreen: undefined;
+    ReportDetailScreen: { reportId: string };
+    AllPublicReportsScreen: { reports: string[]};
 
   };
 

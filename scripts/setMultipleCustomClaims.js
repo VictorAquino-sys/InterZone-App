@@ -64,6 +64,9 @@ const userClaims = {
   'JnEnWIbseURXv9LBXL7YvOZ4mEh1': { // Jan Anacata
     premium: true,
   },
+  'UNkC8pqKdkYGdUVrHXOyKlHDp3b2': { // Gaudencia Teresa
+    premium: true,
+  },
 };
 
 (async () => {

@@ -76,7 +76,8 @@ export const validateVideoFile = async (
 export const uploadVideoWithCompression = async (
     localUri: string,
     user: User,
-    onProgress: (progress: number) => void
+    onProgress: (progress: number) => void,
+    folder: string = 'postvideos'
   ): Promise<{downloadUrl:string; storagePath:string} | null> => {
     try {
       const originalInfo = await FileSystem.getInfoAsync(localUri);
@@ -93,7 +94,8 @@ export const uploadVideoWithCompression = async (
       });
   
       const extension = compressedUri.split('.').pop() ?? 'mp4';
-      const path = `postVideos/${user.uid}/${Date.now()}.${extension}`;
+
+      const path = `${folder}/${user.uid}/${Date.now()}.${extension}`;
       const fileInfo = await FileSystem.getInfoAsync(compressedUri);
   
       if (!fileInfo.exists || fileInfo.size === 0) {
