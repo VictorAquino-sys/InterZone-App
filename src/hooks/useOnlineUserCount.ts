@@ -9,8 +9,8 @@ export function useOnlineUserCount() {
 
   useEffect(() => {
     if (isFocused) {
-        setCount(Math.floor(Math.random() * 41) + 30); // 30–70
-      }
+      setCount(Math.floor(Math.random() * 201) + 100); // 30–70
+    }
     }, [isFocused]);
 
   return count;

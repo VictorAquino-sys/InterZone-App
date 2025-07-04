@@ -2810,6 +2810,8 @@ PODS:
     - react-native-config/App (= 1.5.5)
   - react-native-config/App (1.5.5):
     - React-Core
+  - react-native-maps (1.14.0):
+    - React-Core
   - react-native-pager-view (6.3.0):
     - DoubleConversion
     - glog
@@ -3367,6 +3369,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - react-native-compressor (from `../node_modules/react-native-compressor`)
   - react-native-config (from `../node_modules/react-native-config`)
+  - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-video (from `../node_modules/react-native-video`)
@@ -3602,6 +3605,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-compressor"
   react-native-config:
     :path: "../node_modules/react-native-config"
+  react-native-maps:
+    :path: "../node_modules/react-native-maps"
   react-native-pager-view:
     :path: "../node_modules/react-native-pager-view"
   react-native-safe-area-context:
@@ -3802,6 +3807,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 32481ad50f09c781bdb408b302757e0c9285d6db
   react-native-compressor: efc12813d55bc46e77bad4f98500ba4b685c4d89
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
+  react-native-maps: deb2adbdf309b622f15055b72b8742054929c740
   react-native-pager-view: b351d47a8008bc9fb9a68c73d6d2a1adf032c7c2
   react-native-safe-area-context: 758e894ca5a9bd1868d2a9cfbca7326a2b6bf9dc
   react-native-video: 7ccc99e0d4d7db3303c369d6442286bc5329a64f
@@ -3857,6 +3863,6 @@ SPEC CHECKSUMS:
   VisionCamera: c5c07db74721d37f4c9f8331ad1f8da7b2539995
   Yoga: 33622183a85805e12703cd618b2c16bfd18bfffb
 
-PODFILE CHECKSUM: 21ff846f7d6a4e132539d3b24426974bfffbdbda
+PODFILE CHECKSUM: 39af69f22ca2a74a3ad65eca69238773bd5e743f
 
 COCOAPODS: 1.16.2

@@ -13,3 +13,8 @@ export const deleteImageFromStorage = async (imageUrl: string) => {
     console.warn('Failed to delete image from storage:', imageUrl, error);
   }
 };
+
+export const deleteVideoFromStorage = async (videoUrl: string) => {
+  // Same logic, just a different function name (optional)
+  return deleteImageFromStorage(videoUrl);
+};

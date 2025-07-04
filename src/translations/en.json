@@ -52,6 +52,10 @@
   "genericError": "An error occurred. Please try again.",
   "passwordRequirementsNotMet": "Your password must include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character, and be 6–20 characters long.",
 
+  "bothFieldsRequired": "Please enter both email and password to register.",
+  "emailRequired": "Please enter your email to register.",
+  "passwordRequired": "Please enter a password to register.",
+
   "invalidCredential": "Invalid login credentials. Please double-check your email and password.",
   "emailAlreadyInUse": "The email address is already in use. Please use a different email.",
   "passwordRequirement": "Password must be at least 6 characters and no more than 20.",
@@ -203,7 +207,23 @@
       "inappropriate": "Inappropriate Content",
       "hate": "Hate Speech",
       "other": "Other"
-    }
+    },
+    "newReport": "New Report",
+    "lostPet": "Lost Pet",
+    "missingPerson": "Missing Person",
+    "incident": "Incident / Robbery",
+    "descriptionPlaceholder": "Brief description...",
+    "videoReady": "Video ready to upload",
+    "locationLabel": "Location",
+    "noLocation": "Location unavailable",
+    "locationRequiredTitle": "Location Needed",
+    "requiredFieldsMsg": "Description and location are required.",
+    "sentTitle": "Report Sent",
+    "sentMsg": "Your report was sent successfully!",
+    "dragToExact": "Drag marker to exact spot",
+    "recenter": "Recenter on my location",
+    "submit": "Send Report",
+    "setLocationBtn": "Set your current location"
   },
 
   "profile": {
@@ -419,7 +439,8 @@
   "deleteMessage": "Are you sure you want to delete this post?",
   "businessNotFound": "Business not found.",
   "noRatings": "⭐ No ratings yet",
-  "viewAllReviews": "View all reviews"
+  "viewAllReviews": "View all reviews",
+  "featuredUntil": "🌟 Featured until {{date}}"
 },
 "delete": "Delete",
 "postAs": "Post as:",
@@ -524,6 +545,9 @@
   "successTitle": "Success",
   "successMsg": "Thank you for your review!"
 },
+"businessStreakMessage": "👏 Great! Post for {{daysLeft}} more day{{plural}} to become a Featured Business in {{city}}.",
+"businessFeaturedCongrats": "🎉 You're a Featured Business in {{city}}!",
+"businessStreakBase": "Awesome! Post for 5 days straight and you'll be nominated as a Featured Business in {{city}}.",
 "suggest": {
   "title": "Suggest a Professor",
   "namePlaceholder": "Professor's Name *",
@@ -540,8 +564,8 @@
   "title": "Verify Your Student Email",
   "send": "Send Code",
   "verify": "Verify",
-  "sendLink": "Send link",
   "pleaseWait": "Please wait 5 minutes ->",
+  "sendLink": "Send link",
   "verifiedTitle": "You're verified! 🎓",
   "verifiedMessage": "Your school email has been confirmed.",
   "cancel": "Cancel",
@@ -720,6 +744,8 @@
 "approve": "Approve",
 "reject": "Reject",
 "backToMyCity": "<< Back to my current city",
+"featuredBusinesses": "Featured business",
+"featured": "Featured",
 "adminNotification": {
   "title": "Notify users in Peru",
   "notifTitle": "Notification Title",
@@ -736,5 +762,55 @@
   "failureMsg": "Something went wrong while sending the notification.",
   "errorTitle": "Error",
   "sendBtn": "📣 Send Notification"
+},
+"reportBanner": {
+  "oneAlert": "There’s a local alert in your area!",
+  "noReports": "No alerts yet",
+  "multipleAlerts": "There are {{count}} active alerts in your area!",
+  "types": {
+    "lost_pet": "Lost Pet",
+    "missing_person": "Missing Person",
+    "robbery": "Robbery",
+    "theft": "Theft",
+    "incident": "Incident"
+  },
+  "seeAll": "See all",
+  "allActiveAlerts": "All Active Alerts"
+},
+"reportDetail": {
+  "alertDetail": "Alert Detail",
+  "status": "Status",
+  "reportedAt": "Reported at",
+  "reportedBy": "Reported by",
+  "goBack": "Go back",
+  "petLocation": "Pet Location & Sightings",
+  "tapMap": "Tap or long-press the map to add your “last seen” pin and note.",
+  "lastSeenPlaceholder": "Describe what you saw…",
+  "saveLastSeen": "Save Last Seen",
+  "saving": "Saving…",
+  "sightingsNotes": "Sightings & Community Notes",
+  "missingInfo": "Missing info",
+  "missingInfoDesc": "Tap the map to mark a spot and enter a note.",
+  "thankYou": "Thank you!",
+  "lastSeenAdded": "Your last seen info has been added.",
+  "error": "Error",
+  "saveLastSeenError": "Could not save last seen info.",
+  "notFound": "Report not found.",
+  "mapTypes": {
+    "standard": "Standard",
+    "satellite": "Satellite",
+    "hybrid": "Hybrid"
+  },
+  "originalReportedSpot": "Original Reported Spot",
+  "lastSeenHere": "Last Seen Here",
+  "closeReportTitle": "Close Report",
+  "closeReport": "Close Report",
+  "closeReportMessage": "Are you sure you want to close and permanently delete this report? All attached media will be deleted.",
+  "closeReportCancel": "Cancel",
+  "closeReportDelete": "Delete",
+  "closeReportDeletedTitle": "Report closed",
+  "closeReportDeletedMessage": "The report and all attached media have been deleted.",
+  "closeReportErrorTitle": "Error",
+  "closeReportErrorMessage": "Failed to delete report. Please try again."
 }
 }  

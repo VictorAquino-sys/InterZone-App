@@ -76,8 +76,9 @@ export const validateVideoFile = async (
 export const uploadVideoWithCompression = async (
     localUri: string,
     user: User,
-    onProgress: (progress: number) => void
-  ): Promise<{ downloadUrl: string; storagePath: string} | null> => {
+    onProgress: (progress: number) => void,
+    folder: string = 'postvideos'
+  ): Promise<{downloadUrl:string; storagePath:string} | null> => {
     try {
       const originalInfo = await FileSystem.getInfoAsync(localUri);
       if (!originalInfo.exists || originalInfo.size == null) {
@@ -93,7 +94,8 @@ export const uploadVideoWithCompression = async (
       });
   
       const extension = compressedUri.split('.').pop() ?? 'mp4';
-      const path = `postVideos/${user.uid}/${Date.now()}.${extension}`;
+
+      const path = `${folder}/${user.uid}/${Date.now()}.${extension}`;
       const fileInfo = await FileSystem.getInfoAsync(compressedUri);
   
       if (!fileInfo.exists || fileInfo.size === 0) {
@@ -126,8 +128,7 @@ export const uploadVideoWithCompression = async (
       );
   
       const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/interzone-production.firebasestorage.app/o/${encodeURIComponent(path)}?alt=media`;
-      
-      return {
+      return { 
         downloadUrl,
         storagePath: path
       };

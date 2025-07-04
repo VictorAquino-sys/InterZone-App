@@ -13,6 +13,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, Upl
 import { Tooltip } from '@rneui/themed';
 import { navigationRef } from '../../src/navigation/navigationRef'; // Adjust path as needed
 import * as ImagePicker from 'expo-image-picker';
+import { updateBusinessPostStreak } from '@/utils/businessStreakutils';
 import { useIsFocused } from '@react-navigation/native';
 import i18n from '@/i18n';
 import { Accuracy } from 'expo-location';
@@ -48,7 +49,7 @@ function isUserPeruvian(user?: { country?: string } | null): boolean {
 
 const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
   const auth = getAuth();
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
   const authUser = auth.currentUser;
   const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [postText, setPostText] = useState<string>('');
@@ -644,6 +645,9 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
         commentsEnabled: commentsEnabled,
         verifications: user?.verifications || {},
         showcase: isShowcase, // 🔹 Save showcase field
+        isBusinessFeatured: user.businessProfile?.postStreak?.isFeatured || false,
+        businessFeaturedSince: user.businessProfile?.postStreak?.featuredSince ?? null,
+        businessStreakCount: user.businessProfile?.postStreak?.count ?? 0,
         promo: isPromoEnabled && promoLabel && promoTotal && promoTotal > 0
         ? {
             enabled: true,
@@ -661,6 +665,38 @@ const PostScreen: FunctionComponent<PostScreenProps> = ({ navigation }) => {
       // Add post to Firestore
       const docRef = await addDoc(collection(db, "posts"), postData);
       console.log("Post added successfully with ID:", docRef.id);
+
+      const updatedStreak = user?.businessProfile?.postStreak;
+      if (postingAsBusiness && user?.accountType === "business" && user?.businessVerified && location) {
+        try {
+          await updateBusinessPostStreak(authUser.uid, location);
+          await refreshUser?.(); // Update context (optional but useful for real-time banners)
+          // Show toast/banner with streak progress
+          if (updatedStreak) {
+            if (updatedStreak.isFeatured) {
+              Toast.show({
+                type: 'success',
+                text1: i18n.t('businessFeaturedCongrats', { city: updatedStreak.city })
+              });
+            } else if (updatedStreak.count >= 1) {
+              const left = 5 - updatedStreak.count;
+              Toast.show({
+                type: 'info',
+                text1: i18n.t('businessStreakMessage', {
+                  daysLeft: left,
+                  city: updatedStreak.city,
+                  plural: left > 1 ? 's' : '',
+                })
+              });
+            }
+          }
+        } catch (e) {
+          Toast.show({
+            type: 'info',
+            text1: i18n.t('businessStreakBase', { city: updatedStreak?.city }),
+          });
+        }
+      }
 
       // Update local state
       setPosts(prevPosts => [

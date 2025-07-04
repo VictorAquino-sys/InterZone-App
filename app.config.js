@@ -5,7 +5,7 @@ export default {
   expo: {
     name: IS_DEV ? "InterZone (Dev)" : "InterZone",
     slug: "InterZone",
-    version: "1.0.13",
+    version: "1.0.14",
     orientation: "default",
     icon: "./assets/images/icon.png",
     scheme: "interzone",
@@ -43,7 +43,10 @@ export default {
         EXDefaultScreenOrientationMask: 'UIInterfaceOrientationMaskAllButUpsideDown',
         EXUpdatesURL: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6"
       },
-      googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist"
+      googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? "./GoogleService-Info.plist",
+      config: {
+        googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY,
+      },
     },
     android: {
       package: IS_DEV ? "com.zhd.interzone" : "com.zhd.interzone",
@@ -158,7 +161,7 @@ export default {
       url: "https://u.expo.dev/02152cf1-073f-43da-8d04-f06d2948bde6",
       fallbackToCacheTimeout: 0,
       checkAutomatically: "ON_LOAD",
-      runtimeVersion: "1.0.13"
+      runtimeVersion: "1.0.14"
     }
   }
 };

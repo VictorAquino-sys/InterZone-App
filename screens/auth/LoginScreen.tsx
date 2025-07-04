@@ -119,6 +119,30 @@ const LoginScreen: FunctionComponent<LoginScreenProps> = ({ navigation }) => {
 
   // Save new user details in Firestore after signup
   const handleSignUp = async () => {
+
+    // ✅ If either field is empty, show a clear error and return
+    if (!email.trim() && !password.trim()) {
+      Alert.alert(
+        i18n.t('SignUpError'),
+        i18n.t('bothFieldsRequired', { defaultValue: "Por favor ingresa tu correo electrónico y contraseña para registrarte." })
+      );
+      return;
+    }
+    if (!email.trim()) {
+      Alert.alert(
+        i18n.t('SignUpError'),
+        i18n.t('emailRequired', { defaultValue: "Por favor ingresa tu correo electrónico para registrarte." })
+      );
+      return;
+    }
+    if (!password.trim()) {
+      Alert.alert(
+        i18n.t('SignUpError'),
+        i18n.t('passwordRequired', { defaultValue: "Por favor ingresa una contraseña para registrarte." })
+      );
+      return;
+    }
+      
     // Check if the password is too short
     if (password.length < 6) {
       Alert.alert(i18n.t('SignUpError'), i18n.t('passwordRequirement'));

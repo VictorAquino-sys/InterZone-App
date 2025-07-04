@@ -1,27 +1,40 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import { collection, query, where, getDocs, orderBy, limit, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, getDoc, FieldValue, deleteField } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Post } from '@/contexts/PostsContext';
 import { User } from '@/contexts/UserContext';
 import { useUser } from '@/contexts/UserContext';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../src/navigationTypes';
-import PostCard from '@/components/PostCard';
+// import PostCard from '@/components/PostCard';
 import Avatar from '@/components/Avatar';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import BusinessPostCard from '@/components/businessPostCard';
+import { updateDoc } from 'firebase/firestore';
+import * as RNLocalize from 'react-native-localize';
 import i18n from '@/i18n'; 
 import { deleteDoc, doc } from 'firebase/firestore';
 import BusinessReviewListModal from '@/components/BusinessReviewListModal';
 import BusinessRatingModal from '@/components/BusinessRatingModal';
 import { useNavigation } from '@react-navigation/native';
 import { deleteImageFromStorage } from '@/utils/storageUtils';
+import { setBusinessFeaturedForPosts } from '@/utils/businessStreakutils';
 import { Alert } from 'react-native';
 
 interface BusinessChannelRouteParams {
   businessUid: string;
+}
+
+function isFeatureExpired(featuredSince?: string | Date) {
+  if (!featuredSince) return true;
+  // If Firestore stores as Timestamp, use .toDate()
+  const start = featuredSince instanceof Date ? featuredSince : new Date(featuredSince);
+  const now = new Date();
+  const diff = now.getTime() - start.getTime();
+  const days = diff / (1000 * 60 * 60 * 24);
+  return days > 7;
 }
 
 const BusinessChannelScreen = () => {
@@ -38,37 +51,96 @@ const BusinessChannelScreen = () => {
   const [showReviewList, setShowReviewList] = useState(false);
   const [shouldRefreshReviews, setShouldRefreshReviews] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [featureLoading, setFeatureLoading] = useState(false);
+  const locale = RNLocalize.getLocales()[0]?.languageTag || 'en';
 
+
+  const postStreak = business?.businessProfile?.postStreak;
+  const isActuallyFeatured =
+    !!postStreak?.isFeatured &&
+    postStreak?.featuredSince &&
+    !isFeatureExpired(postStreak.featuredSince);
+
+    let expiryDateString = '';
+    if (postStreak?.featuredSince) {
+      const parsedDate = new Date(postStreak.featuredSince);
+      if (!isNaN(parsedDate.getTime())) {
+        const expiryDate = new Date(parsedDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+        expiryDateString = new Intl.DateTimeFormat(locale, {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        }).format(expiryDate);
+      }
+    }
 
   useEffect(() => {
-    const fetchBusinessData = async () => {
-      // await fetchBusinessRating(); // 👈 rating handled separately
+    if (!isActuallyFeatured || !postStreak?.featuredSince) return;
+    const expiry = new Date(postStreak.featuredSince).getTime() + 7 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const msUntilExpire = expiry - now;
+    if (msUntilExpire > 0) {
+      const timeout = setTimeout(() => {
+        setBusiness(prev =>
+          prev && prev.businessProfile
+            ? {
+                ...prev,
+                businessProfile: {
+                  ...prev.businessProfile,
+                  name: prev.businessProfile.name || '',
+                  ownerUid: prev.businessProfile.ownerUid || '',
+                  avatar: prev.businessProfile.avatar || '',
+                  description: prev.businessProfile.description || '',
+                  category: prev.businessProfile.category || '',
+                  location: prev.businessProfile.location || '',
+                  email: prev.businessProfile.email || '',
+                  postStreak: {
+                    ...prev.businessProfile.postStreak,
+                    isFeatured: false,
+                    featuredSince: undefined,
+                    count: prev.businessProfile.postStreak?.count ?? 0,
+                    lastPostDate: prev.businessProfile.postStreak?.lastPostDate || '',
+                    city: prev.businessProfile.postStreak?.city || '',
+                  },
+                },
+              }
+            : prev // no update if businessProfile missing
+        );
+        // Fetch latest business data from Firestore
+        fetchBusinessData();
+      }, msUntilExpire + 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isActuallyFeatured, postStreak?.featuredSince]);
 
-      try {
-        const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', businessUid)));
-        if (!userDoc.empty) {
-          const userData = userDoc.docs[0].data() as User;
-          setBusiness(userData);
-        }
-
-        const postQuery = query(
-            collection(db, 'posts'),
-            where('user.uid', '==', businessUid),
-            where('showcase', '==', true), // ✅ Only showcased posts
-            orderBy('timestamp', 'desc'),
-            limit(6) // ✅ Limit to 6 posts
-          );
-
-        const postSnap = await getDocs(postQuery);
-        const businessPosts = postSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
-        setPosts(businessPosts);
-      } catch (error) {
-        console.error("Error loading business data:", error);
-      } finally {
-        setLoading(false);
+  const fetchBusinessData = async () => {
+    try {
+      const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', businessUid)));
+      if (!userDoc.empty) {
+        const userData = userDoc.docs[0].data() as User;
+        setBusiness(userData);
       }
-    };
+  
+      const postQuery = query(
+        collection(db, 'posts'),
+        where('user.uid', '==', businessUid),
+        where('showcase', '==', true),
+        orderBy('timestamp', 'desc'),
+        limit(6)
+      );
+  
+      const postSnap = await getDocs(postQuery);
+      const businessPosts = postSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
+      setPosts(businessPosts);
+    } catch (error) {
+      console.error("Error loading business data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBusinessData();
     fetchBusinessRating();
   }, [businessUid]);
@@ -182,6 +254,141 @@ const BusinessChannelScreen = () => {
                 <Text style={styles.description}>
                 {business.businessProfile?.description || business.description || i18n.t('businessChannel.noDescription')}
                 </Text>
+
+                {/* ⭐️ ADMIN FEATURED BUTTONS BELOW ⭐️ */}
+                {user?.claims?.admin && (
+                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 14, marginBottom: 2 }}>
+                    {isActuallyFeatured ? (
+                      // --- REMOVE FEATURED BUTTON ---
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#ffebee', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 }}
+                        onPress={async () => {
+                          try {
+                            await updateDoc(doc(db, 'users', businessUid), {
+                              'businessProfile.postStreak.isFeatured': false,
+                              'businessProfile.postStreak.featuredSince': deleteField(),
+                            });
+
+                            await setBusinessFeaturedForPosts(businessUid, false);
+                            await fetchBusinessData();
+
+                            Alert.alert('Removed', 'This business is no longer featured.');
+                            setBusiness(prev =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    businessProfile: {
+                                      ...prev.businessProfile,
+                                      name: prev.businessProfile?.name || '',
+                                      ownerUid: prev.businessProfile?.ownerUid || '',
+                                      avatar: prev.businessProfile?.avatar ?? '',
+                                      description: prev.businessProfile?.description ?? '',
+                                      category: prev.businessProfile?.category ?? '',
+                                      location: prev.businessProfile?.location ?? '',
+                                      email: prev.businessProfile?.email ?? '',
+                                      postStreak: {
+                                        ...prev.businessProfile?.postStreak,
+                                        isFeatured: false,
+                                        featuredSince: undefined,
+                                        count: prev.businessProfile?.postStreak?.count ?? 0,
+                                        lastPostDate: prev.businessProfile?.postStreak?.lastPostDate ?? '',
+                                        city: prev.businessProfile?.postStreak?.city ?? '',
+                                      },
+                                    },
+                                  }
+                                : prev
+                            );
+                          } catch (error) {
+                            Alert.alert('Error', 'Failed to remove feature status.');
+                            console.log(error);
+                          }
+                        }}
+                      >
+                        <Text style={{ color: '#c62828', fontWeight: '700' }}>Remove Featured</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      // --- SET AS FEATURED BUTTON ---
+                      <TouchableOpacity
+                        disabled={featureLoading}
+                        style={{ 
+                          backgroundColor: '#e8f5e9', 
+                          paddingHorizontal: 14, 
+                          paddingVertical: 8, 
+                          borderRadius: 12,     
+                          opacity: featureLoading ? 0.5 : 1
+                        }}
+                        onPress={async () => {
+                          setFeatureLoading(true);
+
+                          try {
+                            const now = new Date();
+                            await updateDoc(doc(db, 'users', businessUid), {
+                              'businessProfile.postStreak.count': business?.businessProfile?.postStreak?.count ?? 0,
+                              'businessProfile.postStreak.lastPostDate': business?.businessProfile?.postStreak?.lastPostDate ?? "",
+                              'businessProfile.postStreak.city': business?.lastKnownLocation?.label || "",
+                              'businessProfile.postStreak.isFeatured': true,
+                              'businessProfile.postStreak.featuredSince': now,
+                            });
+                            await setBusinessFeaturedForPosts(businessUid, true);
+                            await fetchBusinessData();
+
+                            Alert.alert('Featured', 'This business is now featured for 7 days.');
+                            setBusiness(prev =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    businessProfile: {
+                                      ...prev.businessProfile,
+                                      name: prev.businessProfile?.name || '',
+                                      ownerUid: prev.businessProfile?.ownerUid || '',
+                                      avatar: prev.businessProfile?.avatar ?? '',
+                                      description: prev.businessProfile?.description ?? '',
+                                      category: prev.businessProfile?.category ?? '',
+                                      location: prev.businessProfile?.location ?? '',
+                                      email: prev.businessProfile?.email ?? '',
+                                      postStreak: {
+                                        ...prev.businessProfile?.postStreak,
+                                        isFeatured: true,
+                                        featuredSince: undefined,
+                                        count: prev.businessProfile?.postStreak?.count ?? 0,
+                                        lastPostDate: prev.businessProfile?.postStreak?.lastPostDate ?? '',
+                                        city: prev.businessProfile?.postStreak?.city ?? '',
+                                      },
+                                    },
+                                  }
+                                : prev
+                            );
+                            navigation.navigate('HomeScreen', { refreshFeatured: Date.now() });
+
+                          } catch (error) {
+                            Alert.alert('Error', 'Failed to set feature status.');
+                            console.log(error);
+                          } finally {
+                            setFeatureLoading(false);
+                          }
+
+                        }}
+                      >
+                        {featureLoading ? (
+                          <ActivityIndicator size="small" color="#999" />
+                        ) : (
+                          <Text style={{ color: isActuallyFeatured ? '#c62828' : '#2e7d32', fontWeight: '700' }}>
+                            {isActuallyFeatured ? 'Remove Featured' : 'Set as Featured'}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+                {/* ⭐️ END ADMIN CONTROLS ⭐️ */}
+
+                {isActuallyFeatured && expiryDateString && expiryDateString !== 'Invalid Date' && (
+                  <View style={{ backgroundColor: '#FFFDE7', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, marginTop: 6 }}>
+                    <Text style={{ color: '#FFD600', fontWeight: '700' }}>
+                      {i18n.t('businessChannel.featuredUntil', { date: expiryDateString })}
+                    </Text>
+                  </View>
+                )}
 
                 <View style={{ alignItems: 'center', marginTop: 12 }}>
                   <TouchableOpacity onPress={() => setShowRatingModal(true)} style={styles.ratingBox}>
